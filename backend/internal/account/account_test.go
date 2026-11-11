@@ -17,18 +17,20 @@ type providerStub struct {
 	raw            json.RawMessage
 	calls, updates int
 	loginErr       error
+	registerResult *AuthResult
+	registerErr    error
 	updated        json.RawMessage
 	logouts        int
 }
 
 func (p *providerStub) Register(context.Context, string, string, string) (AuthResult, error) {
-	return AuthResult{User: p.raw}, nil
-}
-func (p *providerStub) Confirm(context.Context, string, string) (AuthResult, error) {
+	if p.registerResult != nil {
+		return *p.registerResult, p.registerErr
+	}
 	return p.Login(context.Background(), "", "")
 }
 func (p *providerStub) Login(context.Context, string, string) (AuthResult, error) {
-	return AuthResult{User: p.raw, Session: &Session{AccessToken: p.token, RefreshToken: "test-refresh", TokenType: "bearer"}}, p.loginErr
+	return AuthResult{User: p.raw, Session: &Session{AccessToken: p.token, RefreshToken: "test-refresh", TokenType: "bearer", ExpiresIn: 3600, ExpiresAt: time.Now().Add(time.Hour).Unix()}}, p.loginErr
 }
 func (p *providerStub) Refresh(context.Context, string) (AuthResult, error) {
 	return p.Login(context.Background(), "", "")
@@ -164,9 +166,6 @@ func TestInputPolicy(t *testing.T) {
 	if _, err := s.Register(context.Background(), "x@example.test", "short", "Test"); !errors.Is(err, ErrInput) {
 		t.Fatal("bad password")
 	}
-	if _, err := s.Confirm(context.Background(), "x@example.test", "abcdef"); !errors.Is(err, ErrInput) {
-		t.Fatal("bad OTP")
-	}
 	if _, err := s.Refresh(context.Background(), ""); !errors.Is(err, ErrInput) {
 		t.Fatal("empty refresh")
 	}
@@ -196,5 +195,25 @@ func TestVerifiedMFARequiresAAL2(t *testing.T) {
 	p.token = jwt(map[string]any{"sub": userID, "iss": s.issuer, "aud": []string{"authenticated"}, "exp": time.Now().Add(time.Hour).Unix(), "aal": "aal2"})
 	if _, err := s.Authenticate(context.Background(), p.token); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestRegisterRequiresRealReadySession(t *testing.T) {
+	s, p, _ := fixture()
+	result, err := s.Register(context.Background(), "x@example.test", "example-password", "Member")
+	if err != nil || result.Session == nil || result.Session.AccessToken != p.token {
+		t.Fatal("signup did not return provider session")
+	}
+	p.registerResult = &AuthResult{User: p.raw}
+	if _, err = s.Register(context.Background(), "x@example.test", "example-password", "Member"); !errors.Is(err, ErrAuthConfig) {
+		t.Fatal("confirmation-required signup reported success")
+	}
+	p.registerResult = &AuthResult{User: p.raw, Session: &Session{AccessToken: "partial"}}
+	if _, err = s.Register(context.Background(), "x@example.test", "example-password", "Member"); !errors.Is(err, ErrUnavailable) {
+		t.Fatal("partial session reported ready")
+	}
+	p.registerErr = ErrRateLimit
+	if _, err = s.Register(context.Background(), "x@example.test", "example-password", "Member"); !errors.Is(err, ErrRateLimit) {
+		t.Fatal("provider error replaced")
 	}
 }

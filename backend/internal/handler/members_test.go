@@ -41,10 +41,6 @@ func TestMemberEndpointsOwnershipAndRoleEscalation(t *testing.T) {
 				w.WriteHeader(204)
 				return
 			}
-			if r.URL.Path == "/auth/v1/signup" {
-				_, _ = fmt.Fprintf(w, `{"id":%q,"email":"student@example.test"}`, id)
-				return
-			}
 			_ = json.NewEncoder(w).Encode(map[string]any{"access_token": token, "refresh_token": "unit-refresh", "token_type": "bearer", "expires_in": 3600, "user": map[string]string{"id": id, "email": "student@example.test"}})
 			return
 		}
@@ -87,8 +83,10 @@ func TestMemberEndpointsOwnershipAndRoleEscalation(t *testing.T) {
 	}{
 		{"register", "POST", "/api/v1/auth/register", `{"email":"student@example.test","password":"example-password","display_name":"Student"}`, "", 201},
 		{"register role", "POST", "/api/v1/auth/register", `{"email":"student@example.test","password":"example-password","display_name":"Student","role":"admin"}`, "", 400},
+		{"register metadata role", "POST", "/api/v1/auth/register", `{"email":"student@example.test","password":"example-password","display_name":"Student","user_metadata":{"role":"admin"}}`, "", 400},
+		{"register app metadata", "POST", "/api/v1/auth/register", `{"email":"student@example.test","password":"example-password","display_name":"Student","app_metadata":{"role":"admin"}}`, "", 400},
 		{"login", "POST", "/api/v1/auth/login", `{"email":"student@example.test","password":"example-password"}`, "", 200},
-		{"confirm", "POST", "/api/v1/auth/confirm", `{"email":"student@example.test","token":"123456"}`, "", 200},
+		{"confirm retired", "POST", "/api/v1/auth/confirm", `{}`, "", 410},
 		{"refresh", "POST", "/api/v1/auth/refresh", `{"refresh_token":"unit-refresh"}`, "", 200},
 		{"profile own", "GET", "/api/v1/me?id=22222222-2222-4222-8222-222222222222", "", token, 200},
 		{"profile patch", "PATCH", "/api/v1/me", `{"display_name":"New"}`, token, 200},

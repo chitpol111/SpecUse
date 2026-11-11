@@ -7,6 +7,7 @@ Go REST API ด้วย `net/http` และ JSON แยก handler, service �
 
 เริ่มงานสมาชิกด้วย [AUTH_API.md](AUTH_API.md), ตั้งค่า DB ด้วย [SUPABASE_SETUP.md](SUPABASE_SETUP.md),
 สิทธิ์สินค้าใน [ADMIN_API.md](ADMIN_API.md) และเตรียม deploy ด้วย [RENDER.md](RENDER.md)
+Register ได้ member/session พร้อมใช้ทันที ไม่ต้อง OTP; /auth/confirm เดิมตอบ 410
 React เรียก Go เท่านั้น; local fixture ด้านล่างยังใช้ได้โดยไม่ต้องมีบัญชีหรือ keys
 
 ล่าสุดเพิ่ม [B1 SATA-first: วิธีรันและ JSON/curl](STORAGE_B1.md) สำหรับ synthetic fixture แยก
@@ -292,7 +293,7 @@ Tests ใช้ `httptest`, memory repository และ stub repository ส่�
 
 เพิ่ม auth/profile ownership, role escalation, Member/Admin, CRUD และ DB RPC tests แล้ว
 PostgreSQL integration แยกจาก unit tests; ทดสอบ trigger/grants/CRUD/snapshot/rollback ด้วย schema จำลอง
-ยังต้องทำ hosted Supabase/Auth/SMTP และ Render smoke tests ตามคู่มือก่อนส่งงานจริง
+ยังต้องทำ hosted Supabase/Auth และ Render smoke tests ตามคู่มือก่อนส่งงานจริง
 
 ## TODO / ข้อตกลงที่รอระยะถัดไป
 
@@ -307,4 +308,4 @@ PostgreSQL integration แยกจาก unit tests; ทดสอบ trigger/gr
   GPU/M.2/PSU/Case checks หรือ typed PSU/Case/cooler
 - ใช้ server-only Data API RPC, default-deny direct table access และ RLS ตาม [SUPABASE_SETUP.md](SUPABASE_SETUP.md)
 - เพิ่ม Auth/Profile/Admin และ tests แล้ว; ยังไม่มี saved-build persistence/publication, recovery/OAuth/MFA UI
-- ยังต้องตั้ง project/SMTP/keys/CORS และทดสอบบริการจริงก่อน deploy; ไม่มี privileged key ใน Frontend
+- ยังต้องตั้ง project/keys/CORS และปิด Confirm email และทดสอบบริการจริงก่อน deploy; ไม่มี privileged key ใน Frontend

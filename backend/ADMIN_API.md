@@ -9,21 +9,35 @@ Admin endpoints ตรวจ Bearer token กับ Supabase แล้วอ่�
 ไม่ใช้ role จาก JWT user_metadata/app_metadata หรือ request เป็นสิทธิ์ app
 SQL mutation ตรวจ p_actor กับ profiles.role ซ้ำ เพื่อกัน role เปลี่ยนระหว่างคำขอ
 
-## Provision Admin แบบควบคุม
+## เตรียมบัญชี Admin ล่วงหน้าแบบควบคุม
 
-1. สมัคร/ยืนยันอีเมลผ่าน flow ปกติ จะได้ member เสมอ
-2. เจ้าของ project ตรวจ UUID และ email ของบัญชีใน Auth Dashboard
-3. ใช้ SQL Editor/owner connection เท่านั้น ตรวจให้ตรงทั้ง UUID/email ก่อนเปลี่ยน role:
+1. เจ้าของ project เตรียมบัญชีเฉพาะที่ตนควบคุมก่อน demo/deploy; สร้างรหัสผ่านไม่ซ้ำและเก็บใน password manager
+   ปิด Confirm email ตาม SUPABASE_SETUP.md แล้วสมัครผ่าน Go Register ด้วย email/password/display_name เท่านั้น
+   ต้องได้ 201 พร้อม session; GET /me ยืนยันว่าเริ่ม role=member เสมอ ไม่ต้อง OTP/อีเมลยืนยัน
+   อย่าส่ง role, user_metadata หรือ app_metadata และไม่มี /auth/register-admin
+2. เจ้าของตรวจ UUID/email ให้ตรงใน Auth Dashboard และ profiles ของบัญชีนี้
+   อย่ายกระดับตามชื่อ display_name หรือ email ที่ส่งมาใน request และไม่พิมพ์ token/password ลง logs
+3. ใช้ Supabase SQL Editor ที่ลงชื่อเข้าใช้เป็นเจ้าของ หรือ owner DB connection เท่านั้น
+   แทน UUID/email placeholder ด้านล่างด้วยบัญชีที่ตรวจแล้วก่อนรัน (ไม่ต้องใส่รหัสผ่านหรือ key ใน SQL):
 
 ```sql
 UPDATE public.profiles p SET role='admin',updated_at=now()
 FROM auth.users u
 WHERE p.id=u.id
   AND u.id='REPLACE_WITH_VERIFIED_USER_UUID'::uuid
-  AND u.email='REPLACE_WITH_VERIFIED_EMAIL';
+  AND u.email='REPLACE_WITH_VERIFIED_EMAIL'
+  AND p.role='member'
+RETURNING p.id,p.role;
 ```
 
-ต้องได้ UPDATE 1; อย่าใช้ service key ผ่าน Frontend และไม่มี public endpoint ยกระดับสิทธิ์
+ต้องได้หนึ่งแถว role=admin; หากไม่มีแถวหรือเกินหนึ่งแถวให้หยุดตรวจ UUID/email/role ก่อน ไม่ขยาย WHERE ให้กว้าง
+4. Login ด้วยบัญชีที่เตรียมไว้ → GET /me ต้อง role=admin และ GET /admin/products ต้อง 200
+   ใช้บัญชี member อีกบัญชีตรวจ 403; ไม่มี Bearer ต้อง 401 ก่อนนำไป demo
+5. เจ้าของส่งมอบ credentials ผ่าน password manager/ช่องทางที่ควบคุมได้เท่านั้น ไม่ส่งใน PR/แชต/source
+   ไม่ใช้บัญชี Admin เป็นข้อมูลตัวอย่างและไม่สร้างบัญชีจริงผ่าน unit tests หรือ migration
+
+อย่าใช้ service key ผ่าน Frontend และไม่มี public endpoint ยกระดับสิทธิ์
+public Register สร้าง member เสมอ; SQL owner promotion เป็นขั้นตอนดูแลระบบล่วงหน้าแยกจาก public API
 ลดสิทธิ์ด้วย owner SQL เช่นเดียวกัน; คำขอถัดไปอ่าน role ใหม่ไม่รอ JWT หมดอายุ
 ไม่สร้าง admin/email/password ใน seed; tests ใช้บัญชีจำลองใน disposable DB เท่านั้น
 
