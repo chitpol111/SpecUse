@@ -2,8 +2,11 @@ package catalog
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"strings"
+
+	"specuse/backend/internal/hardware"
 )
 
 var (
@@ -24,9 +27,32 @@ type Product struct {
 // Specs contains only the compatibility fields agreed with the frontend.
 // Unrelated fields are omitted instead of supplying guessed or zero values.
 type Specs struct {
-	CPUSocket         string `json:"cpu_socket,omitempty"`
-	RAMType           string `json:"ram_type,omitempty"`
-	ModulesPerPackage int64  `json:"modules_per_package,omitempty"`
+	CPUSocket         string                `json:"cpu_socket,omitempty"`
+	RAMType           string                `json:"ram_type,omitempty"`
+	ModulesPerPackage int64                 `json:"modules_per_package,omitempty"`
+	GPU               *hardware.GPU         `json:"-"`
+	Storage           *hardware.Storage     `json:"-"`
+	Motherboard       *hardware.Motherboard `json:"-"`
+}
+
+// MarshalJSON flattens the category's typed metadata under specs, never under
+// invented GPU/storage wrapper keys. CPU/RAM retain their legacy JSON fields.
+func (s Specs) MarshalJSON() ([]byte, error) {
+	if s.GPU != nil {
+		return json.Marshal(s.GPU)
+	}
+	if s.Storage != nil {
+		return json.Marshal(s.Storage)
+	}
+	if s.Motherboard != nil {
+		return json.Marshal(struct {
+			CPUSocket string `json:"cpu_socket"`
+			RAMType   string `json:"ram_type"`
+			*hardware.Motherboard
+		}{s.CPUSocket, s.RAMType, s.Motherboard})
+	}
+	type legacy Specs
+	return json.Marshal(legacy(s))
 }
 
 // ProductDetails is an additive public view. IDs, prices and the six original

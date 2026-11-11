@@ -1,0 +1,221 @@
+{
+  "data": {
+    "compatible": false,
+    "issues": [
+      {
+        "code": "CPU_SOCKET_MISMATCH",
+        "message": "CPU และเมนบอร์ดใช้ซ็อกเก็ตต่างกัน"
+      }
+    ],
+    "items": [
+      {
+        "product_id": "abcdefab-0000-0000-0000-000000000003",
+        "quantity": 1,
+        "owned_quantity": 1,
+        "purchase_quantity": 0,
+        "unit_price_thb": 12000,
+        "purchase_price_thb": 0
+      },
+      {
+        "product_id": "abcdefab-0000-0000-0000-000000000004",
+        "quantity": 1,
+        "owned_quantity": 0,
+        "purchase_quantity": 1,
+        "unit_price_thb": 5000,
+        "purchase_price_thb": 5000
+      },
+      {
+        "product_id": "91000000-0000-4000-8000-000000000004",
+        "quantity": 1,
+        "owned_quantity": 1,
+        "purchase_quantity": 0,
+        "unit_price_thb": 6000,
+        "purchase_price_thb": 0
+      }
+    ],
+    "ram_selections": [],
+    "total_price_thb": 5000,
+    "compatibility": {
+      "mode": "gpu_storage_v1",
+      "status": "failed",
+      "checks": [
+        {
+          "code": "CPU_SOCKET",
+          "scope": "basic",
+          "status": "failed",
+          "reason_code": "INCOMPATIBLE",
+          "message": "CPU socket ไม่ตรงกับ motherboard",
+          "product_ids": [
+            "abcdefab-0000-0000-0000-000000000003",
+            "abcdefab-0000-0000-0000-000000000004"
+          ],
+          "missing_fields": [],
+          "unsupported_fields": []
+        },
+        {
+          "code": "GPU_MOTHERBOARD",
+          "scope": "motherboard",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ยังไม่เปิดการตรวจฮาร์ดแวร์ส่วนนี้ในช่วง A",
+          "product_ids": [
+            "91000000-0000-4000-8000-000000000004",
+            "abcdefab-0000-0000-0000-000000000004"
+          ],
+          "missing_fields": [
+            {
+              "location": "catalog",
+              "path": "/specs/connectivity_profiles",
+              "product_id": "abcdefab-0000-0000-0000-000000000004",
+              "category": "motherboard"
+            },
+            {
+              "location": "catalog",
+              "path": "/specs/evidence",
+              "product_id": "abcdefab-0000-0000-0000-000000000004",
+              "category": "motherboard"
+            },
+            {
+              "location": "catalog",
+              "path": "/specs/sources",
+              "product_id": "abcdefab-0000-0000-0000-000000000004",
+              "category": "motherboard"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "MOTHERBOARD_RESOURCES",
+          "scope": "motherboard",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ยังไม่เปิดการตรวจฮาร์ดแวร์ส่วนนี้ในช่วง A",
+          "product_ids": [
+            "91000000-0000-4000-8000-000000000004",
+            "abcdefab-0000-0000-0000-000000000004"
+          ],
+          "missing_fields": [
+            {
+              "location": "catalog",
+              "path": "/specs/connectivity_profiles",
+              "product_id": "abcdefab-0000-0000-0000-000000000004",
+              "category": "motherboard"
+            },
+            {
+              "location": "catalog",
+              "path": "/specs/evidence",
+              "product_id": "abcdefab-0000-0000-0000-000000000004",
+              "category": "motherboard"
+            },
+            {
+              "location": "catalog",
+              "path": "/specs/sources",
+              "product_id": "abcdefab-0000-0000-0000-000000000004",
+              "category": "motherboard"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "GPU_PSU",
+          "scope": "psu",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ยังไม่เปิดการตรวจฮาร์ดแวร์ส่วนนี้ในช่วง A",
+          "product_ids": [
+            "91000000-0000-4000-8000-000000000004"
+          ],
+          "missing_fields": [
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "psu"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "GPU_CASE",
+          "scope": "case",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ยังไม่เปิดการตรวจฮาร์ดแวร์ส่วนนี้ในช่วง A",
+          "product_ids": [
+            "91000000-0000-4000-8000-000000000004"
+          ],
+          "missing_fields": [
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "case"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "SYSTEM_PSU",
+          "scope": "psu",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ยังไม่เปิดการตรวจฮาร์ดแวร์ส่วนนี้ในช่วง A",
+          "product_ids": [
+            "91000000-0000-4000-8000-000000000004",
+            "abcdefab-0000-0000-0000-000000000003",
+            "abcdefab-0000-0000-0000-000000000004"
+          ],
+          "missing_fields": [
+            {
+              "location": "context",
+              "path": "/system_power_envelope",
+              "product_id": null,
+              "category": null
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "psu"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "SYSTEM_CASE",
+          "scope": "case",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ยังไม่เปิดการตรวจฮาร์ดแวร์ส่วนนี้ในช่วง A",
+          "product_ids": [
+            "91000000-0000-4000-8000-000000000004",
+            "abcdefab-0000-0000-0000-000000000003",
+            "abcdefab-0000-0000-0000-000000000004"
+          ],
+          "missing_fields": [
+            {
+              "location": "context",
+              "path": "/installation_context",
+              "product_id": null,
+              "category": null
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "case"
+            }
+          ],
+          "unsupported_fields": []
+        }
+      ],
+      "warnings": [],
+      "unverified_domains": [
+        "case",
+        "motherboard",
+        "psu"
+      ],
+      "build_completeness": "not_evaluated"
+    }
+  }
+}

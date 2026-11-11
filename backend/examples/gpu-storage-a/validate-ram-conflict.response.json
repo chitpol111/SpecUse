@@ -1,0 +1,131 @@
+{
+  "data": {
+    "compatible": false,
+    "issues": [
+      {
+        "code": "RAM_TYPE_MISMATCH",
+        "message": "RAM และเมนบอร์ดใช้ RAM type ต่างกัน"
+      }
+    ],
+    "items": [
+      {
+        "product_id": "abcdefab-0000-0000-0000-000000000001",
+        "quantity": 1,
+        "owned_quantity": 1,
+        "purchase_quantity": 0,
+        "unit_price_thb": 25000,
+        "purchase_price_thb": 0
+      },
+      {
+        "product_id": "abcdefab-0000-0000-0000-000000000004",
+        "quantity": 1,
+        "owned_quantity": 0,
+        "purchase_quantity": 1,
+        "unit_price_thb": 5000,
+        "purchase_price_thb": 5000
+      }
+    ],
+    "ram_selections": [
+      {
+        "ram_model_id": "10000000-0000-0000-0000-000000000002",
+        "required_modules": 2,
+        "owned_modules": 2,
+        "purchase_modules": 0,
+        "supplied_modules": 0,
+        "excess_modules": 0,
+        "packages": [],
+        "total_price_thb": 0
+      }
+    ],
+    "total_price_thb": 5000,
+    "compatibility": {
+      "mode": "gpu_storage_v1",
+      "status": "failed",
+      "checks": [
+        {
+          "code": "CPU_SOCKET",
+          "scope": "basic",
+          "status": "passed",
+          "reason_code": "MATCH",
+          "message": "CPU socket ตรงกันตาม catalog; ไม่ใช่การตรวจ CPU support/BIOS ทั้งหมด",
+          "product_ids": [
+            "abcdefab-0000-0000-0000-000000000001",
+            "abcdefab-0000-0000-0000-000000000004"
+          ],
+          "missing_fields": [],
+          "unsupported_fields": []
+        },
+        {
+          "code": "RAM_TYPE",
+          "scope": "basic",
+          "status": "failed",
+          "reason_code": "INCOMPATIBLE",
+          "message": "RAM type ไม่ตรงกับ motherboard",
+          "product_ids": [
+            "abcdefab-0000-0000-0000-000000000004"
+          ],
+          "missing_fields": [],
+          "unsupported_fields": []
+        },
+        {
+          "code": "SYSTEM_PSU",
+          "scope": "psu",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ยังไม่เปิดการตรวจฮาร์ดแวร์ส่วนนี้ในช่วง A",
+          "product_ids": [
+            "abcdefab-0000-0000-0000-000000000001",
+            "abcdefab-0000-0000-0000-000000000004"
+          ],
+          "missing_fields": [
+            {
+              "location": "context",
+              "path": "/system_power_envelope",
+              "product_id": null,
+              "category": null
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "psu"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "SYSTEM_CASE",
+          "scope": "case",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ยังไม่เปิดการตรวจฮาร์ดแวร์ส่วนนี้ในช่วง A",
+          "product_ids": [
+            "abcdefab-0000-0000-0000-000000000001",
+            "abcdefab-0000-0000-0000-000000000004"
+          ],
+          "missing_fields": [
+            {
+              "location": "context",
+              "path": "/installation_context",
+              "product_id": null,
+              "category": null
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "case"
+            }
+          ],
+          "unsupported_fields": []
+        }
+      ],
+      "warnings": [],
+      "unverified_domains": [
+        "case",
+        "psu"
+      ],
+      "build_completeness": "not_evaluated"
+    }
+  }
+}

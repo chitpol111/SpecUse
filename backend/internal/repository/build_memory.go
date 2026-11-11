@@ -8,6 +8,7 @@ import (
 
 	"specuse/backend/internal/build"
 	"specuse/backend/internal/catalog"
+	"specuse/backend/internal/hardware"
 )
 
 // BuildMemory serves public catalog reads and build validation from the same
@@ -22,8 +23,22 @@ var _ build.Repository = (*BuildMemory)(nil)
 var _ catalog.Repository = (*BuildMemory)(nil)
 
 func NewBuildMemory(source build.Snapshot) (*BuildMemory, error) {
+	return newBuildMemory(source, false)
+}
+
+// NewLocalBuildMemory permits explicitly marked synthetic provenance. The
+// application calls this only after enforcing APP_ENV=local and a fixture path.
+func NewLocalBuildMemory(source build.Snapshot) (*BuildMemory, error) {
+	return newBuildMemory(source, true)
+}
+
+func newBuildMemory(source build.Snapshot, allowSynthetic bool) (*BuildMemory, error) {
+	owned, err := hardware.Clone(source)
+	if err != nil {
+		return nil, fmt.Errorf("%w: invalid metadata: %v", build.ErrInvalidInput, err)
+	}
 	snapshot := build.Snapshot{
-		Products: append([]build.Component{}, source.Products...), RAMModels: append([]build.RAMModel{}, source.RAMModels...),
+		Products: append([]build.Component{}, owned.Products...), RAMModels: append([]build.RAMModel{}, owned.RAMModels...),
 	}
 	models := map[string]string{}
 	for i := range snapshot.RAMModels {
@@ -49,16 +64,25 @@ func NewBuildMemory(source build.Snapshot) (*BuildMemory, error) {
 		valid := false
 		switch product.Category {
 		case "cpu":
-			valid = specs.CPUSocket != "" && specs.RAMType == "" && specs.ModulesPerPackage == 0 && component.RAMModelID == ""
+			valid = specs.CPUSocket != "" && specs.RAMType == "" && specs.ModulesPerPackage == 0 && component.RAMModelID == "" && specs.GPU == nil && specs.Storage == nil && specs.Motherboard == nil
 		case "motherboard":
-			valid = specs.CPUSocket != "" && specs.RAMType != "" && specs.ModulesPerPackage == 0 && component.RAMModelID == ""
+			valid = specs.CPUSocket != "" && specs.RAMType != "" && specs.ModulesPerPackage == 0 && component.RAMModelID == "" && specs.GPU == nil && specs.Storage == nil
 		case "ram":
-			valid = specs.CPUSocket == "" && specs.RAMType != "" && (specs.ModulesPerPackage == 1 || specs.ModulesPerPackage == 2) && models[component.RAMModelID] == specs.RAMType
+			valid = specs.CPUSocket == "" && specs.RAMType != "" && (specs.ModulesPerPackage == 1 || specs.ModulesPerPackage == 2) && models[component.RAMModelID] == specs.RAMType && specs.GPU == nil && specs.Storage == nil && specs.Motherboard == nil
+		case "gpu":
+			valid = specs.CPUSocket == "" && specs.RAMType == "" && specs.ModulesPerPackage == 0 && component.RAMModelID == "" && specs.Storage == nil && specs.Motherboard == nil
+		case "storage":
+			valid = specs.CPUSocket == "" && specs.RAMType == "" && specs.ModulesPerPackage == 0 && component.RAMModelID == "" && specs.GPU == nil && specs.Motherboard == nil
 		default:
 			valid = specs == (build.Specs{}) && component.RAMModelID == ""
 		}
 		if !valid {
 			return nil, fmt.Errorf("%w: invalid compatibility metadata", build.ErrInvalidInput)
+		}
+		for _, err := range []error{hardware.ValidateGPU(specs.GPU, allowSynthetic), hardware.ValidateStorage(specs.Storage, allowSynthetic), hardware.ValidateMotherboard(specs.Motherboard, allowSynthetic)} {
+			if err != nil {
+				return nil, fmt.Errorf("%w: %v", build.ErrInvalidInput, err)
+			}
 		}
 		base = append(base, product)
 	}
@@ -81,7 +105,10 @@ func (m *BuildMemory) ListActive(ctx context.Context, filter catalog.Filter) ([]
 		return nil, 0, err
 	}
 	for i := range items {
-		items[i] = m.withDetails(items[i])
+		items[i], err = m.withDetails(items[i])
+		if err != nil {
+			return nil, 0, err
+		}
 	}
 	return items, total, nil
 }
@@ -91,29 +118,45 @@ func (m *BuildMemory) FindActiveByID(ctx context.Context, id string) (catalog.Pr
 	if err != nil {
 		return catalog.ProductDetails{}, err
 	}
-	return m.withDetails(product), nil
+	return m.withDetails(product)
 }
 
-func (m *BuildMemory) withDetails(product catalog.ProductDetails) catalog.ProductDetails {
-	component := m.byID[product.ID]
+func (m *BuildMemory) withDetails(product catalog.ProductDetails) (catalog.ProductDetails, error) {
+	component, err := hardware.Clone(m.byID[product.ID])
+	if err != nil {
+		return catalog.ProductDetails{}, err
+	}
 	switch product.Category {
 	case "cpu", "motherboard", "ram":
 		// Copy into a new DTO for each read. Callers cannot mutate the specs
 		// used by validation or another public response through this pointer.
 		product.Specs = &catalog.Specs{CPUSocket: component.Specs.CPUSocket,
-			RAMType: component.Specs.RAMType, ModulesPerPackage: component.Specs.ModulesPerPackage}
+			RAMType: component.Specs.RAMType, ModulesPerPackage: component.Specs.ModulesPerPackage, Motherboard: component.Specs.Motherboard}
+		if product.Category == "motherboard" && product.Specs.Motherboard == nil {
+			product.Specs.Motherboard = &hardware.Motherboard{}
+		}
 		if product.Category == "ram" {
 			product.RAMModelID = component.RAMModelID
 		}
+	case "gpu":
+		metadata := component.Specs.GPU
+		if metadata == nil {
+			metadata = &hardware.GPU{}
+		}
+		product.Specs = &catalog.Specs{GPU: metadata}
+	case "storage":
+		metadata := component.Specs.Storage
+		if metadata == nil {
+			metadata = &hardware.Storage{}
+		}
+		product.Specs = &catalog.Specs{Storage: metadata}
 	}
-	return product
+	return product, nil
 }
 
 func (m *BuildMemory) LoadSnapshot(ctx context.Context) (build.Snapshot, error) {
 	if err := ctx.Err(); err != nil {
 		return build.Snapshot{}, err
 	}
-	return build.Snapshot{
-		Products: append([]build.Component{}, m.snapshot.Products...), RAMModels: append([]build.RAMModel{}, m.snapshot.RAMModels...),
-	}, nil
+	return hardware.Clone(m.snapshot)
 }

@@ -1,0 +1,289 @@
+{
+  "data": {
+    "compatible": false,
+    "issues": [],
+    "items": [
+      {
+        "product_id": "93000000-0000-4000-8000-000000000001",
+        "quantity": 3,
+        "owned_quantity": 2,
+        "purchase_quantity": 1,
+        "unit_price_thb": 700,
+        "purchase_price_thb": 700
+      }
+    ],
+    "ram_selections": [],
+    "total_price_thb": 700,
+    "compatibility": {
+      "mode": "gpu_storage_v1",
+      "status": "unknown",
+      "checks": [
+        {
+          "code": "STORAGE_MOTHERBOARD",
+          "scope": "motherboard",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ยังไม่เปิดการตรวจฮาร์ดแวร์ส่วนนี้ในช่วง A",
+          "product_ids": [
+            "93000000-0000-4000-8000-000000000001"
+          ],
+          "missing_fields": [
+            {
+              "location": "catalog",
+              "path": "/specs/evidence",
+              "product_id": "93000000-0000-4000-8000-000000000001",
+              "category": "storage"
+            },
+            {
+              "location": "catalog",
+              "path": "/specs/host",
+              "product_id": "93000000-0000-4000-8000-000000000001",
+              "category": "storage"
+            },
+            {
+              "location": "catalog",
+              "path": "/specs/sources",
+              "product_id": "93000000-0000-4000-8000-000000000001",
+              "category": "storage"
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "cpu"
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "motherboard"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "MOTHERBOARD_RESOURCES",
+          "scope": "motherboard",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ยังไม่เปิดการตรวจฮาร์ดแวร์ส่วนนี้ในช่วง A",
+          "product_ids": [
+            "93000000-0000-4000-8000-000000000001"
+          ],
+          "missing_fields": [
+            {
+              "location": "catalog",
+              "path": "/specs/evidence",
+              "product_id": "93000000-0000-4000-8000-000000000001",
+              "category": "storage"
+            },
+            {
+              "location": "catalog",
+              "path": "/specs/host",
+              "product_id": "93000000-0000-4000-8000-000000000001",
+              "category": "storage"
+            },
+            {
+              "location": "catalog",
+              "path": "/specs/sources",
+              "product_id": "93000000-0000-4000-8000-000000000001",
+              "category": "storage"
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "cpu"
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "motherboard"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "STORAGE_PSU",
+          "scope": "psu",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ยังไม่เปิดการตรวจฮาร์ดแวร์ส่วนนี้ในช่วง A",
+          "product_ids": [
+            "93000000-0000-4000-8000-000000000001"
+          ],
+          "missing_fields": [
+            {
+              "location": "catalog",
+              "path": "/specs/evidence",
+              "product_id": "93000000-0000-4000-8000-000000000001",
+              "category": "storage"
+            },
+            {
+              "location": "catalog",
+              "path": "/specs/power",
+              "product_id": "93000000-0000-4000-8000-000000000001",
+              "category": "storage"
+            },
+            {
+              "location": "catalog",
+              "path": "/specs/sources",
+              "product_id": "93000000-0000-4000-8000-000000000001",
+              "category": "storage"
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "psu"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "STORAGE_CASE",
+          "scope": "case",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ยังไม่เปิดการตรวจฮาร์ดแวร์ส่วนนี้ในช่วง A",
+          "product_ids": [
+            "93000000-0000-4000-8000-000000000001"
+          ],
+          "missing_fields": [
+            {
+              "location": "catalog",
+              "path": "/specs/dimensions",
+              "product_id": "93000000-0000-4000-8000-000000000001",
+              "category": "storage"
+            },
+            {
+              "location": "catalog",
+              "path": "/specs/evidence",
+              "product_id": "93000000-0000-4000-8000-000000000001",
+              "category": "storage"
+            },
+            {
+              "location": "catalog",
+              "path": "/specs/host",
+              "product_id": "93000000-0000-4000-8000-000000000001",
+              "category": "storage"
+            },
+            {
+              "location": "catalog",
+              "path": "/specs/sources",
+              "product_id": "93000000-0000-4000-8000-000000000001",
+              "category": "storage"
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "case"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "SYSTEM_PSU",
+          "scope": "psu",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ยังไม่เปิดการตรวจฮาร์ดแวร์ส่วนนี้ในช่วง A",
+          "product_ids": [
+            "93000000-0000-4000-8000-000000000001"
+          ],
+          "missing_fields": [
+            {
+              "location": "catalog",
+              "path": "/specs/evidence",
+              "product_id": "93000000-0000-4000-8000-000000000001",
+              "category": "storage"
+            },
+            {
+              "location": "catalog",
+              "path": "/specs/power",
+              "product_id": "93000000-0000-4000-8000-000000000001",
+              "category": "storage"
+            },
+            {
+              "location": "catalog",
+              "path": "/specs/sources",
+              "product_id": "93000000-0000-4000-8000-000000000001",
+              "category": "storage"
+            },
+            {
+              "location": "context",
+              "path": "/system_power_envelope",
+              "product_id": null,
+              "category": null
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "psu"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "SYSTEM_CASE",
+          "scope": "case",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ยังไม่เปิดการตรวจฮาร์ดแวร์ส่วนนี้ในช่วง A",
+          "product_ids": [
+            "93000000-0000-4000-8000-000000000001"
+          ],
+          "missing_fields": [
+            {
+              "location": "catalog",
+              "path": "/specs/dimensions",
+              "product_id": "93000000-0000-4000-8000-000000000001",
+              "category": "storage"
+            },
+            {
+              "location": "catalog",
+              "path": "/specs/evidence",
+              "product_id": "93000000-0000-4000-8000-000000000001",
+              "category": "storage"
+            },
+            {
+              "location": "catalog",
+              "path": "/specs/host",
+              "product_id": "93000000-0000-4000-8000-000000000001",
+              "category": "storage"
+            },
+            {
+              "location": "catalog",
+              "path": "/specs/sources",
+              "product_id": "93000000-0000-4000-8000-000000000001",
+              "category": "storage"
+            },
+            {
+              "location": "context",
+              "path": "/installation_context",
+              "product_id": null,
+              "category": null
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "case"
+            }
+          ],
+          "unsupported_fields": []
+        }
+      ],
+      "warnings": [],
+      "unverified_domains": [
+        "case",
+        "motherboard",
+        "psu"
+      ],
+      "build_completeness": "not_evaluated"
+    }
+  }
+}

@@ -113,6 +113,10 @@ func TestFixtureCatalogRetainsOriginalFieldsAndAddsTrustedSpecs(t *testing.T) {
 	}
 	byID := map[string]map[string]any{}
 	for _, product := range expected {
+		if product["category"] == "motherboard" {
+			specs := product["specs"].(map[string]any)
+			specs["connectivity_profiles"], specs["sources"], specs["evidence"] = nil, nil, nil
+		}
 		byID[product["id"].(string)] = product
 	}
 	for _, product := range body.Data.Items {

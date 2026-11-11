@@ -1,0 +1,149 @@
+{
+  "data": {
+    "items": [
+      {
+        "id": "91000000-0000-4000-8000-000000000004",
+        "name": "[SYNTHETIC FIXTURE ONLY] GPU A",
+        "category": "gpu",
+        "brand": "SYNTHETIC - NOT A REAL MANUFACTURER",
+        "price_thb": 6000,
+        "is_active": true,
+        "specs": {
+          "display": {
+            "chipset_name": "SYNTHETIC-GPU-A",
+            "vram_capacity_bytes": 8589934592
+          },
+          "host": {
+            "connector": "pcie_x16",
+            "supported_link_modes": [
+              {
+                "pcie_generation": 4,
+                "lanes": 16
+              }
+            ]
+          },
+          "power": {
+            "board_power_w": 120,
+            "min_system_power_w": 500,
+            "connector_options": [
+              {
+                "option_id": "synthetic-native-8pin",
+                "adapter_part_number": null,
+                "connectors": [
+                  {
+                    "type": "pcie_8pin",
+                    "count": 1
+                  }
+                ],
+                "cable_policy": "independent_cables"
+              }
+            ]
+          },
+          "dimensions": {
+            "length_mm": 240,
+            "height_mm": 115,
+            "thickness_mm": 40,
+            "occupied_slots": 2
+          },
+          "sources": [
+            {
+              "source_id": "synthetic-v1",
+              "manufacturer": "SYNTHETIC FIXTURE ONLY",
+              "title": "Artificial contract fixture; not manufacturer evidence",
+              "url": "https://fixtures.specuse.invalid/gpu-storage-v1",
+              "document_revision": "synthetic-v1",
+              "section": "Artificial GPU A values; no commercial SKU",
+              "checked_at": "2026-11-11T00:00:00Z"
+            }
+          ],
+          "evidence": [
+            {
+              "paths": [
+                "/display",
+                "/host",
+                "/power",
+                "/dimensions"
+              ],
+              "source_ids": [
+                "synthetic-v1"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "91000000-0000-4000-8000-000000000008",
+        "name": "[SYNTHETIC FIXTURE ONLY] GPU B connector missing",
+        "category": "gpu",
+        "brand": "SYNTHETIC - NOT A REAL MANUFACTURER",
+        "price_thb": 6000,
+        "is_active": true,
+        "specs": {
+          "display": {
+            "chipset_name": "SYNTHETIC-GPU-A",
+            "vram_capacity_bytes": 8589934592
+          },
+          "host": {
+            "connector": null,
+            "supported_link_modes": [
+              {
+                "pcie_generation": 4,
+                "lanes": 16
+              }
+            ]
+          },
+          "power": {
+            "board_power_w": 120,
+            "min_system_power_w": 500,
+            "connector_options": [
+              {
+                "option_id": "synthetic-native-8pin",
+                "adapter_part_number": null,
+                "connectors": [
+                  {
+                    "type": "pcie_8pin",
+                    "count": 1
+                  }
+                ],
+                "cable_policy": "independent_cables"
+              }
+            ]
+          },
+          "dimensions": {
+            "length_mm": 240,
+            "height_mm": 115,
+            "thickness_mm": 40,
+            "occupied_slots": 2
+          },
+          "sources": [
+            {
+              "source_id": "synthetic-v1",
+              "manufacturer": "SYNTHETIC FIXTURE ONLY",
+              "title": "Artificial contract fixture; not manufacturer evidence",
+              "url": "https://fixtures.specuse.invalid/gpu-storage-v1",
+              "document_revision": "synthetic-v1",
+              "section": "Artificial GPU B; connector intentionally missing",
+              "checked_at": "2026-11-11T00:00:00Z"
+            }
+          ],
+          "evidence": [
+            {
+              "paths": [
+                "/display",
+                "/host/supported_link_modes",
+                "/power",
+                "/dimensions"
+              ],
+              "source_ids": [
+                "synthetic-v1"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "page": 1,
+    "page_size": 20,
+    "total": 2
+  }
+}
