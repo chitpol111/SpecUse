@@ -1,0 +1,24 @@
+{
+  "data": {
+    "compatible": true,
+    "issues": [],
+    "items": [
+      {"product_id": "abcdefab-0000-0000-0000-000000000004", "quantity": 1, "owned_quantity": 0, "purchase_quantity": 1, "unit_price_thb": 5000, "purchase_price_thb": 5000}
+    ],
+    "ram_selections": [
+      {
+        "ram_model_id": "10000000-0000-0000-0000-000000000003",
+        "required_modules": 3,
+        "owned_modules": 0,
+        "purchase_modules": 3,
+        "supplied_modules": 4,
+        "excess_modules": 1,
+        "packages": [
+          {"product_id": "abcdefab-0000-0000-0000-000000000008", "quantity": 2, "modules_per_package": 2, "unit_price_thb": 3000}
+        ],
+        "total_price_thb": 6000
+      }
+    ],
+    "total_price_thb": 11000
+  }
+}

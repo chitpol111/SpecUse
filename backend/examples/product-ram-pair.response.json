@@ -1,0 +1,17 @@
+{
+  "data": {
+    "product": {
+      "id": "abcdefab-0000-0000-0000-000000000006",
+      "name": "[LOCAL TEST] DDR5 pair",
+      "category": "ram",
+      "brand": "Example",
+      "price_thb": 4000,
+      "is_active": true,
+      "ram_model_id": "10000000-0000-0000-0000-000000000001",
+      "specs": {
+        "ram_type": "DDR5",
+        "modules_per_package": 2
+      }
+    }
+  }
+}

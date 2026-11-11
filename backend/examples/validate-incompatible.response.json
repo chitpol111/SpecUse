@@ -1,0 +1,28 @@
+{
+  "data": {
+    "compatible": false,
+    "issues": [
+      {"code": "CPU_SOCKET_MISMATCH", "message": "CPU และเมนบอร์ดใช้ซ็อกเก็ตต่างกัน"},
+      {"code": "RAM_TYPE_MISMATCH", "message": "RAM และเมนบอร์ดใช้ RAM type ต่างกัน"}
+    ],
+    "items": [
+      {"product_id": "abcdefab-0000-0000-0000-000000000003", "quantity": 1, "owned_quantity": 1, "purchase_quantity": 0, "unit_price_thb": 12000, "purchase_price_thb": 0},
+      {"product_id": "abcdefab-0000-0000-0000-000000000004", "quantity": 1, "owned_quantity": 0, "purchase_quantity": 1, "unit_price_thb": 5000, "purchase_price_thb": 5000}
+    ],
+    "ram_selections": [
+      {
+        "ram_model_id": "10000000-0000-0000-0000-000000000002",
+        "required_modules": 3,
+        "owned_modules": 0,
+        "purchase_modules": 3,
+        "supplied_modules": 3,
+        "excess_modules": 0,
+        "packages": [
+          {"product_id": "abcdefab-0000-0000-0000-000000000007", "quantity": 3, "modules_per_package": 1, "unit_price_thb": 1500}
+        ],
+        "total_price_thb": 4500
+      }
+    ],
+    "total_price_thb": 9500
+  }
+}

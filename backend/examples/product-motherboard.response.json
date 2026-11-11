@@ -1,0 +1,16 @@
+{
+  "data": {
+    "product": {
+      "id": "abcdefab-0000-0000-0000-000000000004",
+      "name": "[LOCAL TEST] Motherboard",
+      "category": "motherboard",
+      "brand": "Example",
+      "price_thb": 5000,
+      "is_active": true,
+      "specs": {
+        "cpu_socket": "AM5",
+        "ram_type": "DDR5"
+      }
+    }
+  }
+}
