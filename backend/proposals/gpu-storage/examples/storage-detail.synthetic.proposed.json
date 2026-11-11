@@ -1,0 +1,68 @@
+{
+  "data": {
+    "product": {
+      "id": "91000000-0000-4000-8000-000000000005",
+      "name": "[SYNTHETIC FIXTURE ONLY] M.2 NVMe drive",
+      "category": "storage",
+      "brand": "SYNTHETIC - NOT A REAL MANUFACTURER",
+      "price_thb": 2000,
+      "is_active": true,
+      "specs": {
+        "display": {
+          "media_type": "ssd",
+          "capacity_bytes": 1000000000000,
+          "sequential_read_mb_s": 3000,
+          "sequential_write_mb_s": 2000
+        },
+        "host": {
+          "connection_type": "pcie_nvme",
+          "connector": "m2",
+          "form_factor": "m2",
+          "m2_keying": "m",
+          "width_mm": 22,
+          "length_mm": 80,
+          "supported_link_modes": [
+            {
+              "pcie_generation": 4,
+              "lanes": 4
+            }
+          ]
+        },
+        "power": {
+          "connector_type": "none",
+          "max_operating_power_w": 6,
+          "startup_power_w": 6
+        },
+        "dimensions": {
+          "width_mm": 22,
+          "length_mm": 80,
+          "height_mm": 3
+        },
+        "sources": [
+          {
+            "source_id": "synthetic-v1",
+            "manufacturer": "SYNTHETIC FIXTURE ONLY",
+            "title": "Artificial contract fixture; not manufacturer evidence",
+            "url": "https://fixtures.specuse.invalid/gpu-storage-v1",
+            "document_revision": "synthetic-v1",
+            "section": "Artificial M.2 NVMe values; no commercial SKU",
+            "checked_at": "2026-11-11T00:00:00Z"
+          }
+        ],
+        "evidence": [
+          {
+            "paths": [
+              "/display",
+              "/host",
+              "/power",
+              "/dimensions"
+            ],
+            "source_ids": [
+              "synthetic-v1"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "data": {
+    "product": {
+      "id": "91000000-0000-4000-8000-000000000002",
+      "name": "[SYNTHETIC FIXTURE ONLY] Board A with M.2 NVMe",
+      "category": "motherboard",
+      "brand": "SYNTHETIC - NOT A REAL MANUFACTURER",
+      "price_thb": 4000,
+      "is_active": true,
+      "specs": {
+        "cpu_socket": "SYNTH_SOCKET_A",
+        "ram_type": "DDR5",
+        "connectivity_profiles": [
+          {
+            "profile_id": "synthetic-cpu-a",
+            "cpu_product_ids": [
+              "91000000-0000-4000-8000-000000000001"
+            ],
+            "requires_firmware_confirmation": false,
+            "pcie_slots": [
+              {
+                "slot_id": "PCIE_1",
+                "connector": "pcie_x16",
+                "supported_link_modes": [
+                  {
+                    "pcie_generation": 4,
+                    "lanes": 16
+                  }
+                ],
+                "gpu_supported": true
+              }
+            ],
+            "storage_ports": [
+              {
+                "port_id": "M2_1",
+                "connector": "m2",
+                "supported_connection_types": [
+                  "pcie_nvme"
+                ],
+                "accepted_module_keys": [
+                  "m"
+                ],
+                "supported_widths_mm": [
+                  22
+                ],
+                "supported_lengths_mm": [
+                  80
+                ],
+                "supported_link_modes": [
+                  {
+                    "pcie_generation": 4,
+                    "lanes": 4
+                  }
+                ]
+              },
+              {
+                "port_id": "SATA_1",
+                "connector": "sata_data",
+                "supported_connection_types": [
+                  "sata"
+                ],
+                "accepted_module_keys": null,
+                "supported_widths_mm": null,
+                "supported_lengths_mm": null,
+                "supported_link_modes": null
+              },
+              {
+                "port_id": "SATA_2",
+                "connector": "sata_data",
+                "supported_connection_types": [
+                  "sata"
+                ],
+                "accepted_module_keys": null,
+                "supported_widths_mm": null,
+                "supported_lengths_mm": null,
+                "supported_link_modes": null
+              },
+              {
+                "port_id": "SATA_3",
+                "connector": "sata_data",
+                "supported_connection_types": [
+                  "sata"
+                ],
+                "accepted_module_keys": null,
+                "supported_widths_mm": null,
+                "supported_lengths_mm": null,
+                "supported_link_modes": null
+              }
+            ],
+            "resource_rules": []
+          }
+        ],
+        "sources": [
+          {
+            "source_id": "synthetic-v1",
+            "manufacturer": "SYNTHETIC FIXTURE ONLY",
+            "title": "Artificial contract fixture; not manufacturer evidence",
+            "url": "https://fixtures.specuse.invalid/gpu-storage-v1",
+            "document_revision": "synthetic-v1",
+            "section": "Artificial complete profile; no sharing rules within this test model",
+            "checked_at": "2026-11-11T00:00:00Z"
+          }
+        ],
+        "evidence": [
+          {
+            "paths": [
+              "/cpu_socket",
+              "/ram_type",
+              "/connectivity_profiles"
+            ],
+            "source_ids": [
+              "synthetic-v1"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

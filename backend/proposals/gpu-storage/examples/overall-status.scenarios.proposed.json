@@ -1,0 +1,70 @@
+[
+  {
+    "name": "phase_a_basic_pass_rest_unknown",
+    "required_check_statuses": [
+      "passed",
+      "unknown",
+      "unknown"
+    ],
+    "expected_status": "unknown",
+    "expected_compatible": false
+  },
+  {
+    "name": "phase_a_basic_fail_psu_case_unknown",
+    "required_check_statuses": [
+      "failed",
+      "unknown",
+      "unknown"
+    ],
+    "expected_status": "failed",
+    "expected_compatible": false
+  },
+  {
+    "name": "phase_b_motherboard_pass_psu_case_unknown",
+    "required_check_statuses": [
+      "passed",
+      "passed",
+      "unknown",
+      "unknown"
+    ],
+    "expected_status": "unknown",
+    "expected_compatible": false
+  },
+  {
+    "name": "phase_b_motherboard_fail_psu_case_unknown",
+    "required_check_statuses": [
+      "passed",
+      "failed",
+      "unknown",
+      "unknown"
+    ],
+    "expected_status": "failed",
+    "expected_compatible": false
+  },
+  {
+    "name": "phase_c_all_required_pass_conditional",
+    "required_check_statuses": [
+      "passed",
+      "passed",
+      "passed"
+    ],
+    "expected_status": "passed",
+    "expected_compatible": true
+  },
+  {
+    "name": "phase_c_one_required_unknown",
+    "required_check_statuses": [
+      "passed",
+      "unknown",
+      "passed"
+    ],
+    "expected_status": "unknown",
+    "expected_compatible": false
+  },
+  {
+    "name": "empty_checks_not_vacuous_pass",
+    "required_check_statuses": [],
+    "expected_status": "unknown",
+    "expected_compatible": false
+  }
+]

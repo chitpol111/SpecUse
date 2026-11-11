@@ -1,0 +1,303 @@
+{
+  "data": {
+    "compatible": false,
+    "issues": [],
+    "items": [
+      {
+        "product_id": "abcdefab-0000-0000-0000-000000000001",
+        "quantity": 1,
+        "owned_quantity": 1,
+        "purchase_quantity": 0,
+        "unit_price_thb": 25000,
+        "purchase_price_thb": 0
+      },
+      {
+        "product_id": "abcdefab-0000-0000-0000-000000000004",
+        "quantity": 1,
+        "owned_quantity": 1,
+        "purchase_quantity": 0,
+        "unit_price_thb": 5000,
+        "purchase_price_thb": 0
+      },
+      {
+        "product_id": "90000000-0000-0000-0000-000000000001",
+        "quantity": 1,
+        "owned_quantity": 1,
+        "purchase_quantity": 0,
+        "unit_price_thb": 0,
+        "purchase_price_thb": 0
+      },
+      {
+        "product_id": "90000000-0000-0000-0000-000000000002",
+        "quantity": 3,
+        "owned_quantity": 2,
+        "purchase_quantity": 1,
+        "unit_price_thb": 0,
+        "purchase_price_thb": 0
+      }
+    ],
+    "ram_selections": [],
+    "total_price_thb": 0,
+    "compatibility": {
+      "mode": "gpu_storage_v1",
+      "status": "unknown",
+      "checks": [
+        {
+          "code": "CPU_SOCKET",
+          "scope": "basic",
+          "status": "passed",
+          "reason_code": "MATCH",
+          "message": "ผ่านการเทียบ socket ตาม catalog เดิม ไม่ใช่การรับรอง build ครบ",
+          "product_ids": [
+            "abcdefab-0000-0000-0000-000000000001",
+            "abcdefab-0000-0000-0000-000000000004"
+          ],
+          "missing_fields": [],
+          "unsupported_fields": []
+        },
+        {
+          "code": "GPU_MOTHERBOARD",
+          "scope": "motherboard",
+          "status": "unknown",
+          "reason_code": "METADATA_MISSING",
+          "message": "ยังไม่มีข้อมูล host ของ GPU และ connectivity profile ของ motherboard",
+          "product_ids": [
+            "90000000-0000-0000-0000-000000000001",
+            "abcdefab-0000-0000-0000-000000000004"
+          ],
+          "missing_fields": [
+            {
+              "location": "catalog",
+              "path": "/specs/host/connector",
+              "product_id": "90000000-0000-0000-0000-000000000001",
+              "category": "gpu"
+            },
+            {
+              "location": "catalog",
+              "path": "/specs/connectivity_profiles",
+              "product_id": "abcdefab-0000-0000-0000-000000000004",
+              "category": "motherboard"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "STORAGE_MOTHERBOARD",
+          "scope": "motherboard",
+          "status": "unknown",
+          "reason_code": "METADATA_MISSING",
+          "message": "ยังไม่ทราบ connection type และพอร์ตที่ใช้งานได้",
+          "product_ids": [
+            "90000000-0000-0000-0000-000000000002",
+            "abcdefab-0000-0000-0000-000000000004"
+          ],
+          "missing_fields": [
+            {
+              "location": "catalog",
+              "path": "/specs/host/connection_type",
+              "product_id": "90000000-0000-0000-0000-000000000002",
+              "category": "storage"
+            },
+            {
+              "location": "catalog",
+              "path": "/specs/connectivity_profiles",
+              "product_id": "abcdefab-0000-0000-0000-000000000004",
+              "category": "motherboard"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "MOTHERBOARD_RESOURCES",
+          "scope": "motherboard",
+          "status": "unknown",
+          "reason_code": "METADATA_MISSING",
+          "message": "ยังจัดสรร GPU 1 ใบและ storage 3 instances ไม่ได้เพราะข้อมูล ports/sharing ไม่ครบ",
+          "product_ids": [
+            "90000000-0000-0000-0000-000000000001",
+            "90000000-0000-0000-0000-000000000002",
+            "abcdefab-0000-0000-0000-000000000004"
+          ],
+          "missing_fields": [
+            {
+              "location": "catalog",
+              "path": "/specs/connectivity_profiles",
+              "product_id": "abcdefab-0000-0000-0000-000000000004",
+              "category": "motherboard"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "GPU_PSU",
+          "scope": "psu",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ยังไม่มีการตรวจ PSU ในช่วงนี้",
+          "product_ids": [
+            "90000000-0000-0000-0000-000000000001"
+          ],
+          "missing_fields": [
+            {
+              "location": "catalog",
+              "path": "/specs/power/connector_options",
+              "product_id": "90000000-0000-0000-0000-000000000001",
+              "category": "gpu"
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "psu"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "GPU_CASE",
+          "scope": "case",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ยังไม่มีการตรวจ Case ในช่วงนี้",
+          "product_ids": [
+            "90000000-0000-0000-0000-000000000001"
+          ],
+          "missing_fields": [
+            {
+              "location": "catalog",
+              "path": "/specs/dimensions/length_mm",
+              "product_id": "90000000-0000-0000-0000-000000000001",
+              "category": "gpu"
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "case"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "STORAGE_PSU",
+          "scope": "psu",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ต้องตรวจไฟสำหรับ storage ทั้ง 3 ลูก รวมของที่มีอยู่แล้ว",
+          "product_ids": [
+            "90000000-0000-0000-0000-000000000002"
+          ],
+          "missing_fields": [
+            {
+              "location": "catalog",
+              "path": "/specs/power/max_operating_power_w",
+              "product_id": "90000000-0000-0000-0000-000000000002",
+              "category": "storage"
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "psu"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "STORAGE_CASE",
+          "scope": "case",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ยังไม่มีข้อมูลรูปแบบและพื้นที่ติดตั้งของ storage",
+          "product_ids": [
+            "90000000-0000-0000-0000-000000000002"
+          ],
+          "missing_fields": [
+            {
+              "location": "catalog",
+              "path": "/specs/dimensions/height_mm",
+              "product_id": "90000000-0000-0000-0000-000000000002",
+              "category": "storage"
+            },
+            {
+              "location": "catalog",
+              "path": "/specs/host/form_factor",
+              "product_id": "90000000-0000-0000-0000-000000000002",
+              "category": "storage"
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "case"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "SYSTEM_PSU",
+          "scope": "psu",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ยังไม่มีการตรวจไฟของทั้งระบบ รวม CPU/อุปกรณ์อื่นและของที่มีอยู่แล้ว",
+          "product_ids": [
+            "abcdefab-0000-0000-0000-000000000001",
+            "abcdefab-0000-0000-0000-000000000004",
+            "90000000-0000-0000-0000-000000000001",
+            "90000000-0000-0000-0000-000000000002"
+          ],
+          "missing_fields": [
+            {
+              "location": "context",
+              "path": "/system_power_envelope",
+              "product_id": null,
+              "category": null
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "psu"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "SYSTEM_CASE",
+          "scope": "case",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ยังไม่มีการตรวจพื้นที่ติดตั้งของทั้งระบบและ layout จริง",
+          "product_ids": [
+            "abcdefab-0000-0000-0000-000000000001",
+            "abcdefab-0000-0000-0000-000000000004",
+            "90000000-0000-0000-0000-000000000001",
+            "90000000-0000-0000-0000-000000000002"
+          ],
+          "missing_fields": [
+            {
+              "location": "context",
+              "path": "/installation_context",
+              "product_id": null,
+              "category": null
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "case"
+            }
+          ],
+          "unsupported_fields": []
+        }
+      ],
+      "warnings": [],
+      "unverified_domains": [
+        "case",
+        "motherboard",
+        "psu"
+      ],
+      "build_completeness": "not_evaluated"
+    }
+  }
+}
