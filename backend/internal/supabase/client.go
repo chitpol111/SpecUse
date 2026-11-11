@@ -138,13 +138,6 @@ func (c *Client) Register(ctx context.Context, email, password, name string) (ac
 	}
 	return authResult(raw)
 }
-func (c *Client) Confirm(ctx context.Context, email, token string) (account.AuthResult, error) {
-	raw, err := c.request(ctx, "POST", "/auth/v1/verify", c.publishable, "", map[string]string{"email": email, "token": token, "type": "signup"})
-	if err != nil {
-		return account.AuthResult{}, err
-	}
-	return authResult(raw)
-}
 func (c *Client) Login(ctx context.Context, email, password string) (account.AuthResult, error) {
 	raw, err := c.request(ctx, "POST", "/auth/v1/token?grant_type=password", c.publishable, "", map[string]string{"email": email, "password": password})
 	if err != nil {

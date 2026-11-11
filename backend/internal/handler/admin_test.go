@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"specuse/backend/internal/account"
 	"specuse/backend/internal/build"
@@ -17,9 +18,6 @@ import (
 type adminProvider struct{ user json.RawMessage }
 
 func (p adminProvider) Register(context.Context, string, string, string) (account.AuthResult, error) {
-	return account.AuthResult{}, nil
-}
-func (p adminProvider) Confirm(context.Context, string, string) (account.AuthResult, error) {
 	return account.AuthResult{}, nil
 }
 func (p adminProvider) Login(context.Context, string, string) (account.AuthResult, error) {
@@ -104,5 +102,58 @@ func TestAdminHTTPAuthorizationAndCRUD(t *testing.T) {
 	}
 	if repo.writes != 3 {
 		t.Fatal("CRUD count")
+	}
+}
+
+type signupAdminProvider struct {
+	adminProvider
+	session account.Session
+}
+
+func (p signupAdminProvider) Register(context.Context, string, string, string) (account.AuthResult, error) {
+	return account.AuthResult{User: p.user, Session: &p.session}, nil
+}
+func TestRegisteredMemberSessionCannotAccessAdmin(t *testing.T) {
+	const issuer = "https://unit.invalid/auth/v1"
+	const id = "11111111-1111-4111-8111-111111111111"
+	token := memberToken(id, issuer)
+	provider := signupAdminProvider{adminProvider: adminProvider{json.RawMessage(`{"id":"11111111-1111-4111-8111-111111111111","email":"student@example.test","user_metadata":{"role":"admin"}}`)}, session: account.Session{AccessToken: token, RefreshToken: "TEST-REFRESH", TokenType: "bearer", ExpiresIn: 3600, ExpiresAt: time.Now().Add(time.Hour).Unix()}}
+	repo := &adminRepo{role: "member"}
+	auth := account.New(provider, repo, issuer, "authenticated")
+	h := WithAdmin(WithMembers(http.NotFoundHandler(), auth), auth, management.New(repo))
+	register := httptest.NewRequest("POST", "/api/v1/auth/register", strings.NewReader(`{"email":"student@example.test","password":"EXAMPLE-ONLY-password","display_name":"Student"}`))
+	register.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, register)
+	if w.Code != 201 {
+		t.Fatal("registration failed")
+	}
+	var result struct {
+		Data account.AuthResult `json:"data"`
+	}
+	if json.Unmarshal(w.Body.Bytes(), &result) != nil || result.Data.Session == nil {
+		t.Fatal("signup did not provide a session")
+	}
+	tok := result.Data.Session.AccessToken
+	for _, tt := range []struct {
+		method, path string
+		want         int
+	}{
+		{"GET", "/api/v1/me", 200},
+		{"GET", "/api/v1/admin/products", 403},
+		{"POST", "/api/v1/admin/products", 403},
+		{"PATCH", "/api/v1/admin/products/22222222-2222-4222-8222-222222222222", 403},
+		{"DELETE", "/api/v1/admin/products/22222222-2222-4222-8222-222222222222", 403},
+	} {
+		r := httptest.NewRequest(tt.method, tt.path, strings.NewReader(`{}`))
+		r.Header.Set("Authorization", "Bearer "+tok)
+		w = httptest.NewRecorder()
+		h.ServeHTTP(w, r)
+		if w.Code != tt.want {
+			t.Fatalf("%s %s: %d", tt.method, tt.path, w.Code)
+		}
+	}
+	if repo.writes != 0 {
+		t.Fatal("registered member reached admin writes")
 	}
 }

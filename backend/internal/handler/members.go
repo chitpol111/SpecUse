@@ -14,6 +14,8 @@ import (
 func accountError(w http.ResponseWriter, err error) {
 	status, code, message := 500, "INTERNAL_ERROR", "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์"
 	switch {
+	case errors.Is(err, account.ErrAuthConfig):
+		status, code, message = 503, "AUTH_CONFIGURATION_ERROR", "ระบบสมัครสมาชิกยังตั้งค่าไม่พร้อม กรุณาติดต่อผู้ดูแล"
 	case errors.Is(err, account.ErrInput):
 		status, code, message = 400, "VALIDATION_ERROR", "ข้อมูลคำขอไม่ถูกต้อง"
 	case errors.Is(err, account.ErrUnauthorized):
@@ -110,7 +112,14 @@ func allowedMethod(w http.ResponseWriter, r *http.Request, methods ...string) bo
 func WithMembers(next http.Handler, s *account.Service) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
-		authRoute := path == "/api/v1/auth/register" || path == "/api/v1/auth/confirm" || path == "/api/v1/auth/login" || path == "/api/v1/auth/refresh"
+		if path == "/api/v1/auth/confirm" {
+			w.Header().Set("Cache-Control", "no-store")
+			if allowedMethod(w, r, "POST") {
+				writeError(w, http.StatusGone, "ENDPOINT_RETIRED", "ไม่ใช้ขั้นตอนยืนยันอีเมลแล้ว กรุณาใช้ Register หรือ Login")
+			}
+			return
+		}
+		authRoute := path == "/api/v1/auth/register" || path == "/api/v1/auth/login" || path == "/api/v1/auth/refresh"
 		memberRoute := path == "/api/v1/me" || path == "/api/v1/me/password" || path == "/api/v1/auth/logout"
 		if !authRoute && !memberRoute {
 			next.ServeHTTP(w, r)
@@ -155,19 +164,6 @@ func WithMembers(next http.Handler, s *account.Service) http.Handler {
 					return
 				}
 				result, err = s.Login(r.Context(), p.Email, p.Password)
-			case "/api/v1/auth/confirm":
-				var p *struct {
-					Email string `json:"email"`
-					Token string `json:"token"`
-				}
-				if !decodeAccount(w, r, &p) {
-					return
-				}
-				if p == nil {
-					accountError(w, account.ErrInput)
-					return
-				}
-				result, err = s.Confirm(r.Context(), p.Email, p.Token)
 			case "/api/v1/auth/refresh":
 				var p *struct {
 					Token string `json:"refresh_token"`
@@ -186,7 +182,7 @@ func WithMembers(next http.Handler, s *account.Service) http.Handler {
 				return
 			}
 			if path == "/api/v1/auth/register" {
-				writeJSON(w, 201, map[string]any{"data": map[string]any{"user": result.User, "session": result.Session, "email_confirmation_required": result.Session == nil}})
+				writeJSON(w, 201, map[string]any{"data": map[string]any{"user": result.User, "session": result.Session, "email_confirmation_required": false}})
 			} else {
 				writeJSON(w, 200, map[string]any{"data": result})
 			}
