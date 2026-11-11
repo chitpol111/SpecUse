@@ -4,7 +4,11 @@ import "net/http"
 
 // WithCORS uses only explicitly configured origins. An empty list permits no
 // cross-origin browser access. CORS does not replace authentication.
-func WithCORS(next http.Handler, origins []string) http.Handler {
+func WithCORS(next http.Handler, origins []string, methods ...string) http.Handler {
+	allowedMethods := "GET, POST"
+	if len(methods) > 0 {
+		allowedMethods = methods[0]
+	}
 	allowed := make(map[string]bool, len(origins))
 	for _, origin := range origins {
 		if origin != "" && origin != "*" {
@@ -19,7 +23,7 @@ func WithCORS(next http.Handler, origins []string) http.Handler {
 			if r.Method == http.MethodOptions && r.Header.Get("Access-Control-Request-Method") != "" {
 				w.Header().Add("Vary", "Access-Control-Request-Method")
 				w.Header().Add("Vary", "Access-Control-Request-Headers")
-				w.Header().Set("Access-Control-Allow-Methods", "GET, POST")
+				w.Header().Set("Access-Control-Allow-Methods", allowedMethods)
 				w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
 				w.WriteHeader(http.StatusNoContent)
 				return
