@@ -4,8 +4,10 @@
 ## ทดลองหน้าเช็กสเปกกับ Backend
 
 หน้า `/build` โหลดสินค้าและส่งรายการให้ Backend ตรวจความเข้ากันได้และยอดซื้อเพิ่ม
-ข้อมูลที่ใช้ตอนนี้เป็น local fixture สำหรับพัฒนาเท่านั้น ไม่ได้บันทึก Build
-หรือเชื่อม Supabase
+ตัวอย่างคำสั่งด้านล่างใช้ local fixture สำหรับพัฒนา ไม่บันทึก Build หรือเชื่อม Supabase
+Backend เพิ่มโหมด Supabase/Auth/Profile/Admin แล้ว ดู [Auth contract](backend/AUTH_API.md),
+[ตั้งค่า Supabase](backend/SUPABASE_SETUP.md), [สิทธิ์ Admin](backend/ADMIN_API.md) และ
+[เตรียม Render](backend/RENDER.md); ยังต้องตั้งค่าบัญชีและทดสอบ hosted services จริง
 
 เปิด Terminal แรกสำหรับ Backend (ใช้ clone แยก `SpecUse-backend`):
 

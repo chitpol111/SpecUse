@@ -1,14 +1,15 @@
-# Auth / Profile / Admin contract — ส่งให้ Fluke ก่อน implementation
+# Auth / Profile / Admin contract
 
 ฐาน main 000dd9f; ยืนยันค่าเริ่มต้นกับเจ้าของ Backend 2026-11-11
 ทุก request จาก React ใช้ Go `/api/v1` เท่านั้น ไม่มี Supabase SDK flow ซ้ำและไม่มี cookies
 Go เรียก Supabase Auth / Data API ฝั่ง server; Supabase เป็นผู้เก็บ/ตรวจรหัสผ่านและออก session
-เอกสารนี้กำหนดสัญญาก่อน code; ตรวจ implementation PR และตั้งค่าบัญชีก่อนทดสอบบริการจริง
+สัญญานี้ส่งก่อน implementation แล้ว; ปัจจุบันมีโค้ด/tests ใน branches แบบต่อกัน ยังไม่ merge
+ต้องตั้งค่า project และทดสอบบริการจริงตาม SUPABASE_SETUP.md/RENDER.md ก่อนอ้างว่าเชื่อมต่อหรือ deploy สำเร็จ
 
 ## ค่าเริ่มต้นและขั้นตอน
 
 - Supabase Email provider เปิด, Confirm email เปิด, minimum password length ตั้งอย่างน้อย 8
-- Profile แก้ได้เฉพาะ display_name (trim, 1–100 Unicode characters); email/id/role เป็น readonly
+- Profile แก้ได้เฉพาะ display_name (trim, 1–100 Unicode characters, ไม่รับ NUL); email/id/role เป็น readonly
 - Email template ของ Confirm signup ใช้ `{{ .Token }}` ให้ผู้ใช้กรอก OTP ใน FE แล้ว POST ผ่าน Go
   ไม่ใช้ implicit redirect ที่ส่ง tokens ใน URL; ไม่ต้องทำ OAuth/PKCE flow อีกชุด
 - สมัคร → ยืนยัน email ด้วย OTP → ได้ session; login หลังยืนยันแล้วใช้ email/password ผ่าน Go
@@ -85,6 +86,9 @@ Password flow: ตรวจ current_password ด้วย password grant ขอ�
 เปรียบเทียบ user UUID ให้ตรงกัน แล้ว update password ด้วย session ที่ reauthenticate ใหม่
 คืน session ใหม่นั้นให้ FE แทนของเดิม; Supabase เป็นผู้ตัดสิน password policy/recent-auth requirements
 หาก project บังคับ nonce/MFA เพิ่ม ต้องตอบ error ที่ชัดเจน ไม่ข้าม provider policy
+บัญชีที่มี verified MFA factor ต้องใช้ token aal2 สำหรับ protected endpoints; aal1 ตอบ 403 REAUTHENTICATION_REQUIRED
+ยังไม่มี MFA challenge/UI flow ใน milestone นี้ จึงใช้บัญชีทดสอบ email/password ที่ไม่เปิด MFA ก่อน
+หาก update ล้มเหลว Go พยายาม logout session ชั่วคราวที่ reauthenticate; ไม่อ้างว่าเปลี่ยนรหัสผ่านเพิกถอนทุกอุปกรณ์
 
 ## Errors / HTTP
 

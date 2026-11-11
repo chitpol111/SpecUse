@@ -18,6 +18,7 @@ END $$;
 UPDATE public.profiles SET role='admin' WHERE id='22222222-2222-4222-8222-222222222222';
 SELECT public.backend_profile_update('11111111-1111-4111-8111-111111111111','New member');
 SET ROLE service_role;
+SELECT public.backend_health();
 SELECT public.backend_product_save('22222222-2222-4222-8222-222222222222',
 '{"id":"33333333-3333-4333-8333-333333333333","name":"[TEST MODEL] CPU","category":"cpu","brand":"TEST ONLY","price_thb":25000,"is_active":true,"specs":{"cpu_socket":"TEST_SOCKET"}}',true);
 SELECT public.backend_product_save('22222222-2222-4222-8222-222222222222',
@@ -28,6 +29,7 @@ SELECT public.backend_product_deactivate('22222222-2222-4222-8222-222222222222',
 SELECT public.backend_catalog_snapshot();
 RESET ROLE;
 DO $$ BEGIN
+ IF has_function_privilege('anon','public.backend_health()','EXECUTE') THEN RAISE EXCEPTION 'Anon health RPC';END IF;
  IF (SELECT price_thb FROM public.products WHERE id='44444444-4444-4444-8444-444444444444')<>6000 THEN RAISE EXCEPTION 'Price not saved';END IF;
  IF (SELECT is_active FROM public.products WHERE id='33333333-3333-4333-8333-333333333333') THEN RAISE EXCEPTION 'Deactivate failed';END IF;
  IF NOT EXISTS(SELECT 1 FROM public.product_cpus WHERE product_id='33333333-3333-4333-8333-333333333333' AND cpu_socket='TEST_SOCKET') THEN RAISE EXCEPTION 'Typed metadata lost';END IF;

@@ -17,7 +17,7 @@ SQL function อ่านทุกตารางใน SQL statement เดี�
 4. Settings → API Keys: project URL, publishable key และ secret key สำหรับ server
    legacy anon/service_role JWT keys ใช้ได้เช่นกัน แต่ไม่ใส่ server key ใน Frontend
 5. เปิด Data API สำหรับ public schema เพื่อให้ Go เรียก RPC; anonymous/member ไม่มีสิทธิ์ table/RPC ที่สร้างในงานนี้
-6. รัน migrations 001,002,003,004 ด้วย project-owner SQL connection/SQL Editor ตามลำดับ
+6. รัน migrations 001,002,003,004,005,006 ด้วย project-owner SQL connection/SQL Editor ตามลำดับ
    ถ้า 001/002 เคยรันแล้ว อย่ารันซ้ำ; ตรวจ migration history และ backup ก่อนใช้ฐานที่มีข้อมูล
    startup ไม่รัน migrations หรือ seed ให้อัตโนมัติ
 
@@ -54,7 +54,8 @@ memory mode สำหรับ tests/local เดิมยังมี; ถ้�
   CPU/socket, motherboard/socket+RAM และ RAM models/packages ยังคง typed tables เดิม
 - ไม่มีการ backfill metadata หรือ synthetic hardware evidence ให้สินค้าใน DB
 - เปิด RLS และ revoke table privileges จาก anon/authenticated/service_role; ไม่มี client policies
-- เฉพาะ service_role เรียก backend_catalog_snapshot/backend_profile_get/backend_profile_update ได้
+- 005 เพิ่ม Admin mutation RPC ตรวจ actor role ซ้ำ, 006 เพิ่ม backend_health RPC สำหรับ readiness
+- เฉพาะ service_role เรียก backend_catalog_snapshot/backend_profile_get/backend_profile_update และ Admin/health RPC ได้
   ฟังก์ชัน SECURITY DEFINER มี search_path='' และใช้ชื่อ schema ชัดเจน
 - Go ตรวจ token ทุกครั้งผ่าน Auth GET /user แล้วตรวจ iss/aud/exp/nbf/sub และเทียบ user UUID
   SQL role ที่ app ใช้อ่าน profiles เป็นฝั่ง server; token role/user_metadata ไม่กำหนดสิทธิ์ app
@@ -101,3 +102,6 @@ fake Auth server ไม่ใช่ Supabase จริง จึงไม่ถ�
 migrations ตรวจเพิ่มได้กับ PostgreSQL container และ auth.users/roles จำลอง; ผลนี้ไม่แทน hosted Supabase integration
 
 Auth session/logout และ privileged-key semantics อ้างอิงเอกสารทางการใน AUTH_API.md
+
+Render configuration และ hosted smoke checklist ดู [RENDER.md](RENDER.md)
+`GET /api/v1/health` เช็ก DB RPC ภายใน 2 วินาทีใน Supabase mode; ไม่ใช่หลักฐานว่า Auth/SMTP ใช้งานได้ครบ

@@ -81,7 +81,7 @@ func ValidEmail(email string) bool {
 func ValidPassword(p string) bool { return utf8.RuneCountInString(p) >= 8 && len(p) <= 1024 }
 func DisplayName(name string) (string, error) {
 	name = strings.TrimSpace(name)
-	if !utf8.ValidString(name) || utf8.RuneCountInString(name) < 1 || utf8.RuneCountInString(name) > 100 {
+	if !utf8.ValidString(name) || strings.ContainsRune(name, 0) || utf8.RuneCountInString(name) < 1 || utf8.RuneCountInString(name) > 100 {
 		return "", ErrInput
 	}
 	return name, nil
@@ -185,9 +185,24 @@ func (s *Service) Authenticate(ctx context.Context, token string) (Identity, err
 		ID        string `json:"id"`
 		Email     string `json:"email"`
 		Anonymous bool   `json:"is_anonymous"`
+		Factors   []struct {
+			Status string `json:"status"`
+		} `json:"factors"`
 	}
 	if json.Unmarshal(raw, &user) != nil || strings.ToLower(user.ID) != id || user.Anonymous {
 		return Identity{}, ErrUnauthorized
+	}
+	for _, factor := range user.Factors {
+		if factor.Status == "verified" {
+			payload, _ := base64.RawURLEncoding.DecodeString(strings.Split(token, ".")[1])
+			var claims struct {
+				AAL string `json:"aal"`
+			}
+			_ = json.Unmarshal(payload, &claims)
+			if claims.AAL != "aal2" {
+				return Identity{}, ErrReauth
+			}
+		}
 	}
 	profile, err := s.profiles.GetProfile(ctx, id)
 	if err != nil {
@@ -203,7 +218,11 @@ func (s *Service) UpdateProfile(ctx context.Context, identity Identity, name str
 	if err != nil {
 		return Profile{}, err
 	}
-	return s.profiles.UpdateProfile(ctx, identity.ID, name)
+	profile, err := s.profiles.UpdateProfile(ctx, identity.ID, name)
+	if err == nil && profile.ID != identity.ID {
+		return Profile{}, ErrUnavailable
+	}
+	return profile, err
 }
 func (s *Service) Logout(ctx context.Context, identity Identity) error {
 	return s.provider.Logout(ctx, identity.Token)
@@ -219,6 +238,14 @@ func (s *Service) Password(ctx context.Context, identity Identity, current, next
 	if reauth.Session == nil {
 		return AuthResult{}, ErrUnauthorized
 	}
+	keep := false
+	defer func() {
+		if !keep {
+			cleanup, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			defer cancel()
+			_ = s.provider.Logout(cleanup, reauth.Session.AccessToken)
+		}
+	}()
 	var user struct {
 		ID string `json:"id"`
 	}
@@ -227,12 +254,15 @@ func (s *Service) Password(ctx context.Context, identity Identity, current, next
 	}
 	updated, err := s.provider.UpdatePassword(ctx, reauth.Session.AccessToken, next)
 	if err != nil {
-		// Clean up the temporary refresh session without logging credentials.
-		cleanup, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
-		_ = s.provider.Logout(cleanup, reauth.Session.AccessToken)
 		return AuthResult{}, err
 	}
+	var changed struct {
+		ID string `json:"id"`
+	}
+	if json.Unmarshal(updated, &changed) != nil || changed.ID != identity.ID {
+		return AuthResult{}, ErrUnavailable
+	}
+	keep = true
 	reauth.User = updated
 	return reauth, nil
 }
