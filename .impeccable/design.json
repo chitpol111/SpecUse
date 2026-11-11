@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-11T03:51:23.666Z",
+  "title": "Design System: SpecUse",
+  "extensions": {
+    "colorMeta": {
+      "obsidian-ground": {
+        "role": "neutral",
+        "displayName": "Obsidian Ground",
+        "canonical": "#0b0202",
+        "tonalRamp": ["#080101", "#120303", "#1b0505", "#290707", "#3a0909", "#520d0d", "#751313", "#a01d1d"]
+      },
+      "obsidian-surface": {
+        "role": "neutral",
+        "displayName": "Obsidian Surface",
+        "canonical": "#120505",
+        "tonalRamp": ["#090202", "#120505", "#1c0707", "#2a0909", "#3b0c0c", "#520f0f", "#751414", "#a01e1e"]
+      },
+      "burgundy-glass": {
+        "role": "neutral",
+        "displayName": "Burgundy Glass",
+        "canonical": "rgba(35, 8, 10, 0.76)",
+        "tonalRamp": ["#130608", "#23080a", "#350c10", "#4b1116", "#64171d", "#811e25", "#a32930", "#c83b42"]
+      },
+      "ruby-primary": {
+        "role": "primary",
+        "displayName": "Ruby Primary",
+        "canonical": "#dc2626",
+        "tonalRamp": ["#270707", "#4b0d0d", "#761414", "#a01c1c", "#c52222", "#dc2626", "#ed5a5a", "#f7b4b4"]
+      },
+      "ruby-light": {
+        "role": "primary",
+        "displayName": "Ruby Light",
+        "canonical": "#f87171",
+        "tonalRamp": ["#310909", "#5a1010", "#861919", "#b72727", "#dc4848", "#f87171", "#f99c9c", "#fbd1d1"]
+      },
+      "crimson-deep": {
+        "role": "primary",
+        "displayName": "Crimson Deep",
+        "canonical": "#991b1b",
+        "tonalRamp": ["#1e0606", "#390a0a", "#5b1010", "#7d1717", "#991b1b", "#bb2b2b", "#db5555", "#f1aaaa"]
+      },
+      "text-primary": {
+        "role": "neutral",
+        "displayName": "Primary Text",
+        "canonical": "#f8fafc",
+        "tonalRamp": ["#16181a", "#292d31", "#41464c", "#5d636a", "#7b8289", "#a0a6ad", "#cbd0d5", "#f8fafc"]
+      },
+      "text-secondary": {
+        "role": "neutral",
+        "displayName": "Secondary Text",
+        "canonical": "#cbd5e1",
+        "tonalRamp": ["#11161d", "#202a36", "#344354", "#4e6175", "#6f8295", "#94a5b5", "#cbd5e1", "#f1f5f9"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Thai Display",
+        "purpose": "Hero headline, with red gradient only on the user-specified phrase."
+      },
+      "body": {
+        "displayName": "Thai Body",
+        "purpose": "Readable explanatory copy and product-status disclosures."
+      }
+    },
+    "shadows": [
+      {
+        "name": "glass-panel",
+        "value": "0 24px 70px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.025)",
+        "purpose": "Give translucent burgundy panels depth against the obsidian page."
+      },
+      {
+        "name": "glass-panel-hover",
+        "value": "0 22px 58px rgba(0, 0, 0, 0.34), 0 0 32px rgba(220, 38, 38, 0.09)",
+        "purpose": "Subtle hover response for interactive panels."
+      }
+    ],
+    "motion": [
+      {
+        "name": "surface-transition",
+        "value": "220ms ease",
+        "purpose": "Panel border, shadow, and background transitions."
+      },
+      {
+        "name": "hero-entry",
+        "value": "650ms ease-out",
+        "purpose": "One restrained entrance for the hero content; respects reduced-motion preferences."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary CTA",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ruby pill action for the primary page journey.",
+      "html": "<a class=\"ds-button-primary\" href=\"#public-builds\">ดูตัวอย่างแนวทาง <svg viewBox=\"0 0 20 20\" aria-hidden=\"true\"><path d=\"M4 10h12m-5-5 5 5-5 5\"/></svg></a>",
+      "css": ".ds-button-primary { display: inline-flex; min-height: 3.5rem; align-items: center; justify-content: center; gap: .5rem; padding: 1rem 1.75rem; border: 0; border-radius: 9999px; background: #dc2626; color: #f8fafc; font: 700 1rem/1.5 'IBM Plex Sans Thai', sans-serif; text-decoration: none; box-shadow: 0 10px 24px rgba(220, 38, 38, .2); transition: transform 180ms ease, background-color 180ms ease; } .ds-button-primary svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; } .ds-button-primary:hover { transform: translateY(-2px); background: #f87171; } .ds-button-primary:focus-visible { outline: 3px solid #f87171; outline-offset: 3px; }"
+    },
+    {
+      "name": "Secondary CTA",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Quiet pill action with an obsidian fill and fine neutral border.",
+      "html": "<a class=\"ds-button-secondary\" href=\"#start\">ดูขั้นตอนที่วางแผนไว้</a>",
+      "css": ".ds-button-secondary { display: inline-flex; min-height: 3.5rem; align-items: center; justify-content: center; padding: 1rem 1.75rem; border: 1px solid rgba(255, 255, 255, .15); border-radius: 9999px; background: #0b0202; color: #f8fafc; font: 700 1rem/1.5 'IBM Plex Sans Thai', sans-serif; text-decoration: none; transition: border-color 180ms ease, background-color 180ms ease; } .ds-button-secondary:hover { border-color: rgba(248, 113, 113, .5); background: #1d0909; } .ds-button-secondary:focus-visible { outline: 3px solid #f87171; outline-offset: 3px; }"
+    },
+    {
+      "name": "Glass Panel",
+      "kind": "card",
+      "refersTo": "glass-panel",
+      "description": "Burgundy translucent container used for the hero preview and feature card.",
+      "html": "<article class=\"ds-glass-panel\"><h2>ทำงานและเล่นเกม</h2><p>ภาพจำลอง · ฟังก์ชันยังไม่เปิดใช้งาน</p></article>",
+      "css": ".ds-glass-panel { padding: 1.5rem; border: 1px solid rgba(220, 38, 38, .16); border-radius: 1.5rem; background: rgba(35, 8, 10, .76); color: #f8fafc; box-shadow: 0 24px 70px rgba(0, 0, 0, .34), inset 0 1px 0 rgba(255, 255, 255, .025); -webkit-backdrop-filter: blur(18px) saturate(135%); backdrop-filter: blur(18px) saturate(135%); transition: border-color 220ms ease, box-shadow 220ms ease; } .ds-glass-panel h2 { margin: 0; font: 700 1.125rem/1.5 'IBM Plex Sans Thai', sans-serif; } .ds-glass-panel p { margin: .25rem 0 0; color: #fecaca; font: 400 .75rem/1.5 'IBM Plex Sans Thai', sans-serif; } .ds-glass-panel:hover { border-color: rgba(248, 113, 113, .32); box-shadow: 0 22px 58px rgba(0, 0, 0, .34), 0 0 32px rgba(220, 38, 38, .09); }"
+    },
+    {
+      "name": "Sample Status Chip",
+      "kind": "chip",
+      "refersTo": "status-chip",
+      "description": "Explicitly marks illustrative content, never a live availability state.",
+      "html": "<span class=\"ds-chip\"><span aria-hidden=\"true\"></span>ข้อมูลตัวอย่าง</span>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; gap: .5rem; padding: .5rem 1rem; border: 1px solid rgba(248, 113, 113, .2); border-radius: 9999px; background: rgba(248, 113, 113, .1); color: #fecaca; font: 700 .75rem/1.5 'IBM Plex Sans Thai', sans-serif; } .ds-chip span { width: .5rem; height: .5rem; border-radius: 50%; background: #dc2626; }"
+    },
+    {
+      "name": "Component Preview Row",
+      "kind": "custom",
+      "refersTo": "component-preview-row",
+      "description": "Non-interactive sample component row used only to illustrate the planned editor.",
+      "html": "<div class=\"ds-preview-row\"><span class=\"ds-preview-icon\">CPU</span><span class=\"ds-preview-copy\"><strong>หน่วยประมวลผล</strong><small>เลือกตามการใช้งาน</small></span><span class=\"ds-preview-label\">ตัวอย่าง</span></div>",
+      "css": ".ds-preview-row { display: flex; align-items: center; gap: .75rem; padding: .75rem .875rem; border: 1px solid rgba(255, 255, 255, .1); border-radius: .75rem; background: rgba(29, 9, 9, .8); color: #f8fafc; font-family: 'IBM Plex Sans Thai', sans-serif; } .ds-preview-icon { display: grid; width: 2.5rem; height: 2.5rem; flex: none; place-items: center; border-radius: .75rem; background: rgba(248, 113, 113, .1); color: #fca5a5; font-size: .625rem; font-weight: 700; } .ds-preview-copy { display: grid; flex: 1; min-width: 0; } .ds-preview-copy strong { font-size: .875rem; } .ds-preview-copy small { color: #94a3b8; font-size: .75rem; } .ds-preview-label { color: #94a3b8; font-size: .875rem; font-weight: 700; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Ruby Planning Desk",
+    "overview": "SpecUse's landing page feels like a considered workspace for planning a PC: dark, focused, and quietly technical without borrowing generic sci-fi ornament. Obsidian red-black creates the ground; burgundy translucency and fine crimson edges separate content while keeping the page calm. Thai copy and real component categories carry the story.\n\nThe page is a prototype. Its component preview and build pathways are illustrative; the editor, catalog, prices, checks, accounts, and saved builds are not represented as available functions. Red is reserved for navigation emphasis, primary actions, and the one requested headline phrase.",
+    "keyCharacteristics": [
+      "Obsidian and maroon fields with a quiet crimson grid.",
+      "Crisp Thai typography using self-hosted IBM Plex Sans Thai.",
+      "Burgundy glass panels with restrained borders and soft depth.",
+      "Ruby actions and a phrase-only crimson headline treatment."
+    ],
+    "rules": [
+      {
+        "name": "The Ruby Is Intentional Rule",
+        "body": "Keep saturated red for primary actions, active details, and the exact hero phrase “เริ่มจากสเปกที่ใช่”; do not spread the gradient to other headings.",
+        "section": "colors"
+      }
+    ],
+    "dos": [
+      "Do keep “เริ่มจากสเปกที่ใช่” as the only gradient text.",
+      "Do label sample pathways and the component preview as illustrative.",
+      "Do describe planned functions as unavailable until they are implemented.",
+      "Do preserve the mobile-first reading order and accessible focus states."
+    ],
+    "donts": [
+      "Don't imply a live product catalog, final prices, compatibility engine, accounts, saved builds, or sharing.",
+      "Don't invent product recommendations, popularity, member submissions, reviews, or performance claims.",
+      "Don't add unrelated accent hues or spread decorative glow across every surface."
+    ]
+  }
+}

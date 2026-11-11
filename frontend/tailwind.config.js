@@ -1,22 +1,27 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: "class",
   content: ["./src/**/*.{js,jsx}"],
   theme: {
     extend: {
       colors: {
-        navy: {
-          950: "#0b1d35",
-          900: "#102a49",
-          800: "#173b5c",
+        obsidian: {
+          950: "#0b0202",
+          900: "#120505",
+          800: "#1d0909",
         },
-        aqua: {
-          500: "#16b8a6",
-          600: "#0c9d91",
+        ruby: {
+          200: "#fecaca",
+          300: "#fca5a5",
+          400: "#f87171",
+          500: "#dc2626",
+          600: "#b91c1c",
+          700: "#991b1b",
         },
         cream: "#f7f8f5",
       },
       boxShadow: {
-        card: "0 16px 50px rgba(13, 35, 57, 0.08)",
+        card: "0 18px 48px rgba(0, 0, 0, 0.26)",
       },
     },
   },

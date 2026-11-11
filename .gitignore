@@ -39,6 +39,8 @@ build/Release
 
 # Dependency directories
 node_modules/
+frontend/build/
+.github/skills/impeccable/scripts/bin/
 jspm_packages/
 
 # Snowpack dependency directory (https://snowpack.dev/)

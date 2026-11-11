@@ -114,14 +114,29 @@ The first frontend milestone is a responsive Landing Page with:
 9. A call to action to start building or register.
 10. Footer with project information and useful links.
 
+The current landing page is a prototype. The build editor, compatibility
+checks, product catalog and prices, accounts, saved builds, and sharing are not
+available yet. Describe these as planned functionality; sample pathways are
+informational examples only.
+
+The next frontend milestone is an unsaved build-validation page that reads
+active products from `GET /api/v1/products` and sends selected CPU,
+motherboard, and optional RAM requirements to `POST /api/v1/builds/validate`.
+It uses the local Backend fixture during development; it does not save builds
+or represent fixture prices as live purchase prices.
+
 The build editor, member build management, and admin product management are
 separate pages and are outside the first Landing Page milestone. The initial
 Landing Page may use clearly identified sample data without an API client.
 
 ## Design direction
 
-- Navy and teal/turquoise accents on a warm off-white background.
-- Modern, friendly, and trustworthy presentation.
+- A sleek, premium, minimalist dark-red interface with obsidian and deep
+  burgundy surfaces, a subtle crimson grid/mesh, and multi-tone ruby accents.
+- Use translucent burgundy glass panels with fine crimson borders and restrained
+  red glow on hover; keep body text crisp and high-contrast.
+- Highlight “เริ่มจากสเปกที่ใช่” with the requested crimson gradient and use ruby
+  red for primary actions and active states.
 - Responsive layouts for desktop and mobile, readable typography, clear
   headings, and generous spacing.
 - Thai-language user-facing text; no Lorem Ipsum.

@@ -1,0 +1,26 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "gradient-text",
+        "value": "*",
+        "files": [
+          "frontend/src/index.css"
+        ],
+        "createdAt": "2026-11-11T02:47:48.437Z",
+        "reason": "User requested a crimson gradient only on the hero phrase เริ่มจากสเปกที่ใช่"
+      },
+      {
+        "rule": "codex-grid-background",
+        "value": "*",
+        "files": [
+          "frontend/src/index.css"
+        ],
+        "createdAt": "2026-11-11T02:47:48.453Z",
+        "reason": "User requested a subtle dark-red digital grid pattern"
+      }
+    ]
+  }
+}

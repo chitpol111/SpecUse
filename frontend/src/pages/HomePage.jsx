@@ -15,11 +15,11 @@ export default function HomePage() {
       <SiteHeader />
       <main>
         <HeroSection />
-        <ProblemSection />
         <BenefitsSection />
         <ServiceSection />
-        <StepsSection />
         <PublicBuildsSection />
+        <ProblemSection />
+        <StepsSection />
         <FAQSection />
         <CallToAction />
       </main>

@@ -2,10 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "IBM Plex Sans Thai";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../public/fonts/ibm-plex-sans-thai-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "IBM Plex Sans Thai";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../public/fonts/ibm-plex-sans-thai-700.woff2") format("woff2");
+}
+
 :root {
-  font-family: "Noto Sans Thai", "Leelawadee UI", Tahoma, sans-serif;
-  color: #172b42;
-  background: #f7f8f5;
+  font-family: "IBM Plex Sans Thai", "Noto Sans Thai", "Leelawadee UI", Tahoma, sans-serif;
+  color: #f8fafc;
+  background: #0b0202;
+  color-scheme: dark;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -14,8 +31,15 @@
 }
 
 body {
-  min-width: 320px;
+  min-height: 100vh;
   margin: 0;
+  background:
+    radial-gradient(ellipse at 50% -18%, rgba(153, 27, 27, 0.18), transparent 46%),
+    #0b0202;
+}
+
+main [id] {
+  scroll-margin-top: 6rem;
 }
 
 button,
@@ -27,20 +51,65 @@ button {
   font: inherit;
 }
 
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid #f87171;
+  outline-offset: 3px;
+}
+
 ::selection {
-  color: #102a49;
-  background: #b6eee6;
+  color: #fff;
+  background: #b91c1c;
 }
 
 .hero-grid {
-  background-image: linear-gradient(rgba(16, 42, 73, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(16, 42, 73, 0.045) 1px, transparent 1px);
+  background-image:
+    linear-gradient(rgba(220, 38, 38, 0.075) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(220, 38, 38, 0.075) 1px, transparent 1px);
   background-size: 34px 34px;
-  mask-image: linear-gradient(to bottom, black, transparent 90%);
+  mask-image: linear-gradient(to bottom, black 0%, rgba(0, 0, 0, 0.72) 58%, transparent 100%);
 }
 
 .hero-orb {
-  background: radial-gradient(circle, rgba(22, 184, 166, 0.2), transparent 68%);
+  background: radial-gradient(circle, rgba(220, 38, 38, 0.18), transparent 68%);
+}
+
+.headline-accent {
+  color: transparent;
+  background: linear-gradient(105deg, #ef4444 4%, #dc2626 48%, #991b1b 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+}
+
+.glass-panel {
+  border: 1px solid rgba(220, 38, 38, 0.16);
+  background: rgba(35, 8, 10, 0.76);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.025);
+  -webkit-backdrop-filter: blur(18px) saturate(135%);
+  backdrop-filter: blur(18px) saturate(135%);
+  transition: border-color 220ms ease, box-shadow 220ms ease, background-color 220ms ease;
+}
+
+@media (hover: hover) {
+  .glass-panel:hover {
+    border-color: rgba(248, 113, 113, 0.32);
+    box-shadow: 0 22px 58px rgba(0, 0, 0, 0.34), 0 0 32px rgba(220, 38, 38, 0.09);
+  }
+}
+
+.glass-panel-soft {
+  border: 1px solid rgba(248, 113, 113, 0.13);
+  background: rgba(53, 12, 15, 0.58);
+  -webkit-backdrop-filter: blur(12px) saturate(125%);
+  backdrop-filter: blur(12px) saturate(125%);
+}
+
+.closing-panel::before {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0, rgba(220, 38, 38, 0.14), transparent 62%);
+  content: "";
+  pointer-events: none;
 }
 
 .fade-up {
@@ -71,5 +140,12 @@ button {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@supports (scrollbar-color: auto) {
+  * {
+    scrollbar-color: #7f1d1d #0b0202;
+    scrollbar-width: thin;
   }
 }

@@ -1,50 +1,61 @@
 const problems = [
   {
-    number: "01",
     title: "ไม่แน่ใจว่าจะเลือกอะไร",
     description: "อุปกรณ์มีหลายรุ่น หลายราคา เลือกไม่ถูกว่าแบบไหนเหมาะกับงานของเรา",
-    icon: "⌕",
+    icon: "search",
   },
   {
-    number: "02",
     title: "กลัวซื้อมาแล้วใช้ด้วยกันไม่ได้",
     description: "สเปกแต่ละชิ้นมีรายละเอียดที่ต้องเช็ก ทั้ง Socket และชนิดหน่วยความจำ",
-    icon: "◇",
+    icon: "compatibility",
   },
   {
-    number: "03",
     title: "งบบานปลายโดยไม่รู้ตัว",
     description: "รวมราคาทีละชิ้นได้ยาก และอาจเผลอเลือกเกินงบที่ตั้งไว้",
-    icon: "฿",
+    icon: "budget",
   },
 ];
 
 export default function ProblemSection() {
   return (
-    <section className="bg-white py-20 sm:py-24">
-      <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-aqua-600">คุ้นกับปัญหาเหล่านี้ไหม?</p>
-          <h2 className="mt-4 text-3xl font-black tracking-tight text-navy-950 sm:text-4xl">
+    <section className="bg-[#120505] py-20 sm:py-24">
+      <div className="mx-auto grid max-w-7xl gap-10 px-5 sm:px-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+        <div className="max-w-2xl">
+          <h2 className="text-3xl font-black tracking-tight text-slate-50 sm:text-4xl">
             ประกอบคอมไม่ควรเป็นเรื่องชวนปวดหัว
           </h2>
-          <p className="mt-4 leading-7 text-slate-600">
+          <p className="mt-4 leading-7 text-slate-300">
             ก่อนจะได้คอมที่ตอบโจทย์ หลายคนต้องผ่านคำถามมากมายตั้งแต่ชิ้นแรกจนถึงชิ้นสุดท้าย
           </p>
         </div>
-        <div className="mt-12 grid gap-5 md:grid-cols-3">
+        <div className="divide-y divide-ruby-500/15">
           {problems.map((problem) => (
-            <article key={problem.number} className="group rounded-3xl border border-slate-100 bg-cream p-7 transition hover:-translate-y-1 hover:border-aqua-500/30 hover:shadow-card sm:p-8">
-              <div className="flex items-start justify-between">
-                <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white text-2xl font-semibold text-aqua-600 shadow-sm">{problem.icon}</span>
-                <span className="text-sm font-bold tracking-widest text-slate-300">{problem.number}</span>
+            <article key={problem.title} className="flex gap-5 py-6 first:pt-0 last:pb-0">
+              <span className="grid h-12 w-12 shrink-0 place-items-center text-ruby-300">
+                <ProblemIcon name={problem.icon} />
+              </span>
+              <div>
+                <h3 className="text-xl font-extrabold text-slate-100">{problem.title}</h3>
+                <p className="mt-2 leading-7 text-slate-300">{problem.description}</p>
               </div>
-              <h3 className="mt-7 text-xl font-extrabold text-navy-900">{problem.title}</h3>
-              <p className="mt-3 leading-7 text-slate-600">{problem.description}</p>
             </article>
           ))}
         </div>
       </div>
     </section>
+  );
+}
+
+function ProblemIcon({ name }) {
+  const paths = {
+    search: <><circle cx="10.8" cy="10.8" r="6.3" /><path d="m16 16 4 4" /></>,
+    compatibility: <><rect x="4" y="4" width="6" height="6" rx="1" /><rect x="14" y="14" width="6" height="6" rx="1" /><path d="M10 7h3a2 2 0 0 1 2 2v5" /><path d="m12 12 3 3 3-3" /></>,
+    budget: <><path d="M12 3v18" /><path d="M17 7.5c0-1.4-1.7-2.5-4-2.5S9 6.1 9 7.5 10.8 10 13 10s4 1.1 4 2.5-1.8 2.5-4 2.5-4-1.1-4-2.5" /></>,
+  };
+
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {paths[name]}
+    </svg>
   );
 }
