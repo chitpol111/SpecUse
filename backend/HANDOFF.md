@@ -1,5 +1,8 @@
 # ชุดส่งต่อ Backend ให้ฟลุค
 
+ชุดล่าสุดสำหรับ SATA-first อยู่ที่ [STORAGE_B1.md](STORAGE_B1.md) บน feat/backend-storage-b1
+มี fixture แยกและ JSON/curl ที่รันได้จริง โดย default legacy response ยังคงเดิม
+
 ขั้นตอนด้านล่างเป็นชุด legacy บน feat/backend-api สำหรับ GPU/Storage ช่วง A บน
 feat/backend-gpu-storage-a ให้อ่าน [วิธีรันและ JSON ช่วง A](GPU_STORAGE_A.md) ก่อน
 

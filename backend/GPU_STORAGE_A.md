@@ -1,5 +1,9 @@
 # GPU/Storage ช่วง A — Catalog + ราคา
 
+เอกสารนี้บันทึกขอบเขตช่วง A; runtime ล่าสุดเพิ่ม [B1 SATA-first](STORAGE_B1.md) ใน opt-in mode เดิมแล้ว
+direct SATA ที่ผ่านเงื่อนไข B1 ตรวจ allocation ได้ แต่ GPU/M.2/PSU/Case ยัง unknown ตาม coverage
+ตัวอย่างเดิมที่มี GPU/M.2 ยังคง unknown และ fixtures/ราคาเดิมไม่เปลี่ยน
+
 Implement เฉพาะช่วง A ตาม [PR #3](https://github.com/chitpol111/SpecUse/pull/3)
 และ [contract commit 3581447](https://github.com/chitpol111/SpecUse/tree/358144723d71941016956c8e6f760b15f683eba7/backend/proposals/gpu-storage)
 จาก main `642bdab327adfd9761f9debfa05b52fd196df9fa` โดยไม่ merge branch เอกสารเข้ามา

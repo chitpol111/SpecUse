@@ -152,14 +152,15 @@ func (s *Service) validate(ctx context.Context, items []Item, ramItems []RAMItem
 			}
 		}
 		result.Compatibility = phaseACompatibility(selected, selectedModels, ramSKUs)
-		result.Compatible = result.Compatibility.Status == "passed"
 		proven := []Issue{}
 		for _, issue := range result.Issues {
 			if issue.Code == "CPU_SOCKET_MISMATCH" || issue.Code == "RAM_TYPE_MISMATCH" {
 				proven = append(proven, issue)
 			}
 		}
-		result.Issues = proven
+		result.Issues = append(proven, applyStorageB1(result.Compatibility, selected, result.Items)...)
+		refreshCompatibility(result.Compatibility)
+		result.Compatible = result.Compatibility.Status == "passed"
 	}
 	return result, nil
 }

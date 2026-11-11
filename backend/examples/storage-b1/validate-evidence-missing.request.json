@@ -1,0 +1,20 @@
+{
+  "items": [
+    {
+      "product_id": "91000000-0000-4000-8000-000000000001",
+      "quantity": 1,
+      "owned_quantity": 1
+    },
+    {
+      "product_id": "94000000-0000-4000-8000-000000000007",
+      "quantity": 1,
+      "owned_quantity": 1
+    },
+    {
+      "product_id": "91000000-0000-4000-8000-000000000006",
+      "quantity": 3,
+      "owned_quantity": 2
+    }
+  ],
+  "ram_items": []
+}

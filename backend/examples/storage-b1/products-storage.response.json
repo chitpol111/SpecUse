@@ -1,0 +1,266 @@
+{
+  "data": {
+    "items": [
+      {
+        "id": "91000000-0000-4000-8000-000000000005",
+        "name": "[SYNTHETIC FIXTURE ONLY] M.2 NVMe drive",
+        "category": "storage",
+        "brand": "SYNTHETIC - NOT A REAL MANUFACTURER",
+        "price_thb": 2000,
+        "is_active": true,
+        "specs": {
+          "display": {
+            "media_type": "ssd",
+            "capacity_bytes": 1000000000000,
+            "sequential_read_mb_s": 3000,
+            "sequential_write_mb_s": 2000
+          },
+          "host": {
+            "connection_type": "pcie_nvme",
+            "connector": "m2",
+            "form_factor": "m2",
+            "m2_keying": "m",
+            "width_mm": 22,
+            "length_mm": 80,
+            "supported_link_modes": [
+              {
+                "pcie_generation": 4,
+                "lanes": 4
+              }
+            ]
+          },
+          "power": {
+            "connector_type": "none",
+            "max_operating_power_w": 6,
+            "startup_power_w": 6
+          },
+          "dimensions": {
+            "width_mm": 22,
+            "length_mm": 80,
+            "height_mm": 3
+          },
+          "sources": [
+            {
+              "source_id": "synthetic-v1",
+              "manufacturer": "SYNTHETIC FIXTURE ONLY",
+              "title": "Artificial contract fixture; not manufacturer evidence",
+              "url": "https://fixtures.specuse.invalid/gpu-storage-v1",
+              "document_revision": "synthetic-v1",
+              "section": "Artificial M.2 NVMe values; no commercial SKU",
+              "checked_at": "2026-11-11T00:00:00Z"
+            }
+          ],
+          "evidence": [
+            {
+              "paths": [
+                "/display",
+                "/host",
+                "/power",
+                "/dimensions"
+              ],
+              "source_ids": [
+                "synthetic-v1"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "91000000-0000-4000-8000-000000000006",
+        "name": "[SYNTHETIC FIXTURE ONLY] SATA drive",
+        "category": "storage",
+        "brand": "SYNTHETIC - NOT A REAL MANUFACTURER",
+        "price_thb": 1000,
+        "is_active": true,
+        "specs": {
+          "display": {
+            "media_type": "ssd",
+            "capacity_bytes": 500000000000,
+            "sequential_read_mb_s": 500,
+            "sequential_write_mb_s": 400
+          },
+          "host": {
+            "connection_type": "sata",
+            "connector": "sata_data",
+            "form_factor": "2_5_inch",
+            "m2_keying": null,
+            "width_mm": null,
+            "length_mm": null,
+            "supported_link_modes": null
+          },
+          "power": {
+            "connector_type": "sata_power",
+            "max_operating_power_w": 3,
+            "startup_power_w": 4
+          },
+          "dimensions": {
+            "width_mm": 70,
+            "length_mm": 100,
+            "height_mm": 7
+          },
+          "sources": [
+            {
+              "source_id": "synthetic-v1",
+              "manufacturer": "SYNTHETIC FIXTURE ONLY",
+              "title": "Artificial contract fixture; not manufacturer evidence",
+              "url": "https://fixtures.specuse.invalid/gpu-storage-v1",
+              "document_revision": "synthetic-v1",
+              "section": "Artificial SATA values; M.2 and PCIe fields are not applicable",
+              "checked_at": "2026-11-11T00:00:00Z"
+            }
+          ],
+          "evidence": [
+            {
+              "paths": [
+                "/display",
+                "/host",
+                "/power",
+                "/dimensions"
+              ],
+              "source_ids": [
+                "synthetic-v1"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "91000000-0000-4000-8000-000000000009",
+        "name": "[SYNTHETIC FIXTURE ONLY] USB storage outside phase B checks",
+        "category": "storage",
+        "brand": "SYNTHETIC - NOT A REAL MANUFACTURER",
+        "price_thb": 500,
+        "is_active": true,
+        "specs": {
+          "display": {
+            "media_type": "ssd",
+            "capacity_bytes": 250000000000,
+            "sequential_read_mb_s": 400,
+            "sequential_write_mb_s": 300
+          },
+          "host": {
+            "connection_type": "usb",
+            "connector": "usb",
+            "form_factor": "other",
+            "m2_keying": null,
+            "width_mm": null,
+            "length_mm": null,
+            "supported_link_modes": null
+          },
+          "power": {
+            "connector_type": "other",
+            "max_operating_power_w": 3,
+            "startup_power_w": 3
+          },
+          "dimensions": {
+            "width_mm": 50,
+            "length_mm": 90,
+            "height_mm": 10
+          },
+          "sources": [
+            {
+              "source_id": "synthetic-v1",
+              "manufacturer": "SYNTHETIC FIXTURE ONLY",
+              "title": "Artificial contract fixture; not manufacturer evidence",
+              "url": "https://fixtures.specuse.invalid/gpu-storage-v1",
+              "document_revision": "synthetic-v1",
+              "section": "Artificial USB drive: known class outside phase B; null M.2/PCIe fields are inapplicable",
+              "checked_at": "2026-11-11T00:00:00Z"
+            }
+          ],
+          "evidence": [
+            {
+              "paths": [
+                "/display",
+                "/host",
+                "/power",
+                "/dimensions"
+              ],
+              "source_ids": [
+                "synthetic-v1"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "93000000-0000-4000-8000-000000000001",
+        "name": "[SYNTHETIC FIXTURE ONLY] Storage metadata unknown",
+        "category": "storage",
+        "brand": "SYNTHETIC - NOT A REAL MANUFACTURER",
+        "price_thb": 700,
+        "is_active": true,
+        "specs": {
+          "display": null,
+          "host": null,
+          "power": null,
+          "dimensions": null,
+          "sources": null,
+          "evidence": null
+        }
+      },
+      {
+        "id": "94000000-0000-4000-8000-000000000001",
+        "name": "[SYNTHETIC FIXTURE ONLY] B1 second SATA test SKU",
+        "category": "storage",
+        "brand": "SYNTHETIC - NOT A REAL MANUFACTURER",
+        "price_thb": 1500,
+        "is_active": true,
+        "specs": {
+          "display": {
+            "media_type": "hdd",
+            "capacity_bytes": 500000000000,
+            "sequential_read_mb_s": 500,
+            "sequential_write_mb_s": 400
+          },
+          "host": {
+            "connection_type": "sata",
+            "connector": "sata_data",
+            "form_factor": "3_5_inch",
+            "m2_keying": null,
+            "width_mm": null,
+            "length_mm": null,
+            "supported_link_modes": null
+          },
+          "power": {
+            "connector_type": "sata_power",
+            "max_operating_power_w": 3,
+            "startup_power_w": 4
+          },
+          "dimensions": {
+            "width_mm": 70,
+            "length_mm": 100,
+            "height_mm": 7
+          },
+          "sources": [
+            {
+              "source_id": "synthetic-v1",
+              "manufacturer": "SYNTHETIC FIXTURE ONLY",
+              "title": "Artificial contract fixture; not manufacturer evidence",
+              "url": "https://fixtures.specuse.invalid/gpu-storage-v1",
+              "document_revision": "synthetic-v1",
+              "section": "Artificial B1 test values only; not a commercial SKU or manufacturer evidence",
+              "checked_at": "2026-11-11T00:00:00Z"
+            }
+          ],
+          "evidence": [
+            {
+              "paths": [
+                "/display",
+                "/host",
+                "/power",
+                "/dimensions"
+              ],
+              "source_ids": [
+                "synthetic-v1"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "page": 1,
+    "page_size": 20,
+    "total": 5
+  }
+}

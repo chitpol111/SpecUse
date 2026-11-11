@@ -72,7 +72,7 @@
           "scope": "psu",
           "status": "unknown",
           "reason_code": "NOT_IMPLEMENTED",
-          "message": "ยังไม่เปิดการตรวจฮาร์ดแวร์ส่วนนี้ในช่วง A",
+          "message": "ยังไม่รองรับการตรวจฮาร์ดแวร์ส่วนนี้",
           "product_ids": [
             "abcdefab-0000-0000-0000-000000000001",
             "abcdefab-0000-0000-0000-000000000004"
@@ -98,7 +98,7 @@
           "scope": "case",
           "status": "unknown",
           "reason_code": "NOT_IMPLEMENTED",
-          "message": "ยังไม่เปิดการตรวจฮาร์ดแวร์ส่วนนี้ในช่วง A",
+          "message": "ยังไม่รองรับการตรวจฮาร์ดแวร์ส่วนนี้",
           "product_ids": [
             "abcdefab-0000-0000-0000-000000000001",
             "abcdefab-0000-0000-0000-000000000004"

@@ -1,0 +1,179 @@
+{
+  "data": {
+    "compatible": false,
+    "issues": [],
+    "items": [
+      {
+        "product_id": "91000000-0000-4000-8000-000000000001",
+        "quantity": 1,
+        "owned_quantity": 1,
+        "purchase_quantity": 0,
+        "unit_price_thb": 8000,
+        "purchase_price_thb": 0
+      },
+      {
+        "product_id": "94000000-0000-4000-8000-000000000002",
+        "quantity": 1,
+        "owned_quantity": 1,
+        "purchase_quantity": 0,
+        "unit_price_thb": 3500,
+        "purchase_price_thb": 0
+      },
+      {
+        "product_id": "91000000-0000-4000-8000-000000000006",
+        "quantity": 3,
+        "owned_quantity": 2,
+        "purchase_quantity": 1,
+        "unit_price_thb": 1000,
+        "purchase_price_thb": 1000
+      }
+    ],
+    "ram_selections": [],
+    "total_price_thb": 1000,
+    "compatibility": {
+      "mode": "gpu_storage_v1",
+      "status": "unknown",
+      "checks": [
+        {
+          "code": "CPU_SOCKET",
+          "scope": "basic",
+          "status": "passed",
+          "reason_code": "MATCH",
+          "message": "CPU socket ตรงกันตาม catalog; ไม่ใช่การตรวจ CPU support/BIOS ทั้งหมด",
+          "product_ids": [
+            "91000000-0000-4000-8000-000000000001",
+            "94000000-0000-4000-8000-000000000002"
+          ],
+          "missing_fields": [],
+          "unsupported_fields": []
+        },
+        {
+          "code": "STORAGE_MOTHERBOARD",
+          "scope": "motherboard",
+          "status": "passed",
+          "reason_code": "MATCH",
+          "message": "จัด SATA 3 ลูก รวม owned ลงพอร์ตต่างกันได้ตาม profile และ evidence ที่ตรวจครบ; ไม่รวม PSU/Case",
+          "product_ids": [
+            "91000000-0000-4000-8000-000000000001",
+            "91000000-0000-4000-8000-000000000006",
+            "94000000-0000-4000-8000-000000000002"
+          ],
+          "missing_fields": [],
+          "unsupported_fields": []
+        },
+        {
+          "code": "MOTHERBOARD_RESOURCES",
+          "scope": "motherboard",
+          "status": "passed",
+          "reason_code": "MATCH",
+          "message": "จัด SATA 3 ลูก รวม owned ลงพอร์ตต่างกันได้ตาม profile และ evidence ที่ตรวจครบ; ไม่รวม PSU/Case",
+          "product_ids": [
+            "91000000-0000-4000-8000-000000000001",
+            "91000000-0000-4000-8000-000000000006",
+            "94000000-0000-4000-8000-000000000002"
+          ],
+          "missing_fields": [],
+          "unsupported_fields": []
+        },
+        {
+          "code": "STORAGE_PSU",
+          "scope": "psu",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ยังไม่รองรับการตรวจฮาร์ดแวร์ส่วนนี้",
+          "product_ids": [
+            "91000000-0000-4000-8000-000000000006"
+          ],
+          "missing_fields": [
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "psu"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "STORAGE_CASE",
+          "scope": "case",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ยังไม่รองรับการตรวจฮาร์ดแวร์ส่วนนี้",
+          "product_ids": [
+            "91000000-0000-4000-8000-000000000006"
+          ],
+          "missing_fields": [
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "case"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "SYSTEM_PSU",
+          "scope": "psu",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ยังไม่รองรับการตรวจฮาร์ดแวร์ส่วนนี้",
+          "product_ids": [
+            "91000000-0000-4000-8000-000000000001",
+            "91000000-0000-4000-8000-000000000006",
+            "94000000-0000-4000-8000-000000000002"
+          ],
+          "missing_fields": [
+            {
+              "location": "context",
+              "path": "/system_power_envelope",
+              "product_id": null,
+              "category": null
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "psu"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "SYSTEM_CASE",
+          "scope": "case",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ยังไม่รองรับการตรวจฮาร์ดแวร์ส่วนนี้",
+          "product_ids": [
+            "91000000-0000-4000-8000-000000000001",
+            "91000000-0000-4000-8000-000000000006",
+            "94000000-0000-4000-8000-000000000002"
+          ],
+          "missing_fields": [
+            {
+              "location": "context",
+              "path": "/installation_context",
+              "product_id": null,
+              "category": null
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "case"
+            }
+          ],
+          "unsupported_fields": []
+        }
+      ],
+      "warnings": [],
+      "unverified_domains": [
+        "case",
+        "psu"
+      ],
+      "build_completeness": "not_evaluated"
+    }
+  }
+}

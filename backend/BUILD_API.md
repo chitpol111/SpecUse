@@ -3,6 +3,9 @@
 ใช้สัญญา response ที่ยืนยันกับ Fluke แล้ว Backend เป็นผู้คำนวณราคาและ compatibility
 จาก catalog repository เดียวกับ GET products ทั้งหมดเป็น local fixture ยังไม่ใช้ Supabase
 
+ล่าสุด [B1 SATA-first](STORAGE_B1.md) ตรวจ direct SATA allocation ใน opt-in เดิมได้เมื่อข้อมูล/หลักฐานครบ
+ใช้ fixture และ runnable examples แยก ส่วน legacy response ในเอกสารนี้ยังคงเดิม
+
 GPU/Storage ช่วง A ตาม contract PR #3 commit 3581447 เปิดใช้แล้วผ่าน opt-in query
 อ่าน [GPU_STORAGE_A.md](GPU_STORAGE_A.md) สำหรับ synthetic fixture แยก, metadata, limits,
 status/coverage และ runnable JSON/curl ส่วน POST response ด้านล่างเป็น **default legacy** ตามเดิม
@@ -77,7 +80,7 @@ CORS_ALLOWED_ORIGINS=http://localhost:3001,http://127.0.0.1:3001
 | `GET /products` | query `category`, `search`, `page`, `page_size` ไม่ส่ง body | `data.{items,page,page_size,total}` |
 | `GET /products/{id}` | product UUID ใน path ไม่ส่ง body | `data.product` |
 | `POST /builds/validate` | JSON `items` และ `ram_items` ตามรายละเอียดด้านล่าง | `data.{compatible,issues,items,ram_selections,total_price_thb}` |
-| `POST /builds/validate?validation_mode=gpu_storage_v1` | body เดิม | fields เดิม + `data.compatibility` ตาม [ช่วง A](GPU_STORAGE_A.md) |
+| `POST /builds/validate?validation_mode=gpu_storage_v1` | body เดิม | fields เดิม + `data.compatibility` ตาม [B1](STORAGE_B1.md) |
 
 Catalog กรองเฉพาะ `is_active=true`; ชื่อ field ยังคงเป็น `is_active` ไม่ใช่ `active`
 page เริ่มที่ 1 และ page_size เริ่มต้น 20 ต้องเป็นจำนวนเต็มบวก; หากต้องการค่าเริ่มต้น
