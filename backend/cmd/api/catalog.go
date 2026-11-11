@@ -29,16 +29,7 @@ func loadCatalog(appEnv, path string) (*repository.BuildMemory, error) {
 	defer file.Close()
 	decoder := json.NewDecoder(file)
 	decoder.DisallowUnknownFields()
-	// These fields are trusted local fixture metadata, not public product DTOs.
-	var products []struct {
-		catalog.Product
-		Specs struct {
-			CPUSocket         string `json:"cpu_socket"`
-			RAMType           string `json:"ram_type"`
-			ModulesPerPackage int64  `json:"modules_per_package"`
-		} `json:"specs"`
-		RAMModelID string `json:"ram_model_id"`
-	}
+	var products []catalog.ProductDetails
 	if err := decoder.Decode(&products); err != nil {
 		return nil, fmt.Errorf("decode local catalog fixture: %w", err)
 	}
@@ -52,17 +43,21 @@ func loadCatalog(appEnv, path string) (*repository.BuildMemory, error) {
 	snapshot := build.Snapshot{Products: []build.Component{}, RAMModels: []build.RAMModel{}}
 	models := map[string]bool{}
 	for _, product := range products {
+		specs := catalog.Specs{}
+		if product.Specs != nil {
+			specs = *product.Specs
+		}
 		snapshot.Products = append(snapshot.Products, build.Component{
 			Product: product.Product, RAMModelID: product.RAMModelID,
-			Specs: build.Specs{CPUSocket: product.Specs.CPUSocket, RAMType: product.Specs.RAMType, ModulesPerPackage: product.Specs.ModulesPerPackage},
+			Specs: build.Specs{CPUSocket: specs.CPUSocket, RAMType: specs.RAMType, ModulesPerPackage: specs.ModulesPerPackage, GPU: specs.GPU, Storage: specs.Storage, Motherboard: specs.Motherboard},
 		})
 		modelID := strings.ToLower(product.RAMModelID)
 		if product.Category == "ram" && !models[modelID] {
-			snapshot.RAMModels = append(snapshot.RAMModels, build.RAMModel{ID: modelID, RAMType: product.Specs.RAMType})
+			snapshot.RAMModels = append(snapshot.RAMModels, build.RAMModel{ID: modelID, RAMType: specs.RAMType})
 			models[modelID] = true
 		}
 	}
-	repo, err := repository.NewBuildMemory(snapshot)
+	repo, err := repository.NewLocalBuildMemory(snapshot)
 	if err != nil {
 		return nil, fmt.Errorf("validate local catalog fixture: %w", err)
 	}

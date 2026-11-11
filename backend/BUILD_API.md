@@ -3,6 +3,10 @@
 ใช้สัญญา response ที่ยืนยันกับ Fluke แล้ว Backend เป็นผู้คำนวณราคาและ compatibility
 จาก catalog repository เดียวกับ GET products ทั้งหมดเป็น local fixture ยังไม่ใช้ Supabase
 
+GPU/Storage ช่วง A ตาม contract PR #3 commit 3581447 เปิดใช้แล้วผ่าน opt-in query
+อ่าน [GPU_STORAGE_A.md](GPU_STORAGE_A.md) สำหรับ synthetic fixture แยก, metadata, limits,
+status/coverage และ runnable JSON/curl ส่วน POST response ด้านล่างเป็น **default legacy** ตามเดิม
+
 ## รัน Backend
 
 ติดตั้ง Go 1.22 ขึ้นไปตาม `go.mod` และตรวจว่า `go version` ใช้งานได้ใน terminal
@@ -73,6 +77,7 @@ CORS_ALLOWED_ORIGINS=http://localhost:3001,http://127.0.0.1:3001
 | `GET /products` | query `category`, `search`, `page`, `page_size` ไม่ส่ง body | `data.{items,page,page_size,total}` |
 | `GET /products/{id}` | product UUID ใน path ไม่ส่ง body | `data.product` |
 | `POST /builds/validate` | JSON `items` และ `ram_items` ตามรายละเอียดด้านล่าง | `data.{compatible,issues,items,ram_selections,total_price_thb}` |
+| `POST /builds/validate?validation_mode=gpu_storage_v1` | body เดิม | fields เดิม + `data.compatibility` ตาม [ช่วง A](GPU_STORAGE_A.md) |
 
 Catalog กรองเฉพาะ `is_active=true`; ชื่อ field ยังคงเป็น `is_active` ไม่ใช่ `active`
 page เริ่มที่ 1 และ page_size เริ่มต้น 20 ต้องเป็นจำนวนเต็มบวก; หากต้องการค่าเริ่มต้น
@@ -85,16 +90,18 @@ Catalog เพิ่ม fields แบบ additive ทั้งรายการ
 | Category | Fields ที่เพิ่ม | ความหมาย |
 |---|---|---|
 | `cpu` | `specs.cpu_socket` | socket ของ CPU |
-| `motherboard` | `specs.cpu_socket`, `specs.ram_type` | socket และ RAM type ที่ motherboard รองรับสำหรับ checks ปัจจุบัน |
+| `motherboard` | `specs.cpu_socket`, `specs.ram_type`, `specs.connectivity_profiles`, `specs.sources`, `specs.evidence` | socket/RAM type เดิม พร้อม nullable metadata ช่วง A |
 | `ram` | `ram_model_id`, `specs.ram_type`, `specs.modules_per_package` | UUID ของ RAM model, RAM type และจำนวนโมดูลต่อแพ็ก 1 หรือ 2 |
-| หมวดอื่น | ไม่มี fields เพิ่ม | ไม่เติม specs ที่ยังไม่ตกลงหรือเดาข้อมูลให้ |
+| `gpu`, `storage` | `specs.display`, `specs.host`, `specs.power`, `specs.dimensions`, `specs.sources`, `specs.evidence` | typed nullable ตาม [ช่วง A](GPU_STORAGE_A.md); ไม่รับรองผ่าน hardware checks |
+| หมวดอื่น | ไม่มี fields เพิ่ม | PSU/Case/cooler ยังไม่มี typed specs |
 
 `ram_model_id` อยู่ระดับเดียวกับ `id` ไม่ได้อยู่ใน `specs` และไม่ใช่ product UUID
 SKU แพ็กเดี่ยว/คู่ของ RAM model เดียวกันใช้ ram_model_id เดียวกัน แต่มี product id/ราคา
 และ modules_per_package ของตัวเอง ตัวอย่างแพ็กเดี่ยว/คู่ด้านล่างอ่านจาก catalog เดียวกับ validate
 
-`specs` ส่งเฉพาะ keys ที่เกี่ยวข้องกับประเภทสินค้า ไม่เติมค่าว่าง, null หรือ modules_per_package=0
-สำหรับหมวดที่ยังไม่มี typed specs จะละ `specs` และ `ram_model_id` ทั้งคู่
+CPU/RAM specs ส่ง keys เดิม ไม่เติมค่าว่าง/null หรือ modules_per_package=0
+GPU/Storage และ metadata ใหม่ของ motherboard ใช้ null เมื่อยังไม่รู้, [] เมื่อ reviewed empty
+สำหรับหมวดอื่นที่ยังไม่มี typed specs จะละ `specs` และ `ram_model_id` ทั้งคู่
 category ยังคงเป็นตัวพิมพ์เล็กและสถานะยังชื่อ `is_active`
 
 ตัวอย่าง CPU จาก local fixture:
@@ -341,3 +348,5 @@ GET Catalog และ POST validate อ่าน snapshot เดียวกั�
 มี tests สร้าง request validate จากข้อมูล GET โดยตรง ตรวจ CPU/RAM mismatch และแพ็ก 1/2 โมดูล
 รวมถึงป้องกันการแก้ specs ของ response แล้วกระทบ snapshot และไม่ส่ง specs ของหมวดที่ยังไม่ตกลง
 POST success example เดิมยังได้ compatible=true และ total_price_thb=11500
+โหมด opt-in ของ payload เดียวกันยังยอด 11500 แต่ status=unknown/compatible=false เพราะ PSU/Case ยังไม่ตรวจ
+tests เพิ่มสำหรับช่วง A/ขอบเขต/JSON ใหม่อธิบายใน [GPU_STORAGE_A.md](GPU_STORAGE_A.md)

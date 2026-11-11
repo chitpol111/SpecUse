@@ -1,0 +1,690 @@
+[
+  {
+    "id": "abcdefab-0000-0000-0000-000000000001",
+    "name": "[LOCAL TEST] CPU A",
+    "category": "cpu",
+    "brand": "Example",
+    "price_thb": 25000,
+    "is_active": true,
+    "specs": {
+      "cpu_socket": "AM5"
+    }
+  },
+  {
+    "id": "abcdefab-0000-0000-0000-000000000002",
+    "name": "[LOCAL TEST] Inactive CPU",
+    "category": "cpu",
+    "brand": "Example",
+    "price_thb": 1000,
+    "is_active": false,
+    "specs": {
+      "cpu_socket": "AM5"
+    }
+  },
+  {
+    "id": "abcdefab-0000-0000-0000-000000000003",
+    "name": "[LOCAL TEST] CPU B",
+    "category": "cpu",
+    "brand": "Example",
+    "price_thb": 12000,
+    "is_active": true,
+    "specs": {
+      "cpu_socket": "LGA1700"
+    }
+  },
+  {
+    "id": "abcdefab-0000-0000-0000-000000000004",
+    "name": "[LOCAL TEST] Motherboard",
+    "category": "motherboard",
+    "brand": "Example",
+    "price_thb": 5000,
+    "is_active": true,
+    "specs": {
+      "cpu_socket": "AM5",
+      "ram_type": "DDR5"
+    }
+  },
+  {
+    "id": "abcdefab-0000-0000-0000-000000000005",
+    "name": "[LOCAL TEST] RAM",
+    "category": "ram",
+    "brand": "Example",
+    "price_thb": 2500,
+    "is_active": true,
+    "ram_model_id": "10000000-0000-0000-0000-000000000001",
+    "specs": {
+      "ram_type": "DDR5",
+      "modules_per_package": 1
+    }
+  },
+  {
+    "id": "abcdefab-0000-0000-0000-000000000006",
+    "name": "[LOCAL TEST] DDR5 pair",
+    "category": "ram",
+    "brand": "Example",
+    "price_thb": 4000,
+    "is_active": true,
+    "ram_model_id": "10000000-0000-0000-0000-000000000001",
+    "specs": {
+      "ram_type": "DDR5",
+      "modules_per_package": 2
+    }
+  },
+  {
+    "id": "abcdefab-0000-0000-0000-000000000007",
+    "name": "[LOCAL TEST] DDR4 single",
+    "category": "ram",
+    "brand": "Example",
+    "price_thb": 1500,
+    "is_active": true,
+    "ram_model_id": "10000000-0000-0000-0000-000000000002",
+    "specs": {
+      "ram_type": "DDR4",
+      "modules_per_package": 1
+    }
+  },
+  {
+    "id": "abcdefab-0000-0000-0000-000000000008",
+    "name": "[LOCAL TEST] DDR5 pair-only model",
+    "category": "ram",
+    "brand": "Example",
+    "price_thb": 3000,
+    "is_active": true,
+    "ram_model_id": "10000000-0000-0000-0000-000000000003",
+    "specs": {
+      "ram_type": "DDR5",
+      "modules_per_package": 2
+    }
+  },
+  {
+    "id": "abcdefab-0000-0000-0000-000000000009",
+    "name": "[LOCAL TEST] Inactive single for pair-only model",
+    "category": "ram",
+    "brand": "Example",
+    "price_thb": 1,
+    "is_active": false,
+    "ram_model_id": "10000000-0000-0000-0000-000000000003",
+    "specs": {
+      "ram_type": "DDR5",
+      "modules_per_package": 1
+    }
+  },
+  {
+    "id": "91000000-0000-4000-8000-000000000001",
+    "name": "[SYNTHETIC FIXTURE ONLY] CPU A",
+    "category": "cpu",
+    "brand": "SYNTHETIC - NOT A REAL MANUFACTURER",
+    "price_thb": 8000,
+    "is_active": true,
+    "specs": {
+      "cpu_socket": "SYNTH_SOCKET_A"
+    }
+  },
+  {
+    "id": "91000000-0000-4000-8000-000000000002",
+    "name": "[SYNTHETIC FIXTURE ONLY] Board A with M.2 NVMe",
+    "category": "motherboard",
+    "brand": "SYNTHETIC - NOT A REAL MANUFACTURER",
+    "price_thb": 4000,
+    "is_active": true,
+    "specs": {
+      "cpu_socket": "SYNTH_SOCKET_A",
+      "ram_type": "DDR5",
+      "connectivity_profiles": [
+        {
+          "profile_id": "synthetic-cpu-a",
+          "cpu_product_ids": [
+            "91000000-0000-4000-8000-000000000001"
+          ],
+          "requires_firmware_confirmation": false,
+          "pcie_slots": [
+            {
+              "slot_id": "PCIE_1",
+              "connector": "pcie_x16",
+              "supported_link_modes": [
+                {
+                  "pcie_generation": 4,
+                  "lanes": 16
+                }
+              ],
+              "gpu_supported": true
+            }
+          ],
+          "storage_ports": [
+            {
+              "port_id": "M2_1",
+              "connector": "m2",
+              "supported_connection_types": [
+                "pcie_nvme"
+              ],
+              "accepted_module_keys": [
+                "m"
+              ],
+              "supported_widths_mm": [
+                22
+              ],
+              "supported_lengths_mm": [
+                80
+              ],
+              "supported_link_modes": [
+                {
+                  "pcie_generation": 4,
+                  "lanes": 4
+                }
+              ]
+            },
+            {
+              "port_id": "SATA_1",
+              "connector": "sata_data",
+              "supported_connection_types": [
+                "sata"
+              ],
+              "accepted_module_keys": null,
+              "supported_widths_mm": null,
+              "supported_lengths_mm": null,
+              "supported_link_modes": null
+            },
+            {
+              "port_id": "SATA_2",
+              "connector": "sata_data",
+              "supported_connection_types": [
+                "sata"
+              ],
+              "accepted_module_keys": null,
+              "supported_widths_mm": null,
+              "supported_lengths_mm": null,
+              "supported_link_modes": null
+            },
+            {
+              "port_id": "SATA_3",
+              "connector": "sata_data",
+              "supported_connection_types": [
+                "sata"
+              ],
+              "accepted_module_keys": null,
+              "supported_widths_mm": null,
+              "supported_lengths_mm": null,
+              "supported_link_modes": null
+            }
+          ],
+          "resource_rules": []
+        }
+      ],
+      "sources": [
+        {
+          "source_id": "synthetic-v1",
+          "manufacturer": "SYNTHETIC FIXTURE ONLY",
+          "title": "Artificial contract fixture; not manufacturer evidence",
+          "url": "https://fixtures.specuse.invalid/gpu-storage-v1",
+          "document_revision": "synthetic-v1",
+          "section": "Artificial complete profile; no sharing rules within this test model",
+          "checked_at": "2026-11-11T00:00:00Z"
+        }
+      ],
+      "evidence": [
+        {
+          "paths": [
+            "/cpu_socket",
+            "/ram_type",
+            "/connectivity_profiles"
+          ],
+          "source_ids": [
+            "synthetic-v1"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "91000000-0000-4000-8000-000000000003",
+    "name": "[SYNTHETIC FIXTURE ONLY] RAM DDR5 single module",
+    "category": "ram",
+    "brand": "SYNTHETIC - NOT A REAL MANUFACTURER",
+    "price_thb": 1000,
+    "is_active": true,
+    "specs": {
+      "ram_type": "DDR5",
+      "modules_per_package": 1
+    },
+    "ram_model_id": "92000000-0000-4000-8000-000000000001"
+  },
+  {
+    "id": "91000000-0000-4000-8000-000000000004",
+    "name": "[SYNTHETIC FIXTURE ONLY] GPU A",
+    "category": "gpu",
+    "brand": "SYNTHETIC - NOT A REAL MANUFACTURER",
+    "price_thb": 6000,
+    "is_active": true,
+    "specs": {
+      "display": {
+        "chipset_name": "SYNTHETIC-GPU-A",
+        "vram_capacity_bytes": 8589934592
+      },
+      "host": {
+        "connector": "pcie_x16",
+        "supported_link_modes": [
+          {
+            "pcie_generation": 4,
+            "lanes": 16
+          }
+        ]
+      },
+      "power": {
+        "board_power_w": 120,
+        "min_system_power_w": 500,
+        "connector_options": [
+          {
+            "option_id": "synthetic-native-8pin",
+            "adapter_part_number": null,
+            "connectors": [
+              {
+                "type": "pcie_8pin",
+                "count": 1
+              }
+            ],
+            "cable_policy": "independent_cables"
+          }
+        ]
+      },
+      "dimensions": {
+        "length_mm": 240,
+        "height_mm": 115,
+        "thickness_mm": 40,
+        "occupied_slots": 2
+      },
+      "sources": [
+        {
+          "source_id": "synthetic-v1",
+          "manufacturer": "SYNTHETIC FIXTURE ONLY",
+          "title": "Artificial contract fixture; not manufacturer evidence",
+          "url": "https://fixtures.specuse.invalid/gpu-storage-v1",
+          "document_revision": "synthetic-v1",
+          "section": "Artificial GPU A values; no commercial SKU",
+          "checked_at": "2026-11-11T00:00:00Z"
+        }
+      ],
+      "evidence": [
+        {
+          "paths": [
+            "/display",
+            "/host",
+            "/power",
+            "/dimensions"
+          ],
+          "source_ids": [
+            "synthetic-v1"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "91000000-0000-4000-8000-000000000005",
+    "name": "[SYNTHETIC FIXTURE ONLY] M.2 NVMe drive",
+    "category": "storage",
+    "brand": "SYNTHETIC - NOT A REAL MANUFACTURER",
+    "price_thb": 2000,
+    "is_active": true,
+    "specs": {
+      "display": {
+        "media_type": "ssd",
+        "capacity_bytes": 1000000000000,
+        "sequential_read_mb_s": 3000,
+        "sequential_write_mb_s": 2000
+      },
+      "host": {
+        "connection_type": "pcie_nvme",
+        "connector": "m2",
+        "form_factor": "m2",
+        "m2_keying": "m",
+        "width_mm": 22,
+        "length_mm": 80,
+        "supported_link_modes": [
+          {
+            "pcie_generation": 4,
+            "lanes": 4
+          }
+        ]
+      },
+      "power": {
+        "connector_type": "none",
+        "max_operating_power_w": 6,
+        "startup_power_w": 6
+      },
+      "dimensions": {
+        "width_mm": 22,
+        "length_mm": 80,
+        "height_mm": 3
+      },
+      "sources": [
+        {
+          "source_id": "synthetic-v1",
+          "manufacturer": "SYNTHETIC FIXTURE ONLY",
+          "title": "Artificial contract fixture; not manufacturer evidence",
+          "url": "https://fixtures.specuse.invalid/gpu-storage-v1",
+          "document_revision": "synthetic-v1",
+          "section": "Artificial M.2 NVMe values; no commercial SKU",
+          "checked_at": "2026-11-11T00:00:00Z"
+        }
+      ],
+      "evidence": [
+        {
+          "paths": [
+            "/display",
+            "/host",
+            "/power",
+            "/dimensions"
+          ],
+          "source_ids": [
+            "synthetic-v1"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "91000000-0000-4000-8000-000000000006",
+    "name": "[SYNTHETIC FIXTURE ONLY] SATA drive",
+    "category": "storage",
+    "brand": "SYNTHETIC - NOT A REAL MANUFACTURER",
+    "price_thb": 1000,
+    "is_active": true,
+    "specs": {
+      "display": {
+        "media_type": "ssd",
+        "capacity_bytes": 500000000000,
+        "sequential_read_mb_s": 500,
+        "sequential_write_mb_s": 400
+      },
+      "host": {
+        "connection_type": "sata",
+        "connector": "sata_data",
+        "form_factor": "2_5_inch",
+        "m2_keying": null,
+        "width_mm": null,
+        "length_mm": null,
+        "supported_link_modes": null
+      },
+      "power": {
+        "connector_type": "sata_power",
+        "max_operating_power_w": 3,
+        "startup_power_w": 4
+      },
+      "dimensions": {
+        "width_mm": 70,
+        "length_mm": 100,
+        "height_mm": 7
+      },
+      "sources": [
+        {
+          "source_id": "synthetic-v1",
+          "manufacturer": "SYNTHETIC FIXTURE ONLY",
+          "title": "Artificial contract fixture; not manufacturer evidence",
+          "url": "https://fixtures.specuse.invalid/gpu-storage-v1",
+          "document_revision": "synthetic-v1",
+          "section": "Artificial SATA values; M.2 and PCIe fields are not applicable",
+          "checked_at": "2026-11-11T00:00:00Z"
+        }
+      ],
+      "evidence": [
+        {
+          "paths": [
+            "/display",
+            "/host",
+            "/power",
+            "/dimensions"
+          ],
+          "source_ids": [
+            "synthetic-v1"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "91000000-0000-4000-8000-000000000007",
+    "name": "[SYNTHETIC FIXTURE ONLY] Board B SATA only",
+    "category": "motherboard",
+    "brand": "SYNTHETIC - NOT A REAL MANUFACTURER",
+    "price_thb": 3500,
+    "is_active": true,
+    "specs": {
+      "cpu_socket": "SYNTH_SOCKET_A",
+      "ram_type": "DDR5",
+      "connectivity_profiles": [
+        {
+          "profile_id": "synthetic-cpu-a",
+          "cpu_product_ids": [
+            "91000000-0000-4000-8000-000000000001"
+          ],
+          "requires_firmware_confirmation": false,
+          "pcie_slots": [
+            {
+              "slot_id": "PCIE_1",
+              "connector": "pcie_x16",
+              "supported_link_modes": [
+                {
+                  "pcie_generation": 4,
+                  "lanes": 16
+                }
+              ],
+              "gpu_supported": true
+            }
+          ],
+          "storage_ports": [
+            {
+              "port_id": "SATA_1",
+              "connector": "sata_data",
+              "supported_connection_types": [
+                "sata"
+              ],
+              "accepted_module_keys": null,
+              "supported_widths_mm": null,
+              "supported_lengths_mm": null,
+              "supported_link_modes": null
+            },
+            {
+              "port_id": "SATA_2",
+              "connector": "sata_data",
+              "supported_connection_types": [
+                "sata"
+              ],
+              "accepted_module_keys": null,
+              "supported_widths_mm": null,
+              "supported_lengths_mm": null,
+              "supported_link_modes": null
+            },
+            {
+              "port_id": "SATA_3",
+              "connector": "sata_data",
+              "supported_connection_types": [
+                "sata"
+              ],
+              "accepted_module_keys": null,
+              "supported_widths_mm": null,
+              "supported_lengths_mm": null,
+              "supported_link_modes": null
+            }
+          ],
+          "resource_rules": []
+        }
+      ],
+      "sources": [
+        {
+          "source_id": "synthetic-v1",
+          "manufacturer": "SYNTHETIC FIXTURE ONLY",
+          "title": "Artificial contract fixture; not manufacturer evidence",
+          "url": "https://fixtures.specuse.invalid/gpu-storage-v1",
+          "document_revision": "synthetic-v1",
+          "section": "Artificial complete profile; no sharing rules within this test model",
+          "checked_at": "2026-11-11T00:00:00Z"
+        }
+      ],
+      "evidence": [
+        {
+          "paths": [
+            "/cpu_socket",
+            "/ram_type",
+            "/connectivity_profiles"
+          ],
+          "source_ids": [
+            "synthetic-v1"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "91000000-0000-4000-8000-000000000008",
+    "name": "[SYNTHETIC FIXTURE ONLY] GPU B connector missing",
+    "category": "gpu",
+    "brand": "SYNTHETIC - NOT A REAL MANUFACTURER",
+    "price_thb": 6000,
+    "is_active": true,
+    "specs": {
+      "display": {
+        "chipset_name": "SYNTHETIC-GPU-A",
+        "vram_capacity_bytes": 8589934592
+      },
+      "host": {
+        "connector": null,
+        "supported_link_modes": [
+          {
+            "pcie_generation": 4,
+            "lanes": 16
+          }
+        ]
+      },
+      "power": {
+        "board_power_w": 120,
+        "min_system_power_w": 500,
+        "connector_options": [
+          {
+            "option_id": "synthetic-native-8pin",
+            "adapter_part_number": null,
+            "connectors": [
+              {
+                "type": "pcie_8pin",
+                "count": 1
+              }
+            ],
+            "cable_policy": "independent_cables"
+          }
+        ]
+      },
+      "dimensions": {
+        "length_mm": 240,
+        "height_mm": 115,
+        "thickness_mm": 40,
+        "occupied_slots": 2
+      },
+      "sources": [
+        {
+          "source_id": "synthetic-v1",
+          "manufacturer": "SYNTHETIC FIXTURE ONLY",
+          "title": "Artificial contract fixture; not manufacturer evidence",
+          "url": "https://fixtures.specuse.invalid/gpu-storage-v1",
+          "document_revision": "synthetic-v1",
+          "section": "Artificial GPU B; connector intentionally missing",
+          "checked_at": "2026-11-11T00:00:00Z"
+        }
+      ],
+      "evidence": [
+        {
+          "paths": [
+            "/display",
+            "/host/supported_link_modes",
+            "/power",
+            "/dimensions"
+          ],
+          "source_ids": [
+            "synthetic-v1"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "91000000-0000-4000-8000-000000000009",
+    "name": "[SYNTHETIC FIXTURE ONLY] USB storage outside phase B checks",
+    "category": "storage",
+    "brand": "SYNTHETIC - NOT A REAL MANUFACTURER",
+    "price_thb": 500,
+    "is_active": true,
+    "specs": {
+      "display": {
+        "media_type": "ssd",
+        "capacity_bytes": 250000000000,
+        "sequential_read_mb_s": 400,
+        "sequential_write_mb_s": 300
+      },
+      "host": {
+        "connection_type": "usb",
+        "connector": "usb",
+        "form_factor": "other",
+        "m2_keying": null,
+        "width_mm": null,
+        "length_mm": null,
+        "supported_link_modes": null
+      },
+      "power": {
+        "connector_type": "other",
+        "max_operating_power_w": 3,
+        "startup_power_w": 3
+      },
+      "dimensions": {
+        "width_mm": 50,
+        "length_mm": 90,
+        "height_mm": 10
+      },
+      "sources": [
+        {
+          "source_id": "synthetic-v1",
+          "manufacturer": "SYNTHETIC FIXTURE ONLY",
+          "title": "Artificial contract fixture; not manufacturer evidence",
+          "url": "https://fixtures.specuse.invalid/gpu-storage-v1",
+          "document_revision": "synthetic-v1",
+          "section": "Artificial USB drive: known class outside phase B; null M.2/PCIe fields are inapplicable",
+          "checked_at": "2026-11-11T00:00:00Z"
+        }
+      ],
+      "evidence": [
+        {
+          "paths": [
+            "/display",
+            "/host",
+            "/power",
+            "/dimensions"
+          ],
+          "source_ids": [
+            "synthetic-v1"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "91000000-0000-4000-8000-000000000010",
+    "name": "[SYNTHETIC FIXTURE ONLY] Future PSU placeholder; metadata contract pending",
+    "category": "psu",
+    "brand": "SYNTHETIC - NOT A REAL MANUFACTURER",
+    "price_thb": 2000,
+    "is_active": true
+  },
+  {
+    "id": "91000000-0000-4000-8000-000000000011",
+    "name": "[SYNTHETIC FIXTURE ONLY] Future Case placeholder; metadata contract pending",
+    "category": "case",
+    "brand": "SYNTHETIC - NOT A REAL MANUFACTURER",
+    "price_thb": 1500,
+    "is_active": true
+  },
+  {
+    "id": "93000000-0000-4000-8000-000000000001",
+    "name": "[SYNTHETIC FIXTURE ONLY] Storage metadata unknown",
+    "category": "storage",
+    "brand": "SYNTHETIC - NOT A REAL MANUFACTURER",
+    "price_thb": 700,
+    "is_active": true
+  }
+]

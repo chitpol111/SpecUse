@@ -1,5 +1,8 @@
 # ชุดส่งต่อ Backend ให้ฟลุค
 
+ขั้นตอนด้านล่างเป็นชุด legacy บน feat/backend-api สำหรับ GPU/Storage ช่วง A บน
+feat/backend-gpu-storage-a ให้อ่าน [วิธีรันและ JSON ช่วง A](GPU_STORAGE_A.md) ก่อน
+
 ## รับโค้ดและติดตั้ง
 
 รับโค้ดจาก branch `feat/backend-api` โดย clone เป็นโฟลเดอร์แยกสำหรับ Backend:
@@ -46,6 +49,9 @@ API ยังเป็น port 8080; PORT กับ CORS frontend port เป็
 ไม่ต้องส่ง token หรือ cookies สำหรับ APIs ในชุดนี้
 
 ## ขอบเขตที่ฟลุคต้องทราบ
+
+สำหรับ GPU/Storage ช่วง A ให้อ่าน [GPU_STORAGE_A.md](GPU_STORAGE_A.md) และใช้ fixture แยกที่ระบุไว้
+opt-in อ่าน status/mode/coverage; รายการ compatible=true ด้านล่างอธิบาย default legacy เท่านั้น
 
 - GET Catalog คง 6 fields เดิมและส่ง specs ตามประเภทสินค้า พร้อม ram_model_id ของ RAM
 - จัดกลุ่ม RAM ด้วย ram_model_id จาก GET แล้วส่งใน ram_items โดยตรง ไม่ hardcode mapping และไม่ส่งราคา/specs กลับไป

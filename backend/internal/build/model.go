@@ -7,18 +7,23 @@ import (
 	"errors"
 
 	"specuse/backend/internal/catalog"
+	"specuse/backend/internal/hardware"
 )
 
 var (
-	ErrInvalidInput = errors.New("invalid build input")
-	ErrUnavailable  = errors.New("product or RAM package unavailable")
-	ErrOverflow     = errors.New("build integer overflow")
+	ErrInvalidInput     = errors.New("invalid build input")
+	ErrUnavailable      = errors.New("product or RAM package unavailable")
+	ErrOverflow         = errors.New("build integer overflow")
+	ErrUnsupportedScope = errors.New("unsupported build scope")
 )
 
 type Specs struct {
 	CPUSocket         string
 	RAMType           string
 	ModulesPerPackage int64
+	GPU               *hardware.GPU
+	Storage           *hardware.Storage
+	Motherboard       *hardware.Motherboard
 }
 
 type Component struct {
@@ -85,11 +90,12 @@ type Issue struct {
 }
 
 type Result struct {
-	// Compatible describes only the initial pairwise checks. It is not a
-	// completeness check or permission to publish a build.
+	// In legacy mode Compatible describes CPU/RAM pairwise checks. Extended
+	// mode derives it from Compatibility.Status; neither permits publication.
 	Compatible    bool
 	Issues        []Issue
 	Items         []PricedItem
 	RAMSelections []RAMSelection
 	TotalPriceTHB int64
+	Compatibility *Compatibility
 }

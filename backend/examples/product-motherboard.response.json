@@ -9,7 +9,10 @@
       "is_active": true,
       "specs": {
         "cpu_socket": "AM5",
-        "ram_type": "DDR5"
+        "ram_type": "DDR5",
+        "connectivity_profiles": null,
+        "sources": null,
+        "evidence": null
       }
     }
   }

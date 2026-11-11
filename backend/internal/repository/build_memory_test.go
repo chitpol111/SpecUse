@@ -62,7 +62,7 @@ func TestCatalogSpecCopiesCannotChangeBuildValidation(t *testing.T) {
 }
 
 func TestCatalogOmitsUnagreedSpecsForOtherCategories(t *testing.T) {
-	for _, category := range []string{"gpu", "storage", "psu", "case", "cooler"} {
+	for _, category := range []string{"psu", "case", "cooler"} {
 		t.Run(category, func(t *testing.T) {
 			source := buildSnapshot()
 			source.Products[1].Product.Category = category

@@ -7,6 +7,7 @@ import (
 	"log"
 	"mime"
 	"net/http"
+	"net/url"
 
 	"specuse/backend/internal/build"
 )
@@ -69,11 +70,12 @@ type ramSelection struct {
 }
 
 type buildData struct {
-	Compatible    bool           `json:"compatible"`
-	Issues        []buildIssue   `json:"issues"`
-	Items         []pricedItem   `json:"items"`
-	RAMSelections []ramSelection `json:"ram_selections"`
-	TotalPriceTHB int64          `json:"total_price_thb"`
+	Compatible    bool                 `json:"compatible"`
+	Issues        []buildIssue         `json:"issues"`
+	Items         []pricedItem         `json:"items"`
+	RAMSelections []ramSelection       `json:"ram_selections"`
+	TotalPriceTHB int64                `json:"total_price_thb"`
+	Compatibility *build.Compatibility `json:"compatibility,omitempty"`
 }
 
 type buildResponse struct {
@@ -82,7 +84,7 @@ type buildResponse struct {
 
 func publicBuildResult(result build.Result) buildResponse {
 	data := buildData{Compatible: result.Compatible, TotalPriceTHB: result.TotalPriceTHB,
-		Issues: []buildIssue{}, Items: []pricedItem{}, RAMSelections: []ramSelection{}}
+		Issues: []buildIssue{}, Items: []pricedItem{}, RAMSelections: []ramSelection{}, Compatibility: result.Compatibility}
 	for _, issue := range result.Issues {
 		message := "พบปัญหาความเข้ากันได้ของอุปกรณ์"
 		switch issue.Code {
@@ -119,6 +121,8 @@ func publicBuildResult(result build.Result) buildResponse {
 func buildError(w http.ResponseWriter, err error) {
 	var tooLarge *http.MaxBytesError
 	switch {
+	case errors.Is(err, build.ErrUnsupportedScope):
+		writeError(w, http.StatusBadRequest, "UNSUPPORTED_BUILD_SCOPE", "โหมดนี้รองรับ GPU รวมไม่เกิน 1 ใบและ Storage ทุกชนิดรวมไม่เกิน 8 ลูก รวมอุปกรณ์ที่มีอยู่แล้ว")
 	case errors.As(err, &tooLarge):
 		writeError(w, http.StatusRequestEntityTooLarge, "PAYLOAD_TOO_LARGE", "คำขอมีขนาดเกิน 1 MiB")
 	case errors.Is(err, build.ErrInvalidInput), errors.Is(err, build.ErrOverflow):
@@ -145,6 +149,23 @@ func (h *BuildValidation) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Allow", http.MethodPost)
 		writeError(w, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "ไม่รองรับ HTTP method นี้")
 		return
+	}
+	query, err := url.ParseQuery(r.URL.RawQuery)
+	if err != nil {
+		buildError(w, build.ErrInvalidInput)
+		return
+	}
+	extended := false
+	if modes, exists := query["validation_mode"]; exists {
+		if len(modes) != 1 {
+			buildError(w, build.ErrInvalidInput)
+			return
+		}
+		if modes[0] != build.GPUStorageMode {
+			writeError(w, http.StatusBadRequest, "UNSUPPORTED_VALIDATION_MODE", "ไม่รองรับ validation_mode นี้")
+			return
+		}
+		extended = true
 	}
 	mediaType, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if err != nil || mediaType != "application/json" {
@@ -188,7 +209,12 @@ func (h *BuildValidation) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		ramItems = append(ramItems, build.RAMItem{RAMModelID: item.RAMModelID, RequiredModules: *item.RequiredModules, OwnedModules: *item.OwnedModules})
 	}
-	result, err := h.service.Validate(r.Context(), items, ramItems)
+	var result build.Result
+	if extended {
+		result, err = h.service.ValidateExtended(r.Context(), items, ramItems)
+	} else {
+		result, err = h.service.Validate(r.Context(), items, ramItems)
+	}
 	if err != nil {
 		buildError(w, err)
 		return
