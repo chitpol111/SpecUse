@@ -1,0 +1,103 @@
+{
+  "data": {
+    "items": [
+      {
+        "id": "90000000-0000-0000-0000-000000000001",
+        "name": "SCHEMA EXAMPLE ONLY - GPU",
+        "category": "gpu",
+        "brand": "EXAMPLE ONLY",
+        "price_thb": 0,
+        "is_active": true,
+        "specs": {
+          "display": {
+            "chipset_name": null,
+            "vram_capacity_bytes": null
+          },
+          "host": {
+            "connector": null,
+            "supported_link_modes": null
+          },
+          "power": {
+            "board_power_w": null,
+            "min_system_power_w": null,
+            "connector_options": null
+          },
+          "dimensions": {
+            "length_mm": null,
+            "height_mm": null,
+            "thickness_mm": null,
+            "occupied_slots": null
+          },
+          "sources": null,
+          "evidence": null
+        }
+      },
+      {
+        "id": "90000000-0000-0000-0000-000000000002",
+        "name": "SCHEMA EXAMPLE ONLY - STORAGE",
+        "category": "storage",
+        "brand": "EXAMPLE ONLY",
+        "price_thb": 0,
+        "is_active": true,
+        "specs": {
+          "display": {
+            "media_type": null,
+            "capacity_bytes": null,
+            "sequential_read_mb_s": null,
+            "sequential_write_mb_s": null
+          },
+          "host": {
+            "connection_type": null,
+            "connector": null,
+            "form_factor": null,
+            "m2_keying": null,
+            "width_mm": null,
+            "length_mm": null,
+            "supported_link_modes": null
+          },
+          "power": {
+            "connector_type": null,
+            "max_operating_power_w": null,
+            "startup_power_w": null
+          },
+          "dimensions": {
+            "width_mm": null,
+            "length_mm": null,
+            "height_mm": null
+          },
+          "sources": null,
+          "evidence": null
+        }
+      },
+      {
+        "id": "abcdefab-0000-0000-0000-000000000001",
+        "name": "[LOCAL TEST] CPU A",
+        "category": "cpu",
+        "brand": "Example",
+        "price_thb": 25000,
+        "is_active": true,
+        "specs": {
+          "cpu_socket": "AM5"
+        }
+      },
+      {
+        "id": "abcdefab-0000-0000-0000-000000000004",
+        "name": "[LOCAL TEST] Motherboard",
+        "category": "motherboard",
+        "brand": "Example",
+        "price_thb": 5000,
+        "is_active": true,
+        "specs": {
+          "cpu_socket": "AM5",
+          "ram_type": "DDR5",
+          "connectivity_profiles": null,
+          "sources": null,
+          "evidence": null
+        }
+      }
+    ],
+    "page": 1,
+    "page_size": 20,
+    "total": 4
+  }
+}

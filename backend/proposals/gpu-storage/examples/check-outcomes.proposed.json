@@ -1,0 +1,62 @@
+[
+  {
+    "preconditions": [
+      "เป็น contract scenario ไม่ใช่ผลของ Catalog ที่ metadata=null",
+      "เอกสารตรง SKU/CPU profile ยืนยัน host/slot/เงื่อนไขที่เกี่ยวข้องครบและมี allocation"
+    ],
+    "expected_check": {
+      "code": "GPU_MOTHERBOARD",
+      "scope": "motherboard",
+      "status": "passed",
+      "reason_code": "MATCH",
+      "message": "ผ่านเฉพาะการตรวจ motherboard ที่มีข้อมูลครบ",
+      "product_ids": [
+        "90000000-0000-0000-0000-000000000001",
+        "abcdefab-0000-0000-0000-000000000004"
+      ],
+      "missing_fields": []
+    }
+  },
+  {
+    "preconditions": [
+      "เป็น contract scenario ไม่ได้แต่งข้อมูลให้สินค้าใน Catalog",
+      "หลักฐานยืนยัน drive ต้องใช้ PCIe NVMe แต่มีเฉพาะ SATA และไม่มีทางเลือกอื่นภายใต้ profile ที่ครบ"
+    ],
+    "expected_check": {
+      "code": "STORAGE_MOTHERBOARD",
+      "scope": "motherboard",
+      "status": "failed",
+      "reason_code": "INCOMPATIBLE",
+      "message": "interface ไม่ตรงกันตามหลักฐานที่ตรวจครบ",
+      "product_ids": [
+        "90000000-0000-0000-0000-000000000002",
+        "abcdefab-0000-0000-0000-000000000004"
+      ],
+      "missing_fields": []
+    },
+    "expected_issue": {
+      "code": "STORAGE_INTERFACE_MISMATCH",
+      "message": "Storage interface ไม่ตรงกับพอร์ตที่ motherboard รองรับ"
+    }
+  },
+  {
+    "preconditions": [
+      "metadata ขาดเหมือน schema examples ชุดนี้"
+    ],
+    "expected_check": {
+      "code": "STORAGE_MOTHERBOARD",
+      "scope": "motherboard",
+      "status": "unknown",
+      "reason_code": "METADATA_MISSING",
+      "message": "ยังไม่มีข้อมูลพอจะสรุปผ่านหรือไม่ผ่าน",
+      "product_ids": [
+        "90000000-0000-0000-0000-000000000002",
+        "abcdefab-0000-0000-0000-000000000004"
+      ],
+      "missing_fields": [
+        "storage.specs.host",
+        "motherboard.specs.connectivity_profiles"
+      ]
+    }
+  }
+]
