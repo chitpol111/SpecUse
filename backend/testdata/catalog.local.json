@@ -1,0 +1,88 @@
+[
+  {
+    "id": "abcdefab-0000-0000-0000-000000000001",
+    "name": "[LOCAL TEST] CPU A",
+    "category": "cpu",
+    "brand": "Example",
+    "price_thb": 25000,
+    "is_active": true,
+    "specs": {"cpu_socket": "AM5"}
+  },
+  {
+    "id": "abcdefab-0000-0000-0000-000000000002",
+    "name": "[LOCAL TEST] Inactive CPU",
+    "category": "cpu",
+    "brand": "Example",
+    "price_thb": 1000,
+    "is_active": false,
+    "specs": {"cpu_socket": "AM5"}
+  },
+  {
+    "id": "abcdefab-0000-0000-0000-000000000003",
+    "name": "[LOCAL TEST] CPU B",
+    "category": "cpu",
+    "brand": "Example",
+    "price_thb": 12000,
+    "is_active": true,
+    "specs": {"cpu_socket": "LGA1700"}
+  },
+  {
+    "id": "abcdefab-0000-0000-0000-000000000004",
+    "name": "[LOCAL TEST] Motherboard",
+    "category": "motherboard",
+    "brand": "Example",
+    "price_thb": 5000,
+    "is_active": true,
+    "specs": {"cpu_socket": "AM5", "ram_type": "DDR5"}
+  },
+  {
+    "id": "abcdefab-0000-0000-0000-000000000005",
+    "name": "[LOCAL TEST] RAM",
+    "category": "ram",
+    "brand": "Example",
+    "price_thb": 2500,
+    "is_active": true,
+    "ram_model_id": "10000000-0000-0000-0000-000000000001",
+    "specs": {"ram_type": "DDR5", "modules_per_package": 1}
+  },
+  {
+    "id": "abcdefab-0000-0000-0000-000000000006",
+    "name": "[LOCAL TEST] DDR5 pair",
+    "category": "ram",
+    "brand": "Example",
+    "price_thb": 4000,
+    "is_active": true,
+    "ram_model_id": "10000000-0000-0000-0000-000000000001",
+    "specs": {"ram_type": "DDR5", "modules_per_package": 2}
+  },
+  {
+    "id": "abcdefab-0000-0000-0000-000000000007",
+    "name": "[LOCAL TEST] DDR4 single",
+    "category": "ram",
+    "brand": "Example",
+    "price_thb": 1500,
+    "is_active": true,
+    "ram_model_id": "10000000-0000-0000-0000-000000000002",
+    "specs": {"ram_type": "DDR4", "modules_per_package": 1}
+  },
+  {
+    "id": "abcdefab-0000-0000-0000-000000000008",
+    "name": "[LOCAL TEST] DDR5 pair-only model",
+    "category": "ram",
+    "brand": "Example",
+    "price_thb": 3000,
+    "is_active": true,
+    "ram_model_id": "10000000-0000-0000-0000-000000000003",
+    "specs": {"ram_type": "DDR5", "modules_per_package": 2}
+  },
+  {
+    "id": "abcdefab-0000-0000-0000-000000000009",
+    "name": "[LOCAL TEST] Inactive single for pair-only model",
+    "category": "ram",
+    "brand": "Example",
+    "price_thb": 1,
+    "is_active": false,
+    "ram_model_id": "10000000-0000-0000-0000-000000000003",
+    "specs": {"ram_type": "DDR5", "modules_per_package": 1}
+  }
+]

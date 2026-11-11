@@ -1,0 +1,15 @@
+{
+  "data": {
+    "product": {
+      "id": "abcdefab-0000-0000-0000-000000000001",
+      "name": "[LOCAL TEST] CPU A",
+      "category": "cpu",
+      "brand": "Example",
+      "price_thb": 25000,
+      "is_active": true,
+      "specs": {
+        "cpu_socket": "AM5"
+      }
+    }
+  }
+}
