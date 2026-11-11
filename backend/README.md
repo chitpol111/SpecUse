@@ -1,19 +1,24 @@
-# SpecUse Backend — ระยะที่ 1.1
+# SpecUse Backend — Catalog และ Build Validation
 
 Go REST API ด้วย `net/http` และ JSON แยก handler, service และ repository
-ระยะนี้มีเฉพาะ public catalog สอง endpoints และส่งเฉพาะ 6 fields ที่ตกลงแล้ว
+มี public catalog สอง endpoints ซึ่งส่ง 6 fields เดิม และ `POST /api/v1/builds/validate`
 ไม่มี dependencies ภายนอก และไม่เชื่อมต่อ Supabase หรือใช้ credentials จริง
+
+อ่าน [API Contract สำหรับ Fluke พร้อม JSON/curl](BUILD_API.md) และ
+[Phase 2 schema/repository](PHASE2.md) สำหรับ compatibility และ RAM selection
+ดู [ชุดส่งต่อให้ฟลุค](HANDOFF.md) สำหรับ setup, รายการไฟล์ที่จะ commit และร่างข้อความส่งต่อ
 
 ## โครงสร้าง
 
 ```text
 backend/
-  cmd/api/                        เริ่ม HTTP server, local fixture loader, lifecycle และ tests
+  cmd/api/                        HTTP server, local fixture loader, lifecycle และ API wiring tests
   internal/catalog/               Product, repository interface, service และ tests
   internal/handler/               HTTP/JSON, CORS และ tests
   internal/repository/            repository ในหน่วยความจำและ tests
   migrations/001_products.up.sql  schema catalog สำหรับ Supabase PostgreSQL
   testdata/catalog.local.json     ข้อมูลสมมติสำหรับ local แบบ opt-in
+  examples/                       Request/response JSON ที่ทดสอบกับ fixture แล้ว
   .env.example                    ตัวอย่าง configuration ที่ไม่มี secrets
 ```
 
@@ -53,7 +58,7 @@ Environment variables:
 - JSON fixture ผิดรูปแบบ, มี fields ที่ไม่รู้จัก, ราคาไม่ใช่จำนวนเต็ม หรือข้อมูลสินค้าไม่ถูกต้อง จะหยุดพร้อม error
 - สำหรับ production ให้เว้น `LOCAL_CATALOG_FILE` และใช้ `APP_ENV=production`;
   ระยะนี้ยังได้ catalog ว่าง เพราะยังไม่มี database adapter
-- fixture มีสินค้า active 4 รายการและ inactive 1 รายการ ทุกชื่อขึ้นต้นด้วย `[LOCAL TEST]`
+- fixture มีสินค้า active 7 รายการและ inactive 2 รายการ ทุกชื่อขึ้นต้นด้วย `[LOCAL TEST]`
   สินค้าและราคาเป็นข้อมูลสมมติ ค่า `cpu`, `motherboard`, `ram` เป็นเพียงตัวอย่าง ไม่ใช่ enum ที่เพิ่มในสัญญา
 
 หากต้องการทดลองค่าเริ่มต้นแบบไม่มีข้อมูล ให้หยุด server เดิมก่อน แล้วจาก `backend/` รัน:
@@ -91,7 +96,7 @@ export CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://l
 เปิด terminal อีกหน้าขณะรัน server พร้อม fixture แล้วทดลอง:
 
 ```sh
-# รายการ: HTTP 200, total=4, items มีเฉพาะสินค้า active
+# รายการ: HTTP 200, total=7, items มีเฉพาะสินค้า active
 curl -i 'http://127.0.0.1:8080/api/v1/products'
 
 # filter และ pagination: HTTP 200, total=2, items 1 รายการ
@@ -109,7 +114,7 @@ curl -i 'http://127.0.0.1:8080/api/v1/products/not-a-uuid'
 # ตรวจ CORS: ต้องเห็น Access-Control-Allow-Origin: http://localhost:3000
 curl -i -H 'Origin: http://localhost:3000' 'http://127.0.0.1:8080/api/v1/products'
 
-# preflight: HTTP 204 ไม่มี body พร้อม Allow-Methods: GET
+# preflight: HTTP 204 ไม่มี body พร้อม Allow-Methods: GET, POST
 curl -i -X OPTIONS \
   -H 'Origin: http://localhost:3000' \
   -H 'Access-Control-Request-Method: GET' \
@@ -122,7 +127,7 @@ curl -i -X OPTIONS \
 
 ## API
 
-ทั้งสอง endpoints เปิดให้ guest และไม่มีการรับราคา/role จาก client
+Catalog ทั้งสอง endpoints และ build validation เปิดให้ guest และไม่มีการรับราคา/role จาก client
 ราคาคือจำนวนเต็มเงินบาท (`int64` ใน Go, `BIGINT` ใน PostgreSQL)
 ไม่มีหน่วยเงินหรือ comma ในค่า JSON
 
@@ -257,6 +262,7 @@ Tests ใช้ `httptest`, memory repository และ stub repository ส่�
 - UUID, query ผิดรูปแบบ, duplicate parameters และ integer overflow
 - error envelope สำหรับ 400/404/405/500 และการไม่รั่วรายละเอียด repository
 - CORS ตาม configured origins และ preflight
+- POST build validation: input/errors, CPU/RAM mismatch, แพ็ก 1/2 โมดูล และ JSON examples จาก fixture
 - local fixture เปิดได้เฉพาะเมื่อตั้งค่าครบ, ค่าเริ่มต้นว่าง และการปฏิเสธ fixture ที่ผิดรูปแบบ
 - graceful shutdown รอ active request ให้เสร็จ และปิด connection เมื่อเกิน drain deadline
 
@@ -266,11 +272,12 @@ Tests ใช้ `httptest`, memory repository และ stub repository ส่�
 ## TODO / ข้อตกลงที่รอระยะถัดไป
 
 - FE/BE ยืนยันแล้วว่า Catalog ระยะนี้ส่งเฉพาะ `id`, `name`, `category`, `brand`, `price_thb`, `is_active`
-- ต้องตกลงชื่อ JSON fields และรูปแบบ typed details ของ CPU socket,
-  motherboard CPU socket/RAM type และ RAM type ก่อนเพิ่มลง response/schema
+- ตกลงชื่อ `specs.cpu_socket`, `specs.ram_type`, `specs.modules_per_package`
+  และ `ram_model_id` ระดับเดียวกับ `id` แล้ว แต่ยังไม่เพิ่มลง Public API ในรอบนี้
+- Schema/repository/compatibility/RAM selection ภายในและ open decisions ดู [PHASE2.md](PHASE2.md)
 - ต้องตกลงชุดค่า category ที่ Frontend จะใช้; ค่า `cpu` ใน tests เป็น fixture ไม่ใช่ enum ใหม่
 - หากต้องการ search ใน brand หรือ fields อื่นเพิ่มเติม ให้ตกลงกับ FE ก่อนขยายพฤติกรรม
 - ยังไม่เพิ่ม fields/filter เฉพาะ GPU, storage, PSU, case และ cooler
 - ยังไม่เลือก Supabase database access strategy หรือ final RLS policies
-- ยังไม่ทำ builds/compatibility/RAM selection, Auth/member หรือ Admin endpoints
+- เพิ่ม POST build validation แล้ว; ยังไม่มี save/publication, Auth/member หรือ Admin endpoints
 - ต้องเพิ่ม authentication/authorization tests เมื่อพัฒนา endpoints ที่มีสิทธิ์เข้าถึง

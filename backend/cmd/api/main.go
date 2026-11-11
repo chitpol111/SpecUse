@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"specuse/backend/internal/build"
 	"specuse/backend/internal/catalog"
 	"specuse/backend/internal/handler"
 )
@@ -42,7 +43,7 @@ func main() {
 	}
 	server := &http.Server{
 		Addr:              address,
-		Handler:           handler.WithCORS(handler.NewCatalog(catalog.NewService(repo)), origins),
+		Handler:           handler.WithCORS(handler.NewAPI(catalog.NewService(repo), build.NewService(repo)), origins),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      15 * time.Second,

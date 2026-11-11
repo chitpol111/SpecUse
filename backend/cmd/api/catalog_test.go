@@ -42,7 +42,7 @@ func TestLoadLocalFixture(t *testing.T) {
 		t.Fatal(err)
 	}
 	items, total, err := repo.ListActive(context.Background(), catalog.Filter{Page: 1, PageSize: 20})
-	if err != nil || len(items) != 4 || total != 4 {
+	if err != nil || len(items) != 7 || total != 7 {
 		t.Fatalf("items=%d total=%d err=%v", len(items), total, err)
 	}
 	item, err := repo.FindActiveByID(context.Background(), "abcdefab-0000-0000-0000-000000000001")
@@ -56,7 +56,7 @@ func TestLoadLocalFixture(t *testing.T) {
 }
 
 func TestLoadCatalogRejectsInvalidFixtures(t *testing.T) {
-	valid := `[{"id":"abcdefab-0000-0000-0000-000000000001","name":"Test","category":"cpu","brand":"Example","price_thb":25000,"is_active":true}]`
+	valid := `[{"id":"abcdefab-0000-0000-0000-000000000001","name":"Test","category":"cpu","brand":"Example","price_thb":25000,"is_active":true,"specs":{"cpu_socket":"AM5"}}]`
 	for _, tt := range []struct {
 		name string
 		body string

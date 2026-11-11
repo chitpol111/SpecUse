@@ -1,0 +1,9 @@
+{
+  "items": [
+    {"product_id": "abcdefab-0000-0000-0000-000000000001", "quantity": 1, "owned_quantity": 1},
+    {"product_id": "abcdefab-0000-0000-0000-000000000004", "quantity": 1, "owned_quantity": 0}
+  ],
+  "ram_items": [
+    {"ram_model_id": "10000000-0000-0000-0000-000000000001", "required_modules": 3, "owned_modules": 0}
+  ]
+}

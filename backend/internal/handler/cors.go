@@ -19,7 +19,7 @@ func WithCORS(next http.Handler, origins []string) http.Handler {
 			if r.Method == http.MethodOptions && r.Header.Get("Access-Control-Request-Method") != "" {
 				w.Header().Add("Vary", "Access-Control-Request-Method")
 				w.Header().Add("Vary", "Access-Control-Request-Headers")
-				w.Header().Set("Access-Control-Allow-Methods", "GET")
+				w.Header().Set("Access-Control-Allow-Methods", "GET, POST")
 				w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
 				w.WriteHeader(http.StatusNoContent)
 				return

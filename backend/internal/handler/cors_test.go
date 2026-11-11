@@ -35,7 +35,7 @@ func TestCORS(t *testing.T) {
 			if w.Header().Get("Vary") == "" {
 				t.Fatal("Vary: Origin missing")
 			}
-			if tt.status == 204 && (w.Body.Len() != 0 || w.Header().Get("Access-Control-Allow-Methods") != "GET") {
+			if tt.status == 204 && (w.Body.Len() != 0 || w.Header().Get("Access-Control-Allow-Methods") != "GET, POST") {
 				t.Fatal("incorrect preflight response")
 			}
 		})
