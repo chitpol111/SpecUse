@@ -40,3 +40,6 @@ GitHub CI ต้องแยกดูตาม commit/PR; local PASS ไม่�
 PR #9 local: 96 tests หลัก + 328 subtests ผ่าน; PR #10 local: 101 tests หลัก + 328 subtests ผ่าน
 PR #11 ผลรวมตามตารางข้างต้น ทุกช่วง fail 0; PR #8 ตรวจ contract JSON/diff (เอกสารเท่านั้น)
 ผล CI ต้องตรวจแยกตาม SHA ของแต่ละ PR ไม่ใช้ผล local แทน CI
+
+PR #11 จัดตำแหน่ง helper fields/tests และ health note ในคู่มือใหม่เพื่อเลี่ยงข้อความชนกับ parent updates
+คง test functions/logic เดิมครบ เพิ่ม commit ปกติ ไม่มี merge/rebase/force push

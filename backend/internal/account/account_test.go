@@ -13,14 +13,14 @@ import (
 const userID = "11111111-1111-4111-8111-111111111111"
 
 type providerStub struct {
+	updated        json.RawMessage
+	logouts        int
 	token          string
 	raw            json.RawMessage
 	calls, updates int
 	loginErr       error
 	registerResult *AuthResult
 	registerErr    error
-	updated        json.RawMessage
-	logouts        int
 }
 
 func (p *providerStub) Register(context.Context, string, string, string) (AuthResult, error) {
@@ -134,6 +134,33 @@ func TestProfileOwnershipAndDatabaseRole(t *testing.T) {
 		t.Fatal("repository ownership mismatch accepted")
 	}
 }
+func TestPasswordCleansUpTemporarySessionOnOwnershipFailure(t *testing.T) {
+	s, p, _ := fixture()
+	id, err := s.Authenticate(context.Background(), p.token)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p.updated = json.RawMessage(`{}`)
+	if _, err := s.Password(context.Background(), id, "old-password", "new-password"); !errors.Is(err, ErrUnavailable) || p.logouts != 1 {
+		t.Fatal("invalid update user or temporary session leaked")
+	}
+	p.raw = json.RawMessage(`{"id":"22222222-2222-4222-8222-222222222222"}`)
+	if _, err := s.Password(context.Background(), id, "old-password", "new-password"); !errors.Is(err, ErrUnauthorized) || p.logouts != 2 {
+		t.Fatal("reauth user mismatch accepted")
+	}
+}
+func TestVerifiedMFARequiresAAL2(t *testing.T) {
+	s, p, profiles := fixture()
+	p.raw = json.RawMessage(`{"id":"11111111-1111-4111-8111-111111111111","factors":[{"status":"verified"}]}`)
+	if _, err := s.Authenticate(context.Background(), p.token); !errors.Is(err, ErrReauth) || len(profiles.seen) != 0 {
+		t.Fatal("MFA requirement bypassed")
+	}
+	p.token = jwt(map[string]any{"sub": userID, "iss": s.issuer, "aud": []string{"authenticated"}, "exp": time.Now().Add(time.Hour).Unix(), "aal": "aal2"})
+	if _, err := s.Authenticate(context.Background(), p.token); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestPasswordRequiresCurrentPasswordAndReturnsReplacementSession(t *testing.T) {
 	s, p, _ := fixture()
 	id, err := s.Authenticate(context.Background(), p.token)
@@ -168,33 +195,6 @@ func TestInputPolicy(t *testing.T) {
 	}
 	if _, err := s.Refresh(context.Background(), ""); !errors.Is(err, ErrInput) {
 		t.Fatal("empty refresh")
-	}
-}
-
-func TestPasswordCleansUpTemporarySessionOnOwnershipFailure(t *testing.T) {
-	s, p, _ := fixture()
-	id, err := s.Authenticate(context.Background(), p.token)
-	if err != nil {
-		t.Fatal(err)
-	}
-	p.updated = json.RawMessage(`{}`)
-	if _, err := s.Password(context.Background(), id, "old-password", "new-password"); !errors.Is(err, ErrUnavailable) || p.logouts != 1 {
-		t.Fatal("invalid update user or temporary session leaked")
-	}
-	p.raw = json.RawMessage(`{"id":"22222222-2222-4222-8222-222222222222"}`)
-	if _, err := s.Password(context.Background(), id, "old-password", "new-password"); !errors.Is(err, ErrUnauthorized) || p.logouts != 2 {
-		t.Fatal("reauth user mismatch accepted")
-	}
-}
-func TestVerifiedMFARequiresAAL2(t *testing.T) {
-	s, p, profiles := fixture()
-	p.raw = json.RawMessage(`{"id":"11111111-1111-4111-8111-111111111111","factors":[{"status":"verified"}]}`)
-	if _, err := s.Authenticate(context.Background(), p.token); !errors.Is(err, ErrReauth) || len(profiles.seen) != 0 {
-		t.Fatal("MFA requirement bypassed")
-	}
-	p.token = jwt(map[string]any{"sub": userID, "iss": s.issuer, "aud": []string{"authenticated"}, "exp": time.Now().Add(time.Hour).Unix(), "aal": "aal2"})
-	if _, err := s.Authenticate(context.Background(), p.token); err != nil {
-		t.Fatal(err)
 	}
 }
 

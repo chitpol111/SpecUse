@@ -64,6 +64,9 @@ memory mode สำหรับ tests/local เดิมยังมี; ถ้�
   SQL role ที่ app ใช้อ่าน profiles เป็นฝั่ง server; token role/user_metadata ไม่กำหนดสิทธิ์ app
 - ไม่เก็บ password/hash/refresh token เอง; session เป็นของ Supabase และไม่มี token logging
 
+Render configuration และ hosted smoke checklist ดู [RENDER.md](RENDER.md)
+`GET /api/v1/health` เช็ก DB RPC ภายใน 2 วินาทีใน Supabase mode; ไม่ใช่หลักฐานว่า Auth/สมาชิกใช้งานได้ครบ
+
 ## Development seed
 
 seeds/development.sql เป็นข้อมูล DEMO case ที่ไม่มี hardware specs/evidence ไม่ใช่สินค้าหรือราคาจริง
@@ -122,6 +125,3 @@ Auth session/logout และ privileged-key semantics อ้างอิงเ�
 
 unit tests จำลอง Register → ใช้ session เข้า Profile → Login/Refresh → Password → Logout และ refresh หลัง logout
 ไม่ใช่ผลทดสอบ hosted Supabase จริง และไม่ต้องทดสอบส่งอีเมลใน flow หลักนี้
-
-Render configuration และ hosted smoke checklist ดู [RENDER.md](RENDER.md)
-`GET /api/v1/health` เช็ก DB RPC ภายใน 2 วินาทีใน Supabase mode; ไม่ใช่หลักฐานว่า Auth/สมาชิกใช้งานได้ครบ
