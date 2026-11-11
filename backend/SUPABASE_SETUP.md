@@ -7,13 +7,16 @@ SQL function อ่านทุกตารางใน SQL statement เดี�
 
 ## สิ่งที่เจ้าของบัญชีต้องเตรียม
 
-ยังไม่มี SUPABASE_* หรือบัญชี Render ใน environment นี้ จึงยังไม่ทดสอบ hosted Supabase/อีเมลจริง/deploy
+ยังไม่มี SUPABASE_* หรือบัญชี Render ใน environment นี้ จึงยังไม่ทดสอบ hosted Supabase หรือ deploy จริง
 ตั้งค่าผ่าน Supabase Dashboard และ backend environment/secret manager ไม่ส่ง secrets ในแชต
 
 1. เลือก project local/test ที่เจ้าของควบคุม; ไม่สร้าง project/บริการแบบมีค่าใช้จ่ายอัตโนมัติ
-2. Authentication → Email เปิด provider และ Confirm email; minimum password length >=8
-3. Confirm signup template ใช้ {{ .Token }} ให้กรอก OTP ผ่าน POST /api/v1/auth/confirm
-   ตั้ง SMTP ที่ทดสอบส่งได้และทดสอบกับอีเมลตนเอง; delivery/rate limit ขึ้นกับ provider settings
+2. Dashboard → Authentication → Sign In / Providers → Email เปิด Email provider และ **ปิด Confirm email** แล้ว Save
+   ตรวจ Allow new users to sign up เปิด; minimum password length >=8
+   hosted project เปิด confirmation โดย default ต้องตรวจค่าที่บันทึกไว้ในแต่ละ environment
+3. ไม่ต้องตั้ง signup OTP template/SMTP สำหรับ flow นี้: Register ต้องได้ session แล้วใช้ /me ได้ทันที
+   /auth/confirm เดิมตอบ 410 ENDPOINT_RETIRED ไม่เรียก Supabase; Frontend ไม่ต้องรอ OTP
+   local Supabase: ตั้ง [auth.email] enable_confirmations=false ใน supabase/config.toml แล้ว restart local stack
 4. Settings → API Keys: project URL, publishable key และ secret key สำหรับ server
    legacy anon/service_role JWT keys ใช้ได้เช่นกัน แต่ไม่ใส่ server key ใน Frontend
 5. เปิด Data API สำหรับ public schema เพื่อให้ Go เรียก RPC; anonymous/member ไม่มีสิทธิ์ table/RPC ที่สร้างในงานนี้
@@ -75,15 +78,22 @@ SELECT set_config('app.allow_development_seed','on',false);
 
 ## ทดลอง flow กับ project ที่ตั้งค่าแล้ว
 
-1. POST /auth/register ด้วย email/password/display_name → 201, session=null เมื่อ confirmation เปิด
-2. รับ OTP จากอีเมล → POST /auth/confirm ด้วย email/token → session
-3. GET /me ด้วย Bearer access token → profile role=member
+1. POST /auth/register ด้วย email/password/display_name → 201, session ต้องไม่เป็น null, email_confirmation_required=false
+2. ใช้ access token จาก Register เรียก GET /me ได้ทันที → profile.role=member ไม่ต้องยืนยัน email
+3. POST /auth/login ด้วย email/password → user/session; ไม่ใส่ role/metadata ใน signup หรือ Profile
 4. PATCH /me เฉพาะ display_name → ชื่อเปลี่ยน; role/id/email ใน body ต้อง 400
 5. POST /auth/refresh ด้วย refresh_token → แทนทั้ง access/refresh pair
 6. PATCH /me/password ด้วย current_password/new_password → แทน session ใหม่ที่ reauthenticate
 7. POST /auth/logout ด้วย Bearer ไม่มี body → 204 แล้วล้าง token ทั้งคู่ใน FE
 8. Refresh หลัง logout ต้องใช้ไม่ได้; access JWT เก่าอาจใช้ได้จน exp จึงห้ามกล่าวว่า revoke JWT ทันที
 9. GET /products และ POST /builds/validate ใช้ DB snapshot จริง; ตรวจราคา/active/metadata ที่ provision เอง
+10. ไม่มี token 401; member เข้า Admin 403 หลังเปิดใช้ช่วง Admin; owner เตรียม Admin ล่วงหน้าตาม ADMIN_API.md
+
+ถ้า provider ยังเปิด confirmation และคืน user แต่ไม่มี session: Go ตอบ 503 AUTH_CONFIGURATION_ERROR
+ไม่สร้าง session ปลอม/ไม่ auto-login เพื่อข้าม policy/ไม่ส่ง 201 ที่ต้องรอ OTP และไม่ auto-retry signup
+บัญชีอาจถูกสร้างไว้แล้ว: เจ้าของแก้ toggle และตรวจบัญชีค้างผ่าน Auth Dashboard ก่อนทดลองใหม่
+ไม่รับประกันว่าปิด confirmation แล้วบัญชีเก่าที่ยังค้างจะถูกยืนยันย้อนหลัง; FE ไม่เปิด OTP flow แทน
+signup ที่ provider คืน session ไม่ครบ/หมดอายุถือเป็น 503 SERVICE_UNAVAILABLE
 
 หน้านี้ยังไม่ให้ผล PASS ของ hosted checklist ต้องบันทึก project/test date และผลจริงแยกเมื่อรัน
 
@@ -101,3 +111,13 @@ fake Auth server ไม่ใช่ Supabase จริง จึงไม่ถ�
 migrations ตรวจเพิ่มได้กับ PostgreSQL container และ auth.users/roles จำลอง; ผลนี้ไม่แทน hosted Supabase integration
 
 Auth session/logout และ privileged-key semantics อ้างอิงเอกสารทางการใน AUTH_API.md
+
+## อ้างอิงการปิด confirmation (ตรวจ 2026-11-11)
+
+- [General configuration / Confirm Email](https://supabase.com/docs/guides/auth/general-configuration)
+- [Password auth / Auth Providers](https://supabase.com/docs/guides/auth/passwords)
+- [User/session เมื่อปิด Confirm email](https://supabase.com/docs/reference/csharp/auth-signup)
+- [Local config](https://supabase.com/docs/guides/local-development/cli/config#auth.email.enable_confirmations)
+
+unit tests จำลอง Register → ใช้ session เข้า Profile → Login/Refresh → Password → Logout และ refresh หลัง logout
+ไม่ใช่ผลทดสอบ hosted Supabase จริง และไม่ต้องทดสอบส่งอีเมลใน flow หลักนี้

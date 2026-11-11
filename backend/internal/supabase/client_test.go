@@ -36,8 +36,6 @@ func TestAuthRESTFlowsAndSafeErrors(t *testing.T) {
 			if p["data"].(map[string]any)["role"] != nil {
 				t.Error("role forwarded")
 			}
-			_, _ = w.Write([]byte(`{"id":"11111111-1111-4111-8111-111111111111","email":"x@example.test"}`))
-			return
 		}
 		if r.URL.Path == "/auth/v1/user" {
 			if r.Header.Get("Authorization") != "Bearer "+token {
@@ -62,12 +60,12 @@ func TestAuthRESTFlowsAndSafeErrors(t *testing.T) {
 		t.Fatal(err)
 	}
 	signup, err := c.Register(context.Background(), "x@example.test", "example-password", "Test")
-	if err != nil || signup.Session != nil {
-		t.Fatal("confirmation-required signup changed")
+	if err != nil || signup.Session == nil {
+		t.Fatal("signup missing immediate provider session")
 	}
 	for _, flow := range []func() (account.AuthResult, error){func() (account.AuthResult, error) {
 		return c.Login(context.Background(), "x@example.test", "example-password")
-	}, func() (account.AuthResult, error) { return c.Confirm(context.Background(), "x@example.test", "123456") }, func() (account.AuthResult, error) { return c.Refresh(context.Background(), "test-refresh") }} {
+	}, func() (account.AuthResult, error) { return c.Refresh(context.Background(), "test-refresh") }} {
 		r, err := flow()
 		if err != nil || r.Session == nil || r.Session.ExpiresAt == 0 || r.Session.RefreshToken != "rotated-test-refresh" {
 			t.Fatal("session rotation fields missing")
@@ -85,7 +83,7 @@ func TestAuthRESTFlowsAndSafeErrors(t *testing.T) {
 	if err := c.Logout(context.Background(), token); err != nil {
 		t.Fatal(err)
 	}
-	if len(requests) != 8 {
+	if len(requests) != 7 {
 		t.Fatalf("unexpected requests %v", requests)
 	}
 }

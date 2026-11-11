@@ -15,6 +15,7 @@ import (
 
 var (
 	ErrInput        = errors.New("invalid account input")
+	ErrAuthConfig   = errors.New("authentication configuration does not support immediate signup")
 	ErrUnauthorized = errors.New("unauthorized")
 	ErrCredentials  = errors.New("invalid credentials")
 	ErrRefresh      = errors.New("invalid refresh token")
@@ -48,7 +49,6 @@ type Profile struct {
 }
 type Provider interface {
 	Register(context.Context, string, string, string) (AuthResult, error)
-	Confirm(context.Context, string, string) (AuthResult, error)
 	Login(context.Context, string, string) (AuthResult, error)
 	Refresh(context.Context, string) (AuthResult, error)
 	User(context.Context, string) (json.RawMessage, error)
@@ -92,19 +92,24 @@ func (s *Service) Register(ctx context.Context, email, password, name string) (A
 	if err != nil || !ValidEmail(email) || !ValidPassword(password) {
 		return AuthResult{}, ErrInput
 	}
-	return s.provider.Register(ctx, email, password, name)
-}
-func (s *Service) Confirm(ctx context.Context, email, token string) (AuthResult, error) {
-	email = strings.TrimSpace(email)
-	if !ValidEmail(email) || len(token) < 6 || len(token) > 10 {
-		return AuthResult{}, ErrInput
+	result, err := s.provider.Register(ctx, email, password, name)
+	if err != nil {
+		return AuthResult{}, err
 	}
-	for _, c := range token {
-		if c < '0' || c > '9' {
-			return AuthResult{}, ErrInput
-		}
+	// Supabase must issue the session. Never pretend signup is ready or fall
+	// back to password login when confirmation is still enabled upstream.
+	if result.Session == nil {
+		return AuthResult{}, ErrAuthConfig
 	}
-	return s.provider.Confirm(ctx, email, token)
+	var user struct {
+		ID string `json:"id"`
+	}
+	if json.Unmarshal(result.User, &user) != nil || !catalog.ValidUUID(user.ID) ||
+		result.Session.AccessToken == "" || result.Session.RefreshToken == "" || result.Session.TokenType != "bearer" ||
+		result.Session.ExpiresIn <= 0 || result.Session.ExpiresAt <= s.now().Unix() {
+		return AuthResult{}, ErrUnavailable
+	}
+	return result, nil
 }
 func (s *Service) Login(ctx context.Context, email, password string) (AuthResult, error) {
 	email = strings.TrimSpace(email)
