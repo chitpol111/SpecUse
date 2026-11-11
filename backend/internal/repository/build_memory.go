@@ -11,10 +11,11 @@ import (
 )
 
 // BuildMemory serves public catalog reads and build validation from the same
-// immutable data. Public catalog DTOs still contain only the original fields.
+// immutable data, including compatibility metadata for catalog responses.
 type BuildMemory struct {
 	snapshot build.Snapshot
 	catalog  *Memory
+	byID     map[string]build.Component
 }
 
 var _ build.Repository = (*BuildMemory)(nil)
@@ -67,15 +68,45 @@ func NewBuildMemory(source build.Snapshot) (*BuildMemory, error) {
 	}
 	sort.Slice(snapshot.Products, func(i, j int) bool { return snapshot.Products[i].Product.ID < snapshot.Products[j].Product.ID })
 	sort.Slice(snapshot.RAMModels, func(i, j int) bool { return snapshot.RAMModels[i].ID < snapshot.RAMModels[j].ID })
-	return &BuildMemory{snapshot: snapshot, catalog: baseRepository}, nil
+	byID := make(map[string]build.Component, len(snapshot.Products))
+	for _, component := range snapshot.Products {
+		byID[component.Product.ID] = component
+	}
+	return &BuildMemory{snapshot: snapshot, catalog: baseRepository, byID: byID}, nil
 }
 
-func (m *BuildMemory) ListActive(ctx context.Context, filter catalog.Filter) ([]catalog.Product, int, error) {
-	return m.catalog.ListActive(ctx, filter)
+func (m *BuildMemory) ListActive(ctx context.Context, filter catalog.Filter) ([]catalog.ProductDetails, int, error) {
+	items, total, err := m.catalog.ListActive(ctx, filter)
+	if err != nil {
+		return nil, 0, err
+	}
+	for i := range items {
+		items[i] = m.withDetails(items[i])
+	}
+	return items, total, nil
 }
 
-func (m *BuildMemory) FindActiveByID(ctx context.Context, id string) (catalog.Product, error) {
-	return m.catalog.FindActiveByID(ctx, id)
+func (m *BuildMemory) FindActiveByID(ctx context.Context, id string) (catalog.ProductDetails, error) {
+	product, err := m.catalog.FindActiveByID(ctx, id)
+	if err != nil {
+		return catalog.ProductDetails{}, err
+	}
+	return m.withDetails(product), nil
+}
+
+func (m *BuildMemory) withDetails(product catalog.ProductDetails) catalog.ProductDetails {
+	component := m.byID[product.ID]
+	switch product.Category {
+	case "cpu", "motherboard", "ram":
+		// Copy into a new DTO for each read. Callers cannot mutate the specs
+		// used by validation or another public response through this pointer.
+		product.Specs = &catalog.Specs{CPUSocket: component.Specs.CPUSocket,
+			RAMType: component.Specs.RAMType, ModulesPerPackage: component.Specs.ModulesPerPackage}
+		if product.Category == "ram" {
+			product.RAMModelID = component.RAMModelID
+		}
+	}
+	return product
 }
 
 func (m *BuildMemory) LoadSnapshot(ctx context.Context) (build.Snapshot, error) {

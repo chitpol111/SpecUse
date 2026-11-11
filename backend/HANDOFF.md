@@ -47,16 +47,18 @@ API ยังเป็น port 8080; PORT กับ CORS frontend port เป็
 
 ## ขอบเขตที่ฟลุคต้องทราบ
 
-- GET Catalog ยังคง 6 fields เดิม ยังไม่ส่ง specs/ram_model_id; ใช้ model IDs จากตัวอย่าง/fixture สำหรับรอบทดสอบนี้
+- GET Catalog คง 6 fields เดิมและส่ง specs ตามประเภทสินค้า พร้อม ram_model_id ของ RAM
+- จัดกลุ่ม RAM ด้วย ram_model_id จาก GET แล้วส่งใน ram_items โดยตรง ไม่ hardcode mapping และไม่ส่งราคา/specs กลับไป
 - จำนวนเงินเป็นตัวเลขเงินบาท Backend คิดเฉพาะของที่ต้องซื้อเพิ่ม Frontend จัดรูปแบบการแสดงผลเอง
 - compatible=true ตรวจเฉพาะ CPU socket/RAM type กับ motherboard ไม่ยืนยันความครบหรือสิทธิ์เผยแพร่ public
 - endpoint ไม่บันทึก build และยังไม่มี member/Admin/Supabase integration
 - local fixture เป็นข้อมูลสมมติ; APP_ENV=local รับ connection เฉพาะ 127.0.0.1 ไม่ใช่ server ให้ทุกคนเรียกข้ามเครื่อง
 - ไม่ต้องรัน SQL migrations เพื่อทดลอง fixture
 
-## ไฟล์ในชุด Backend Phase 2 บน feat/backend-api
+## รายการไฟล์เดิมของ Phase 2 ณ commit 64c7473
 
-รายการนี้เทียบกับ base commit `fda4725`: แก้ไข 8 ไฟล์ เพิ่มใหม่ 23 ไฟล์ รวม 31 ไฟล์
+รายการประวัตินี้เทียบ `fda4725` ถึง `64c7473` ก่อนส่วนขยาย Catalog specs:
+แก้ไข 8 ไฟล์ เพิ่มใหม่ 23 ไฟล์ รวม 31 ไฟล์ ไม่ใช่รายการ diff ของ branch รุ่นถัดมา
 ขอบเขตมีเฉพาะ Backend, เอกสาร, tests, schema และ JSON ตัวอย่าง
 
 แก้ไข:
@@ -109,4 +111,5 @@ frontend, binary หรือ test reports ในรายการ commit ส�
 > ฟลุค ชุด Backend Catalog + POST /api/v1/builds/validate อยู่บน branch feat/backend-api ให้ clone แยกสำหรับ Backend ตาม backend/HANDOFF.md ได้เลย
 > อ่าน backend/BUILD_API.md สำหรับวิธีรันด้วย Go 1.22+ และ local fixture ตั้ง CORS รองรับทั้ง localhost:3000 และ 127.0.0.1:3000 แล้ว
 > Base URL คือ http://127.0.0.1:8080/api/v1 ลอง POST ด้วย examples/validate.request.json ตาม curl ในคู่มือ ต้องได้ compatible=true และยอด 11500
+> GET products มี specs และ RAM ram_model_id แล้ว อ่านจาก API ไปสร้าง request validate ได้เลย ไม่ต้องทำ mapping เอง
 > ตัวอย่างไม่เข้ากันและแพ็ก RAM อยู่ใน examples/ พร้อม response เทียบให้แล้ว ยังไม่ใช้ Supabase/token และไม่ต้องส่งราคาจาก Frontend

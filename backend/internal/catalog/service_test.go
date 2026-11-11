@@ -11,18 +11,18 @@ type stubRepository struct {
 	filter Filter
 	id     string
 	called bool
-	items  []Product
+	items  []ProductDetails
 	total  int
-	item   Product
+	item   ProductDetails
 	err    error
 }
 
-func (r *stubRepository) ListActive(_ context.Context, filter Filter) ([]Product, int, error) {
+func (r *stubRepository) ListActive(_ context.Context, filter Filter) ([]ProductDetails, int, error) {
 	r.called, r.filter = true, filter
 	return r.items, r.total, r.err
 }
 
-func (r *stubRepository) FindActiveByID(_ context.Context, id string) (Product, error) {
+func (r *stubRepository) FindActiveByID(_ context.Context, id string) (ProductDetails, error) {
 	r.called, r.id = true, id
 	return r.item, r.err
 }
@@ -68,7 +68,7 @@ func TestGetValidatesAndNormalizesUUID(t *testing.T) {
 			t.Errorf("id=%q err=%v repository called=%v", id, err, repo.called)
 		}
 	}
-	repo := &stubRepository{item: Product{IsActive: true}}
+	repo := &stubRepository{item: ProductDetails{Product: Product{IsActive: true}}}
 	_, err := NewService(repo).Get(context.Background(), "ABCDEFAB-0000-0000-0000-000000000001")
 	if err != nil || repo.id != "abcdefab-0000-0000-0000-000000000001" {
 		t.Fatalf("id=%q err=%v", repo.id, err)
@@ -76,7 +76,7 @@ func TestGetValidatesAndNormalizesUUID(t *testing.T) {
 }
 
 func TestGetRejectsInactiveRepositoryResult(t *testing.T) {
-	_, err := NewService(&stubRepository{item: Product{IsActive: false}}).
+	_, err := NewService(&stubRepository{item: ProductDetails{Product: Product{IsActive: false}}}).
 		Get(context.Background(), "00000000-0000-0000-0000-000000000001")
 	if !errors.Is(err, ErrNotFound) {
 		t.Fatalf("got %v", err)

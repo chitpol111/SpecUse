@@ -11,8 +11,7 @@ var (
 	ErrNotFound     = errors.New("product not found")
 )
 
-// Product exposes only the six fields already agreed with the frontend.
-// TODO(FE/BE): agree on compatibility JSON fields before exposing typed details.
+// Product retains the original six shared fields used by the build domain.
 type Product struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
@@ -20,6 +19,22 @@ type Product struct {
 	Brand    string `json:"brand"`
 	PriceTHB int64  `json:"price_thb"`
 	IsActive bool   `json:"is_active"`
+}
+
+// Specs contains only the compatibility fields agreed with the frontend.
+// Unrelated fields are omitted instead of supplying guessed or zero values.
+type Specs struct {
+	CPUSocket         string `json:"cpu_socket,omitempty"`
+	RAMType           string `json:"ram_type,omitempty"`
+	ModulesPerPackage int64  `json:"modules_per_package,omitempty"`
+}
+
+// ProductDetails is an additive public view. IDs, prices and the six original
+// fields keep their existing meaning; RAMModelID identifies a model, not a SKU.
+type ProductDetails struct {
+	Product
+	Specs      *Specs `json:"specs,omitempty"`
+	RAMModelID string `json:"ram_model_id,omitempty"`
 }
 
 type Filter struct {
@@ -30,17 +45,17 @@ type Filter struct {
 }
 
 type Page struct {
-	Items    []Product `json:"items"`
-	Page     int       `json:"page"`
-	PageSize int       `json:"page_size"`
-	Total    int       `json:"total"`
+	Items    []ProductDetails `json:"items"`
+	Page     int              `json:"page"`
+	PageSize int              `json:"page_size"`
+	Total    int              `json:"total"`
 }
 
 // Repository implementations must filter inactive products before pagination
 // and counting. Results must have a stable order (ascending UUID).
 type Repository interface {
-	ListActive(context.Context, Filter) ([]Product, int, error)
-	FindActiveByID(context.Context, string) (Product, error)
+	ListActive(context.Context, Filter) ([]ProductDetails, int, error)
+	FindActiveByID(context.Context, string) (ProductDetails, error)
 }
 
 // ValidUUID accepts the canonical UUID shape without imposing a UUID version.

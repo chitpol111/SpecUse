@@ -1,7 +1,8 @@
 # SpecUse Backend — Catalog และ Build Validation
 
 Go REST API ด้วย `net/http` และ JSON แยก handler, service และ repository
-มี public catalog สอง endpoints ซึ่งส่ง 6 fields เดิม และ `POST /api/v1/builds/validate`
+มี public catalog สอง endpoints ซึ่งคง 6 fields เดิมและเพิ่ม compatibility metadata ตามประเภทสินค้า
+รวมถึง `POST /api/v1/builds/validate` จากข้อมูล repository ชุดเดียวกัน
 ไม่มี dependencies ภายนอก และไม่เชื่อมต่อ Supabase หรือใช้ credentials จริง
 
 อ่าน [API Contract สำหรับ Fluke พร้อม JSON/curl](BUILD_API.md) และ
@@ -158,11 +159,12 @@ Catalog ทั้งสอง endpoints และ build validation เปิด�
     "items": [
       {
         "id": "abcdefab-0000-0000-0000-000000000001",
-        "name": "Test CPU",
+        "name": "[LOCAL TEST] CPU A",
         "category": "cpu",
         "brand": "Example",
         "price_thb": 25000,
-        "is_active": true
+        "is_active": true,
+        "specs": {"cpu_socket": "AM5"}
       }
     ],
     "page": 1,
@@ -184,11 +186,12 @@ Catalog ทั้งสอง endpoints และ build validation เปิด�
   "data": {
     "product": {
       "id": "abcdefab-0000-0000-0000-000000000001",
-      "name": "Test CPU",
+      "name": "[LOCAL TEST] CPU A",
       "category": "cpu",
       "brand": "Example",
       "price_thb": 25000,
-      "is_active": true
+      "is_active": true,
+      "specs": {"cpu_socket": "AM5"}
     }
   }
 }
@@ -256,7 +259,8 @@ Tests ใช้ `httptest`, memory repository และ stub repository ส่�
 เปิด HTTP listener เฉพาะ loopback ด้วย port ที่ระบบเลือก ไม่ติดต่อบริการภายนอก
 ไม่ต้องใช้ `.env`, Supabase, ฐานข้อมูล หรือ secret ครอบคลุม:
 
-- รูปแบบ response มีเพียง 6 product fields และราคาเป็นจำนวนเต็มเงินบาท
+- response คง 6 product fields เดิม พร้อม specs ที่เกี่ยวข้อง และราคาเป็นจำนวนเต็มเงินบาท
+- RAM ram_model_id และแพ็ก 1/2 โมดูลจาก GET ใช้กับ POST validate ได้โดยไม่ hardcode mapping
 - ไม่แสดง inactive ทั้งรายการ รายละเอียด ผลค้น และจำนวนรวม
 - category/search, pagination, stable order, รายการว่างและหน้าเกินจริง
 - UUID, query ผิดรูปแบบ, duplicate parameters และ integer overflow
@@ -273,7 +277,7 @@ Tests ใช้ `httptest`, memory repository และ stub repository ส่�
 
 - FE/BE ยืนยันแล้วว่า Catalog ระยะนี้ส่งเฉพาะ `id`, `name`, `category`, `brand`, `price_thb`, `is_active`
 - ตกลงชื่อ `specs.cpu_socket`, `specs.ram_type`, `specs.modules_per_package`
-  และ `ram_model_id` ระดับเดียวกับ `id` แล้ว แต่ยังไม่เพิ่มลง Public API ในรอบนี้
+  และ `ram_model_id` ระดับเดียวกับ `id` แล้ว และเพิ่มลง Catalog list/detail ตามประเภทสินค้า
 - Schema/repository/compatibility/RAM selection ภายในและ open decisions ดู [PHASE2.md](PHASE2.md)
 - ต้องตกลงชุดค่า category ที่ Frontend จะใช้; ค่า `cpu` ใน tests เป็น fixture ไม่ใช่ enum ใหม่
 - หากต้องการ search ใน brand หรือ fields อื่นเพิ่มเติม ให้ตกลงกับ FE ก่อนขยายพฤติกรรม

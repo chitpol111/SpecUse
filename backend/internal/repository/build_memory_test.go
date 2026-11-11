@@ -2,7 +2,9 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"reflect"
 	"testing"
 
 	"specuse/backend/internal/build"
@@ -19,6 +21,72 @@ func buildSnapshot() build.Snapshot {
 				Specs: build.Specs{CPUSocket: "AM5"}},
 		},
 		RAMModels: []build.RAMModel{{ID: model, RAMType: "DDR5"}},
+	}
+}
+
+func TestCatalogSpecCopiesCannotChangeBuildValidation(t *testing.T) {
+	source := buildSnapshot()
+	board := source.Products[1]
+	board.Product.ID = "20000000-0000-0000-0000-000000000003"
+	board.Product.Category = "motherboard"
+	board.Specs.RAMType = "DDR5"
+	source.Products = append(source.Products, board)
+	repo, err := NewBuildMemory(source)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cpu, err := repo.FindActiveByID(context.Background(), source.Products[1].Product.ID)
+	if err != nil || cpu.Specs == nil {
+		t.Fatalf("CPU=%+v err=%v", cpu, err)
+	}
+	cpu.Specs.CPUSocket = "modified"
+	ram, err := repo.FindActiveByID(context.Background(), source.Products[0].Product.ID)
+	if err != nil || ram.Specs == nil {
+		t.Fatalf("RAM=%+v err=%v", ram, err)
+	}
+	ram.Specs.RAMType, ram.Specs.ModulesPerPackage = "modified", 1
+	items, _, err := repo.ListActive(context.Background(), catalog.Filter{Page: 1, PageSize: 20})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if items[0].Specs.CPUSocket != "AM5" || items[1].Specs.RAMType != "DDR5" || items[1].Specs.ModulesPerPackage != 2 {
+		t.Fatalf("detail response mutated repository: %+v", items)
+	}
+	items[0].Specs.CPUSocket = "also modified"
+	result, err := build.NewService(repo).Validate(context.Background(),
+		[]build.Item{{ProductID: source.Products[1].Product.ID, Quantity: 1, OwnedQuantity: 1}, {ProductID: board.Product.ID, Quantity: 1, OwnedQuantity: 1}},
+		[]build.RAMItem{{RAMModelID: source.RAMModels[0].ID, RequiredModules: 2, OwnedModules: 0}})
+	if err != nil || !result.Compatible || result.TotalPriceTHB != 1000 || result.RAMSelections[0].Packages[0].ModulesPerPackage != 2 {
+		t.Fatalf("public specs changed validation: %+v %v", result, err)
+	}
+}
+
+func TestCatalogOmitsUnagreedSpecsForOtherCategories(t *testing.T) {
+	for _, category := range []string{"gpu", "storage", "psu", "case", "cooler"} {
+		t.Run(category, func(t *testing.T) {
+			source := buildSnapshot()
+			source.Products[1].Product.Category = category
+			source.Products[1].Specs = build.Specs{}
+			repo, err := NewBuildMemory(source)
+			if err != nil {
+				t.Fatal(err)
+			}
+			product, err := repo.FindActiveByID(context.Background(), source.Products[1].Product.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			encoded, err := json.Marshal(product)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var fields map[string]json.RawMessage
+			if err := json.Unmarshal(encoded, &fields); err != nil {
+				t.Fatal(err)
+			}
+			if len(fields) != 6 || product.Specs != nil || product.RAMModelID != "" {
+				t.Fatalf("unagreed fields for %s: %s", category, encoded)
+			}
+		})
 	}
 }
 
@@ -135,7 +203,7 @@ func TestBuildMemoryCatalogAndValidationUseSameData(t *testing.T) {
 		t.Fatalf("catalog=%+v snapshot price=%d result=%+v err=%v", product, snapshotPrice, result, err)
 	}
 	items, total, err := repo.ListActive(context.Background(), catalog.Filter{Category: "ram", Page: 1, PageSize: 20})
-	if err != nil || total != 1 || len(items) != 1 || items[0] != product {
+	if err != nil || total != 1 || len(items) != 1 || !reflect.DeepEqual(items[0], product) {
 		t.Fatalf("catalog filter: %+v %d %v", items, total, err)
 	}
 	source.Products[0].Product.IsActive = false

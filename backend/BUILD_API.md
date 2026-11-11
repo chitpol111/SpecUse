@@ -79,11 +79,55 @@ page เริ่มที่ 1 และ page_size เริ่มต้น 20 
 ให้ละ query นั้น ไม่ส่งค่าว่าง เช่น `page=` category เทียบตรงตัว ส่วน search ค้นบางส่วน
 ของชื่อแบบไม่แยกตัวพิมพ์เล็ก/ใหญ่ เรียง UUID ก่อนแบ่งหน้า
 
-ตัวอย่างรายละเอียดสินค้าจาก local fixture:
+Catalog เพิ่ม fields แบบ additive ทั้งรายการและรายละเอียด โดยคง `id`, `name`,
+`category`, `brand`, `price_thb`, `is_active` และ pagination/envelope เดิม:
+
+| Category | Fields ที่เพิ่ม | ความหมาย |
+|---|---|---|
+| `cpu` | `specs.cpu_socket` | socket ของ CPU |
+| `motherboard` | `specs.cpu_socket`, `specs.ram_type` | socket และ RAM type ที่ motherboard รองรับสำหรับ checks ปัจจุบัน |
+| `ram` | `ram_model_id`, `specs.ram_type`, `specs.modules_per_package` | UUID ของ RAM model, RAM type และจำนวนโมดูลต่อแพ็ก 1 หรือ 2 |
+| หมวดอื่น | ไม่มี fields เพิ่ม | ไม่เติม specs ที่ยังไม่ตกลงหรือเดาข้อมูลให้ |
+
+`ram_model_id` อยู่ระดับเดียวกับ `id` ไม่ได้อยู่ใน `specs` และไม่ใช่ product UUID
+SKU แพ็กเดี่ยว/คู่ของ RAM model เดียวกันใช้ ram_model_id เดียวกัน แต่มี product id/ราคา
+และ modules_per_package ของตัวเอง ตัวอย่างแพ็กเดี่ยว/คู่ด้านล่างอ่านจาก catalog เดียวกับ validate
+
+`specs` ส่งเฉพาะ keys ที่เกี่ยวข้องกับประเภทสินค้า ไม่เติมค่าว่าง, null หรือ modules_per_package=0
+สำหรับหมวดที่ยังไม่มี typed specs จะละ `specs` และ `ram_model_id` ทั้งคู่
+category ยังคงเป็นตัวพิมพ์เล็กและสถานะยังชื่อ `is_active`
+
+ตัวอย่าง CPU จาก local fixture:
 
 ```json
-{"data":{"product":{"id":"abcdefab-0000-0000-0000-000000000001","name":"[LOCAL TEST] CPU A","category":"cpu","brand":"Example","price_thb":25000,"is_active":true}}}
+{"data":{"product":{"id":"abcdefab-0000-0000-0000-000000000001","name":"[LOCAL TEST] CPU A","category":"cpu","brand":"Example","price_thb":25000,"is_active":true,"specs":{"cpu_socket":"AM5"}}}}
 ```
+
+ตัวอย่าง RAM แพ็กคู่จาก local fixture:
+
+```json
+{"data":{"product":{"id":"abcdefab-0000-0000-0000-000000000006","name":"[LOCAL TEST] DDR5 pair","category":"ram","brand":"Example","price_thb":4000,"is_active":true,"specs":{"ram_type":"DDR5","modules_per_package":2},"ram_model_id":"10000000-0000-0000-0000-000000000001"}}}
+```
+
+ตัวอย่าง JSON เต็มที่ตรวจเทียบกับ API ใน tests:
+
+- [รายการสินค้าทั้งหมด](examples/products.response.json)
+- [CPU](examples/product-cpu.response.json)
+- [Motherboard](examples/product-motherboard.response.json)
+- [RAM แพ็กเดี่ยว](examples/product-ram-single.response.json) และ [RAM แพ็กคู่](examples/product-ram-pair.response.json)
+
+### ใช้ข้อมูล GET เพื่อสร้าง request validate
+
+1. อ่าน `data.items` จาก GET products และแสดงสินค้าโดยใช้ 6 fields เดิม
+2. CPU/motherboard ใช้ `product.id` ใน `items[].product_id` ตามเดิม
+3. จัดกลุ่ม RAM SKUs ด้วย `ram_model_id` จาก response โดยตรง ไม่ทำ mapping UUID เอง
+4. เมื่อเลือกรุ่น RAM ส่ง model UUID นั้นใน `ram_items[].ram_model_id` พร้อมจำนวนโมดูล
+   ที่ต้องการและมีอยู่แล้ว ไม่ส่ง product id ของแพ็กเป็น RAM model ID
+5. ไม่ต้องเลือกแพ็ก RAM เอง Backend เลือก active SKU ที่เหมาะสมแล้วส่งกลับใน `ram_selections[].packages`
+
+Frontend ใช้ specs ช่วยแสดง/กรองตัวเลือกได้ แต่ผล compatibility และราคาสุดท้ายต้องใช้จาก POST validate
+ห้ามส่ง product ทั้ง object หรือ specs/ราคาใน request เพราะ endpoint รับเฉพาะ IDs/counts
+ไม่มี route เพิ่มสำหรับ metadata: ทั้ง GET list และ GET detail มีข้อมูลที่จำเป็นชุดเดียวกัน
 
 Catalog ตอบ 200 เมื่อสำเร็จ, 400 เมื่อ UUID/query ผิด, 404 เมื่อไม่พบหรือสินค้า inactive,
 405 เมื่อ method ไม่ใช่ GET และ 500 เมื่อเกิด internal error โดยใช้ error envelope เดียวกัน
@@ -229,11 +273,15 @@ endpoint นี้ไม่บันทึก build; ยังไม่มี sa
 ## curl จากโฟลเดอร์ backend
 
 ```sh
-# Catalog ยังตอบ 6 fields เดิม
+# Catalog คง 6 fields เดิมและเพิ่ม specs/ram_model_id ตามประเภทสินค้า
 curl -i 'http://127.0.0.1:8080/api/v1/products'
 
 # รายละเอียดสินค้า
 curl -i 'http://127.0.0.1:8080/api/v1/products/abcdefab-0000-0000-0000-000000000001'
+
+# RAM SKUs: อ่าน ram_model_id และ modules_per_package โดยไม่ hardcode mapping
+curl -i 'http://127.0.0.1:8080/api/v1/products?category=ram'
+curl -i 'http://127.0.0.1:8080/api/v1/products/abcdefab-0000-0000-0000-000000000006'
 
 # สำเร็จ: compatible=true, total_price_thb=11500
 curl -i -X POST 'http://127.0.0.1:8080/api/v1/builds/validate' \
@@ -286,8 +334,10 @@ go test ./...
 go vet ./...
 ```
 
-Tests ครอบคลุม handler/service/repository และตรวจ JSON examples ทั้งสามชุดกับ
+Tests ครอบคลุม handler/service/repository และตรวจ JSON examples ของ Catalog กับ validate ทั้งสามชุดกับ
 API ที่สร้างจาก local fixture จริงด้วย `httptest` ไม่ต้องใช้ Supabase หรือ secrets
 Lifecycle tests เดิมเปิดเฉพาะพอร์ต loopback ชั่วคราว ไม่มีการเชื่อมบริการภายนอก
-ยังไม่เปลี่ยน GET products ให้ส่ง specs/ram_model_id; สำหรับรอบนี้ใช้ fixture IDs จากไฟล์ตัวอย่าง
-ก่อนเพิ่ม fields ดังกล่าวใน Catalog จะสรุปการเปลี่ยนแปลงสัญญาแยกต่างหาก
+GET Catalog และ POST validate อ่าน snapshot เดียวกัน รวมถึง IDs, specs, ราคา และ active status
+มี tests สร้าง request validate จากข้อมูล GET โดยตรง ตรวจ CPU/RAM mismatch และแพ็ก 1/2 โมดูล
+รวมถึงป้องกันการแก้ specs ของ response แล้วกระทบ snapshot และไม่ส่ง specs ของหมวดที่ยังไม่ตกลง
+POST success example เดิมยังได้ compatible=true และ total_price_thb=11500

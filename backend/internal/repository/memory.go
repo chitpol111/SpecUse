@@ -40,14 +40,14 @@ func NewMemory(products []catalog.Product) (*Memory, error) {
 	return result, nil
 }
 
-func (m *Memory) ListActive(ctx context.Context, filter catalog.Filter) ([]catalog.Product, int, error) {
+func (m *Memory) ListActive(ctx context.Context, filter catalog.Filter) ([]catalog.ProductDetails, int, error) {
 	if err := catalog.ValidateFilter(filter); err != nil {
 		return nil, 0, err
 	}
 	if err := ctx.Err(); err != nil {
 		return nil, 0, err
 	}
-	matches := make([]catalog.Product, 0)
+	matches := make([]catalog.ProductDetails, 0)
 	search := strings.ToLower(filter.Search)
 	for _, product := range m.products {
 		if !product.IsActive || (filter.Category != "" && product.Category != filter.Category) {
@@ -57,12 +57,12 @@ func (m *Memory) ListActive(ctx context.Context, filter catalog.Filter) ([]catal
 		if search != "" && !strings.Contains(strings.ToLower(product.Name), search) {
 			continue
 		}
-		matches = append(matches, product)
+		matches = append(matches, catalog.ProductDetails{Product: product})
 	}
 	total := len(matches)
 	start := (filter.Page - 1) * filter.PageSize
 	if start >= total {
-		return []catalog.Product{}, total, nil
+		return []catalog.ProductDetails{}, total, nil
 	}
 	// Bound the size before addition to avoid integer overflow.
 	size := filter.PageSize
@@ -72,14 +72,14 @@ func (m *Memory) ListActive(ctx context.Context, filter catalog.Filter) ([]catal
 	return matches[start : start+size], total, nil
 }
 
-func (m *Memory) FindActiveByID(ctx context.Context, id string) (catalog.Product, error) {
+func (m *Memory) FindActiveByID(ctx context.Context, id string) (catalog.ProductDetails, error) {
 	if err := ctx.Err(); err != nil {
-		return catalog.Product{}, err
+		return catalog.ProductDetails{}, err
 	}
 	for _, product := range m.products {
 		if product.ID == id && product.IsActive {
-			return product, nil
+			return catalog.ProductDetails{Product: product}, nil
 		}
 	}
-	return catalog.Product{}, catalog.ErrNotFound
+	return catalog.ProductDetails{}, catalog.ErrNotFound
 }

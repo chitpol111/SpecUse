@@ -34,21 +34,21 @@ func (s *Service) List(ctx context.Context, filter Filter) (Page, error) {
 		return Page{}, err
 	}
 	if items == nil {
-		items = []Product{}
+		items = []ProductDetails{}
 	}
 	return Page{Items: items, Page: filter.Page, PageSize: filter.PageSize, Total: total}, nil
 }
 
-func (s *Service) Get(ctx context.Context, id string) (Product, error) {
+func (s *Service) Get(ctx context.Context, id string) (ProductDetails, error) {
 	if !ValidUUID(id) {
-		return Product{}, fmt.Errorf("%w: invalid UUID", ErrInvalidInput)
+		return ProductDetails{}, fmt.Errorf("%w: invalid UUID", ErrInvalidInput)
 	}
 	product, err := s.repository.FindActiveByID(ctx, strings.ToLower(id))
 	if err != nil {
-		return Product{}, err
+		return ProductDetails{}, err
 	}
 	if !product.IsActive {
-		return Product{}, ErrNotFound
+		return ProductDetails{}, ErrNotFound
 	}
 	return product, nil
 }

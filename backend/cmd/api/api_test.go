@@ -87,7 +87,7 @@ func TestFrontendOriginsCanPostAndPreflight(t *testing.T) {
 	}
 }
 
-func TestFixtureCatalogRetainsSixPublicFields(t *testing.T) {
+func TestFixtureCatalogRetainsOriginalFieldsAndAddsTrustedSpecs(t *testing.T) {
 	h := fixtureAPI(t)
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, httptest.NewRequest("GET", "/api/v1/products", nil))
@@ -103,14 +103,85 @@ func TestFixtureCatalogRetainsSixPublicFields(t *testing.T) {
 	if w.Code != 200 || body.Data.Total != 7 || len(body.Data.Items) != 7 {
 		t.Fatalf("status=%d body=%s", w.Code, w.Body.String())
 	}
+	fixture, err := os.ReadFile("../../testdata/catalog.local.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var expected []map[string]any
+	if err := json.Unmarshal(fixture, &expected); err != nil {
+		t.Fatal(err)
+	}
+	byID := map[string]map[string]any{}
+	for _, product := range expected {
+		byID[product["id"].(string)] = product
+	}
 	for _, product := range body.Data.Items {
-		if len(product) != 6 || product["is_active"] != true {
+		if product["is_active"] != true {
 			t.Fatalf("catalog response changed: %+v", product)
 		}
 		for _, name := range []string{"id", "name", "category", "brand", "price_thb", "is_active"} {
 			if _, exists := product[name]; !exists {
 				t.Fatalf("missing %s", name)
 			}
+		}
+		if !reflect.DeepEqual(product, byID[product["id"].(string)]) {
+			t.Fatalf("public fields/specs must match trusted catalog data: %+v", product)
+		}
+	}
+}
+
+func TestCatalogExamplesMatchLocalFixtureAPI(t *testing.T) {
+	h := fixtureAPI(t)
+	for _, example := range []struct{ name, path string }{
+		{"products", "/api/v1/products"},
+		{"product-cpu", "/api/v1/products/abcdefab-0000-0000-0000-000000000001"},
+		{"product-motherboard", "/api/v1/products/abcdefab-0000-0000-0000-000000000004"},
+		{"product-ram-single", "/api/v1/products/abcdefab-0000-0000-0000-000000000005"},
+		{"product-ram-pair", "/api/v1/products/abcdefab-0000-0000-0000-000000000006"},
+	} {
+		t.Run(example.name, func(t *testing.T) {
+			expected, err := os.ReadFile("../../examples/" + example.name + ".response.json")
+			if err != nil {
+				t.Fatal(err)
+			}
+			w := httptest.NewRecorder()
+			h.ServeHTTP(w, httptest.NewRequest("GET", example.path, nil))
+			var want, got any
+			if err := json.Unmarshal(expected, &want); err != nil {
+				t.Fatal(err)
+			}
+			if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+				t.Fatal(err)
+			}
+			if w.Code != 200 || !reflect.DeepEqual(want, got) {
+				t.Fatalf("status=%d want=%s got=%s", w.Code, expected, w.Body.String())
+			}
+		})
+	}
+}
+
+func TestCatalogMetadataSurvivesPaginationAndInactiveFiltering(t *testing.T) {
+	h := fixtureAPI(t)
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, httptest.NewRequest("GET", "/api/v1/products?category=ram&page=2&page_size=1", nil))
+	var page struct {
+		Data catalog.Page `json:"data"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &page); err != nil {
+		t.Fatal(err)
+	}
+	if w.Code != 200 || page.Data.Total != 4 || page.Data.Page != 2 || len(page.Data.Items) != 1 {
+		t.Fatalf("status=%d body=%s", w.Code, w.Body.String())
+	}
+	product := page.Data.Items[0]
+	if product.ID != "abcdefab-0000-0000-0000-000000000006" || product.Specs == nil || product.Specs.ModulesPerPackage != 2 || product.RAMModelID == "" {
+		t.Fatalf("metadata lost during pagination: %+v", product)
+	}
+	for _, id := range []string{"abcdefab-0000-0000-0000-000000000002", "abcdefab-0000-0000-0000-000000000009"} {
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, httptest.NewRequest("GET", "/api/v1/products/"+id, nil))
+		if w.Code != 404 || strings.Contains(w.Body.String(), `"specs"`) {
+			t.Fatalf("inactive metadata leaked: %d %s", w.Code, w.Body.String())
 		}
 	}
 }

@@ -47,8 +47,15 @@ func assertProductContract(t *testing.T, raw json.RawMessage) {
 	if err := json.Unmarshal(raw, &fields); err != nil {
 		t.Fatal(err)
 	}
-	if len(fields) != 6 {
-		t.Fatalf("expected only six agreed fields, got %s", raw)
+	if len(fields) < 6 || len(fields) > 8 {
+		t.Fatalf("expected six original fields and optional compatibility metadata, got %s", raw)
+	}
+	for key := range fields {
+		switch key {
+		case "id", "name", "category", "brand", "price_thb", "is_active", "specs", "ram_model_id":
+		default:
+			t.Fatalf("unexpected product field %s", key)
+		}
 	}
 	for _, key := range []string{"id", "name", "category", "brand", "price_thb", "is_active"} {
 		if _, ok := fields[key]; !ok {
@@ -166,12 +173,12 @@ func TestHTTPErrorContract(t *testing.T) {
 
 type failedRepository struct{}
 
-func (failedRepository) ListActive(context.Context, catalog.Filter) ([]catalog.Product, int, error) {
+func (failedRepository) ListActive(context.Context, catalog.Filter) ([]catalog.ProductDetails, int, error) {
 	return nil, 0, errors.New("private database credential")
 }
 
-func (failedRepository) FindActiveByID(context.Context, string) (catalog.Product, error) {
-	return catalog.Product{}, errors.New("private database credential")
+func (failedRepository) FindActiveByID(context.Context, string) (catalog.ProductDetails, error) {
+	return catalog.ProductDetails{}, errors.New("private database credential")
 }
 
 func TestInternalErrorsAreSanitized(t *testing.T) {

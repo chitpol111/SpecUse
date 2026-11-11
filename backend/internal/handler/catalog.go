@@ -34,7 +34,7 @@ type productResponse struct {
 }
 
 type productData struct {
-	Product catalog.Product `json:"product"`
+	Product catalog.ProductDetails `json:"product"`
 }
 
 func writeJSON(w http.ResponseWriter, status int, body any) {

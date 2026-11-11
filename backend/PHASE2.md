@@ -2,7 +2,8 @@
 
 งานนี้มี domain/service และ unit tests สำหรับ compatibility และ RAM selection
 เชื่อม `POST /api/v1/builds/validate` แล้ว ดู [HTTP contract และตัวอย่าง](BUILD_API.md)
-GET Catalog ยังคง 6 fields เดิม และยังไม่มี build persistence หรือ Supabase adapter
+GET Catalog คง 6 fields เดิมและเพิ่ม specs/ram_model_id จาก snapshot เดียวกับ validate
+ยังไม่มี build persistence หรือ Supabase adapter
 
 ## ข้อตกลงล่าสุดที่ยืนยันแล้ว
 
@@ -76,6 +77,8 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f migrations/002_c
 - copy ทั้งตอนสร้างและคืน snapshot เพื่อกัน caller แก้ราคา/specs ของ repository
 - executable ใช้ BuildMemory ซึ่ง delegate Catalog reads ผ่าน Memory เดิม;
   local fixture เพิ่ม typed metadata และ derive RAM models จาก model ID/type ของ SKU ในไฟล์
+- Catalog คืน ProductDetails ที่คง Product 6 fields และเติม optional specs/ram_model_id
+  จาก index ของ validated snapshot ไม่เพิ่มแหล่ง metadata แยก และ copy specs ต่อ response
 - `build.Service.Validate` รับเฉพาะ references/counts ไม่มี client price, specs, role หรือ compatibility result
 - non-RAM คิด `(quantity - owned_quantity) * catalog price`; RAM คิดจากแพ็กที่ต้องซื้อ
   ตรวจ integer overflow ทั้งการคูณ/บวก ไม่ wrap เป็นยอดติดลบ
@@ -124,12 +127,13 @@ go vet ./...
 - exhaustive oracle ตรวจทุก combination ขนาดเล็กของแพ็กเดี่ยว/คู่ รวมราคา 0 และกรณีมีเพียงขนาดเดียว
 - จำนวนโมดูลขนาดใหญ่โดยไม่ใช้ memory ตามจำนวน, integer overflow, invalid counts และ references
 - repository data integrity, copy isolation, canceled context และ service/repository integration
-- tests Phase 1.1 เดิมยังตรวจว่า Catalog ตอบเพียง 6 fields
+- tests ตรวจว่า 6 fields เดิมคงชื่อ/ความหมาย และ Catalog เพิ่มเฉพาะ specs ที่เกี่ยวข้อง
+- tests สร้าง request validate จากข้อมูล GET และตรวจราคากับ compatibility ตรงกัน
 
 ## Open decisions ก่อนเปลี่ยน Public API
 
 - payload/result ของ `/builds/validate` ยืนยันแล้ว และ HTTP statuses อธิบายใน [BUILD_API.md](BUILD_API.md)
-- วางแผนเพิ่ม `specs` และ RAM `ram_model_id` ลง product response; รอบนี้ **ยังไม่เพิ่ม**
+- เพิ่ม `specs` และ RAM `ram_model_id` ลง Catalog list/detail แล้ว ตาม [BUILD_API.md](BUILD_API.md)
 - ยืนยันชุด category ทั้งหมด รวมถึง normalization ของ socket/RAM type identifiers
   ตอนนี้ repository trim whitespace แต่เทียบค่าตรงตัว ไม่แปลงตัวพิมพ์เอง
 - SKU grouping/ข้อมูล RAM model เพิ่มเติม และ stock limits ยังไม่อยู่ใน scope
