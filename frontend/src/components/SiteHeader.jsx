@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
 
 const sectionLinks = [
   { label: "หน้าแรก", href: "#home" },
@@ -9,12 +10,27 @@ const sectionLinks = [
 
 export default function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [logoutPending, setLogoutPending] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
+  const { authenticated, profile, client } = useAuth();
   const { pathname } = useLocation();
   const isHome = pathname === "/";
   const links = sectionLinks.map((link) => ({
     ...link,
     href: isHome ? link.href : `/${link.href}`,
   }));
+
+  async function handleLogout() {
+    setLogoutPending(true);
+    setLogoutError("");
+    try {
+      await client.logout();
+    } catch {
+      setLogoutError("ล้างข้อมูลเข้าสู่ระบบในหน้านี้แล้ว แต่เซิร์ฟเวอร์อาจยังไม่เพิกถอน session");
+    } finally {
+      setLogoutPending(false);
+    }
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0b0202]/90 backdrop-blur-xl">
@@ -35,24 +51,6 @@ export default function SiteHeader() {
             Spec<span className="text-ruby-600">Use</span>
           </span>
         </Link>
-
-        <button
-          type="button"
-          className="grid h-11 w-11 place-items-center rounded-xl border border-white/15 text-slate-100 transition hover:bg-white/5 lg:hidden"
-          aria-label={menuOpen ? "ปิดเมนู" : "เปิดเมนู"}
-          aria-expanded={menuOpen}
-          onClick={() => setMenuOpen((open) => !open)}
-        >
-          {menuOpen ? (
-            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden="true">
-              <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          ) : (
-            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden="true">
-              <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          )}
-        </button>
 
         <nav className="hidden items-center gap-6 lg:flex" aria-label="เมนูหลัก">
           <Link
@@ -79,11 +77,65 @@ export default function SiteHeader() {
             ดูตัวอย่างสเปก
           </a>
         </nav>
+        <div className="flex items-center gap-2 sm:gap-3">
+          {authenticated && (
+            <Link to="/profile" className="hidden rounded-full px-3 py-2.5 text-sm font-bold text-slate-100 transition hover:text-ruby-200 sm:inline-flex">
+              ข้อมูลส่วนตัว
+            </Link>
+          )}
+          {profile?.role === "admin" && (
+            <Link to="/admin/products" className="hidden rounded-full px-3 py-2.5 text-sm font-bold text-ruby-200 transition hover:text-ruby-100 lg:inline-flex">
+              จัดการสินค้า
+            </Link>
+          )}
+          {authenticated ? (
+            <button type="button" disabled={logoutPending} onClick={handleLogout} className="rounded-full border border-ruby-400/40 px-4 py-2.5 text-sm font-bold text-slate-100 transition hover:border-ruby-300 hover:text-ruby-200 disabled:opacity-50">
+              {logoutPending ? "กำลังออก..." : "ออกจากระบบ"}
+            </button>
+          ) : (
+            <Link
+              to="/login"
+              onClick={() => setMenuOpen(false)}
+              className="rounded-full border border-ruby-400/40 px-4 py-2.5 text-sm font-bold text-slate-100 transition hover:border-ruby-300 hover:text-ruby-200"
+            >
+              เข้าสู่ระบบ
+            </Link>
+          )}
+          <button
+            type="button"
+            className="grid h-11 w-11 place-items-center rounded-xl border border-white/15 text-slate-100 transition hover:bg-white/5 lg:hidden"
+            aria-label={menuOpen ? "ปิดเมนู" : "เปิดเมนู"}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            {menuOpen ? (
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden="true">
+                <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden="true">
+                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
+
+      {logoutError && <p role="alert" className="mx-auto max-w-7xl px-5 pb-3 text-sm text-ruby-200 sm:px-8">{logoutError}</p>}
 
       {menuOpen && (
         <nav className="border-t border-white/10 bg-[#0b0202] px-5 py-4 lg:hidden" aria-label="เมนูมือถือ">
           <div className="mx-auto flex max-w-7xl flex-col gap-1">
+            {authenticated && (
+              <Link to="/profile" className="rounded-lg px-3 py-3 font-bold text-ruby-200 transition hover:bg-white/5" onClick={() => setMenuOpen(false)}>
+                ข้อมูลส่วนตัว
+              </Link>
+            )}
+            {profile?.role === "admin" && (
+              <Link to="/admin/products" className="rounded-lg px-3 py-3 font-bold text-ruby-200 transition hover:bg-white/5" onClick={() => setMenuOpen(false)}>
+                จัดการสินค้า
+              </Link>
+            )}
             <Link
               to="/build"
               className="rounded-lg px-3 py-3 font-bold text-ruby-200 transition hover:bg-white/5"

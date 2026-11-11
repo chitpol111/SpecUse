@@ -74,7 +74,7 @@ components:
 
 SpecUse's landing page feels like a considered workspace for planning a PC: dark, focused, and quietly technical without borrowing generic sci-fi ornament. Obsidian red-black creates the ground; burgundy translucency and fine crimson edges separate content while keeping the page calm. Thai copy and real component categories carry the story.
 
-The page is a prototype. Its component preview and build pathways are illustrative; the editor, catalog, prices, checks, accounts, and saved builds are not represented as available functions. Red is reserved for navigation emphasis, primary actions, and the one requested headline phrase.
+The landing page remains a prototype: its component preview is illustrative, and its example pathways do not imply validated compatibility, live catalog data, or persisted builds. Separate `/login`, `/register`, `/profile`, and `/admin/products` surfaces are implemented against the Go API contract; live Supabase behavior remains unverified. Admin visibility is a usability aid only; the backend authorizes every admin operation. Red is reserved for navigation emphasis, primary actions, and the one requested headline phrase.
 
 **Key Characteristics:**
 - Obsidian and maroon fields with a quiet crimson grid.
