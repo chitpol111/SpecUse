@@ -15,6 +15,7 @@ import (
 	"specuse/backend/internal/build"
 	"specuse/backend/internal/catalog"
 	"specuse/backend/internal/handler"
+	"specuse/backend/internal/management"
 )
 
 func main() {
@@ -41,9 +42,14 @@ func main() {
 		// Local development data must not be served on a public interface.
 		address = "127.0.0.1:" + port
 	}
+	var adminService *management.Service
+	if app.database != nil {
+		adminService = management.New(app.database)
+	}
+	routes := handler.WithAdmin(handler.WithMembers(handler.NewAPI(catalog.NewService(app.catalog), build.NewService(app.builds)), app.members), app.members, adminService)
 	server := &http.Server{
 		Addr:              address,
-		Handler:           handler.WithCORS(handler.WithMembers(handler.NewAPI(catalog.NewService(app.catalog), build.NewService(app.builds)), app.members), origins, "GET, POST, PATCH, DELETE"),
+		Handler:           handler.WithCORS(routes, origins, "GET, POST, PATCH, DELETE"),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      30 * time.Second,

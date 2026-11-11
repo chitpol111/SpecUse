@@ -24,6 +24,9 @@ func (r *Repository) LoadSnapshot(ctx context.Context) (build.Snapshot, error) {
 	if err := r.client.RPC(ctx, "backend_catalog_snapshot", map[string]any{}, &data); err != nil {
 		return build.Snapshot{}, err
 	}
+	if data.Products == nil || data.RAMModels == nil {
+		return build.Snapshot{}, account.ErrUnavailable
+	}
 	snapshot := build.Snapshot{Products: []build.Component{}, RAMModels: []build.RAMModel{}}
 	for _, p := range data.Products {
 		specs := catalog.Specs{}
