@@ -1,0 +1,97 @@
+{
+  "data": {
+    "product": {
+      "id": "94000000-0000-4000-8000-000000000002",
+      "name": "[SYNTHETIC FIXTURE ONLY] B1 board 3 SATA ports",
+      "category": "motherboard",
+      "brand": "SYNTHETIC - NOT A REAL MANUFACTURER",
+      "price_thb": 3500,
+      "is_active": true,
+      "specs": {
+        "cpu_socket": "SYNTH_SOCKET_A",
+        "ram_type": "DDR5",
+        "connectivity_profiles": [
+          {
+            "profile_id": "synthetic-cpu-a",
+            "cpu_product_ids": [
+              "91000000-0000-4000-8000-000000000001"
+            ],
+            "requires_firmware_confirmation": false,
+            "pcie_slots": [
+              {
+                "slot_id": "PCIE_1",
+                "connector": "pcie_x16",
+                "supported_link_modes": [
+                  {
+                    "pcie_generation": 4,
+                    "lanes": 16
+                  }
+                ],
+                "gpu_supported": true
+              }
+            ],
+            "storage_ports": [
+              {
+                "port_id": "SATA_1",
+                "connector": "sata_data",
+                "supported_connection_types": [
+                  "sata"
+                ],
+                "accepted_module_keys": null,
+                "supported_widths_mm": null,
+                "supported_lengths_mm": null,
+                "supported_link_modes": null
+              },
+              {
+                "port_id": "SATA_2",
+                "connector": "sata_data",
+                "supported_connection_types": [
+                  "sata"
+                ],
+                "accepted_module_keys": null,
+                "supported_widths_mm": null,
+                "supported_lengths_mm": null,
+                "supported_link_modes": null
+              },
+              {
+                "port_id": "SATA_3",
+                "connector": "sata_data",
+                "supported_connection_types": [
+                  "sata"
+                ],
+                "accepted_module_keys": null,
+                "supported_widths_mm": null,
+                "supported_lengths_mm": null,
+                "supported_link_modes": null
+              }
+            ],
+            "resource_rules": []
+          }
+        ],
+        "sources": [
+          {
+            "source_id": "synthetic-v1",
+            "manufacturer": "SYNTHETIC FIXTURE ONLY",
+            "title": "Artificial contract fixture; not manufacturer evidence",
+            "url": "https://fixtures.specuse.invalid/gpu-storage-v1",
+            "document_revision": "synthetic-v1",
+            "section": "Artificial B1 3 SATA ports; not a commercial SKU or manufacturer evidence",
+            "checked_at": "2026-11-11T00:00:00Z"
+          }
+        ],
+        "evidence": [
+          {
+            "paths": [
+              "/cpu_socket",
+              "/ram_type",
+              "/connectivity_profiles"
+            ],
+            "source_ids": [
+              "synthetic-v1"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

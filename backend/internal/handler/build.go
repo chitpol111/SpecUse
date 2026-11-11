@@ -96,6 +96,10 @@ func publicBuildResult(result build.Result) buildResponse {
 			message = "ข้อมูล CPU socket ของสินค้าไม่ครบ"
 		case "MISSING_RAM_TYPE":
 			message = "ข้อมูล RAM type ไม่ครบ"
+		case "STORAGE_INTERFACE_MISMATCH":
+			message = "ไม่มีพอร์ต direct SATA ที่ยืนยันว่ารองรับ Storage ตาม profile และ evidence"
+		case "MOTHERBOARD_RESOURCE_CONFLICT":
+			message = "พอร์ต SATA ที่ยืนยันว่าใช้ได้ไม่พอสำหรับจำนวนอุปกรณ์ทั้งหมด รวมของที่มีอยู่แล้ว"
 		}
 		data.Issues = append(data.Issues, buildIssue{Code: issue.Code, Message: message})
 	}

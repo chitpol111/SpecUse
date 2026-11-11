@@ -6,7 +6,8 @@ GET Catalog คง 6 fields เดิมและเพิ่ม specs/ram_model
 ยังไม่มี build persistence หรือ Supabase adapter
 
 ส่วนขยาย GPU/Storage ช่วง A ตาม PR #3 commit 3581447 ดู [GPU_STORAGE_A.md](GPU_STORAGE_A.md)
-เอกสารนี้อธิบาย CPU/RAM และ legacy evaluation; opt-in ใหม่รายงาน coverage/unknown เพิ่มโดยไม่เปิด B/C
+เอกสารนี้อธิบาย CPU/RAM และ legacy evaluation; ปัจจุบัน opt-in ตรวจ direct SATA ตาม [B1](STORAGE_B1.md)
+แต่ GPU/M.2/PSU/Case ยัง unknown ตาม coverage
 
 ## ข้อตกลงล่าสุดที่ยืนยันแล้ว
 

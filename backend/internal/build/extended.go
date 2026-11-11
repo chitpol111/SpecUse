@@ -191,7 +191,7 @@ func unsupportedDevice(c Component) []FieldReference {
 
 func newCheck(code, scope string, components []Component) Check {
 	return Check{Code: code, Scope: scope, Status: "unknown", ReasonCode: "NOT_IMPLEMENTED",
-		Message: "ยังไม่เปิดการตรวจฮาร์ดแวร์ส่วนนี้ในช่วง A", ProductIDs: productIDs(components),
+		Message: "ยังไม่รองรับการตรวจฮาร์ดแวร์ส่วนนี้", ProductIDs: productIDs(components),
 		MissingFields: []FieldReference{}, UnsupportedFields: []FieldReference{}}
 }
 
@@ -328,16 +328,21 @@ func phaseACompatibility(selected []Component, models []RAMModel, ramSKUs []Comp
 		appendPending("SYSTEM_PSU", "psu", all, false)
 		appendPending("SYSTEM_CASE", "case", all, false)
 	}
+	refreshCompatibility(result)
+	return result
+}
+
+func refreshCompatibility(result *Compatibility) {
 	unknownDomains := map[string]bool{}
 	for _, c := range result.Checks {
 		if c.Status == "unknown" {
 			unknownDomains[c.Scope] = true
 		}
 	}
+	result.UnverifiedDomains = []string{}
 	for scope := range unknownDomains {
 		result.UnverifiedDomains = append(result.UnverifiedDomains, scope)
 	}
 	sort.Strings(result.UnverifiedDomains)
 	result.Status = aggregate(result.Checks)
-	return result
 }

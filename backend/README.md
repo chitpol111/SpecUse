@@ -5,6 +5,9 @@ Go REST API ด้วย `net/http` และ JSON แยก handler, service �
 รวมถึง `POST /api/v1/builds/validate` จากข้อมูล repository ชุดเดียวกัน
 ไม่มี dependencies ภายนอก และไม่เชื่อมต่อ Supabase หรือใช้ credentials จริง
 
+ล่าสุดเพิ่ม [B1 SATA-first: วิธีรันและ JSON/curl](STORAGE_B1.md) สำหรับ synthetic fixture แยก
+ใช้ opt-in/schema เดิม; legacy response และราคา 11500 คงเดิม ยังไม่ตรวจ GPU/M.2/PSU/Case
+
 เพิ่ม [GPU/Storage ช่วง A: วิธีรัน, contract และ JSON/curl](GPU_STORAGE_A.md)
 ตาม PR #3 commit 3581447 แล้ว โดย opt-in เท่านั้น; default validate และตัวอย่างเดิมยอด 11500 คงเดิม
 
@@ -285,7 +288,8 @@ Tests ใช้ `httptest`, memory repository และ stub repository ส่�
 - ต้องตกลงชุดค่า category ที่ Frontend จะใช้; ค่า `cpu` ใน tests เป็น fixture ไม่ใช่ enum ใหม่
 - หากต้องการ search ใน brand หรือ fields อื่นเพิ่มเติม ให้ตกลงกับ FE ก่อนขยายพฤติกรรม
 - เพิ่ม typed nullable GPU/Storage และ motherboard metadata ตาม [ช่วง A](GPU_STORAGE_A.md) แล้ว
-  ยังไม่มี filters ใหม่, hardware checks B/C หรือ typed PSU/Case/cooler
+  เพิ่ม direct SATA allocation ตาม [B1](STORAGE_B1.md) แล้ว; ยังไม่มี filters ใหม่,
+  GPU/M.2/PSU/Case checks หรือ typed PSU/Case/cooler
 - ยังไม่เลือก Supabase database access strategy หรือ final RLS policies
 - เพิ่ม POST build validation แล้ว; ยังไม่มี save/publication, Auth/member หรือ Admin endpoints
 - ต้องเพิ่ม authentication/authorization tests เมื่อพัฒนา endpoints ที่มีสิทธิ์เข้าถึง
