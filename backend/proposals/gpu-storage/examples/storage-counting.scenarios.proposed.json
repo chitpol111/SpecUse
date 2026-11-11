@@ -1,0 +1,144 @@
+[
+  {
+    "name": "owned_is_subset",
+    "request": {
+      "items": [
+        {
+          "product_id": "91000000-0000-4000-8000-000000000006",
+          "quantity": 3,
+          "owned_quantity": 2
+        }
+      ],
+      "ram_items": []
+    },
+    "storage_total": 3,
+    "purchase_storage_total": 1,
+    "expected_http": 200,
+    "note": "ผ่าน software limit เท่านั้น; ไม่ได้แปลว่า motherboard/PSU/Case รองรับจำนวนนี้"
+  },
+  {
+    "name": "mixed_supported_and_unsupported_eight",
+    "request": {
+      "items": [
+        {
+          "product_id": "91000000-0000-4000-8000-000000000006",
+          "quantity": 3,
+          "owned_quantity": 2
+        },
+        {
+          "product_id": "91000000-0000-4000-8000-000000000005",
+          "quantity": 2,
+          "owned_quantity": 2
+        },
+        {
+          "product_id": "91000000-0000-4000-8000-000000000009",
+          "quantity": 3,
+          "owned_quantity": 1
+        }
+      ],
+      "ram_items": []
+    },
+    "storage_total": 8,
+    "purchase_storage_total": 3,
+    "expected_http": 200,
+    "note": "ผ่าน software limit เท่านั้น; ไม่ได้แปลว่า motherboard/PSU/Case รองรับจำนวนนี้"
+  },
+  {
+    "name": "mixed_nine_even_if_owned",
+    "request": {
+      "items": [
+        {
+          "product_id": "91000000-0000-4000-8000-000000000006",
+          "quantity": 4,
+          "owned_quantity": 4
+        },
+        {
+          "product_id": "91000000-0000-4000-8000-000000000005",
+          "quantity": 2,
+          "owned_quantity": 2
+        },
+        {
+          "product_id": "91000000-0000-4000-8000-000000000009",
+          "quantity": 3,
+          "owned_quantity": 3
+        }
+      ],
+      "ram_items": []
+    },
+    "storage_total": 9,
+    "purchase_storage_total": 0,
+    "expected_http": 400,
+    "expected_error": {
+      "error": {
+        "code": "UNSUPPORTED_BUILD_SCOPE",
+        "message": "โหมดนี้รองรับ Storage รวมไม่เกิน 8 ลูก"
+      }
+    }
+  },
+  {
+    "name": "nine_unsupported",
+    "request": {
+      "items": [
+        {
+          "product_id": "91000000-0000-4000-8000-000000000009",
+          "quantity": 9,
+          "owned_quantity": 0
+        }
+      ],
+      "ram_items": []
+    },
+    "storage_total": 9,
+    "purchase_storage_total": 9,
+    "expected_http": 400,
+    "expected_error": {
+      "error": {
+        "code": "UNSUPPORTED_BUILD_SCOPE",
+        "message": "โหมดนี้รองรับ Storage รวมไม่เกิน 8 ลูก"
+      }
+    }
+  },
+  {
+    "name": "single_sku_eight_all_owned",
+    "request": {
+      "items": [
+        {
+          "product_id": "91000000-0000-4000-8000-000000000006",
+          "quantity": 8,
+          "owned_quantity": 8
+        }
+      ],
+      "ram_items": []
+    },
+    "storage_total": 8,
+    "purchase_storage_total": 0,
+    "expected_http": 200,
+    "note": "ผ่าน software limit เท่านั้น; ไม่ได้แปลว่า motherboard/PSU/Case รองรับจำนวนนี้"
+  },
+  {
+    "name": "not_found_wins_over_scope",
+    "request": {
+      "items": [
+        {
+          "product_id": "91000000-0000-4000-8000-000000000009",
+          "quantity": 9,
+          "owned_quantity": 0
+        },
+        {
+          "product_id": "91000000-0000-4000-8000-000000000999",
+          "quantity": 1,
+          "owned_quantity": 0
+        }
+      ],
+      "ram_items": []
+    },
+    "storage_total": null,
+    "purchase_storage_total": null,
+    "expected_http": 404,
+    "expected_error": {
+      "error": {
+        "code": "NOT_FOUND",
+        "message": "ไม่พบสินค้าหรือแพ็ก RAM ที่พร้อมใช้งาน"
+      }
+    }
+  }
+]

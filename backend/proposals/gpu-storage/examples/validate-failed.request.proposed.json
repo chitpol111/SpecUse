@@ -1,0 +1,36 @@
+{
+  "items": [
+    {
+      "product_id": "91000000-0000-4000-8000-000000000001",
+      "quantity": 1,
+      "owned_quantity": 1
+    },
+    {
+      "product_id": "91000000-0000-4000-8000-000000000007",
+      "quantity": 1,
+      "owned_quantity": 0
+    },
+    {
+      "product_id": "91000000-0000-4000-8000-000000000004",
+      "quantity": 1,
+      "owned_quantity": 1
+    },
+    {
+      "product_id": "91000000-0000-4000-8000-000000000005",
+      "quantity": 1,
+      "owned_quantity": 0
+    },
+    {
+      "product_id": "91000000-0000-4000-8000-000000000006",
+      "quantity": 2,
+      "owned_quantity": 1
+    }
+  ],
+  "ram_items": [
+    {
+      "ram_model_id": "92000000-0000-4000-8000-000000000001",
+      "required_modules": 2,
+      "owned_modules": 1
+    }
+  ]
+}

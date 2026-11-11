@@ -52,7 +52,8 @@
             "abcdefab-0000-0000-0000-000000000001",
             "abcdefab-0000-0000-0000-000000000004"
           ],
-          "missing_fields": []
+          "missing_fields": [],
+          "unsupported_fields": []
         },
         {
           "code": "GPU_MOTHERBOARD",
@@ -65,9 +66,20 @@
             "abcdefab-0000-0000-0000-000000000004"
           ],
           "missing_fields": [
-            "gpu.specs.host",
-            "motherboard.specs.connectivity_profiles"
-          ]
+            {
+              "location": "catalog",
+              "path": "/specs/host/connector",
+              "product_id": "90000000-0000-0000-0000-000000000001",
+              "category": "gpu"
+            },
+            {
+              "location": "catalog",
+              "path": "/specs/connectivity_profiles",
+              "product_id": "abcdefab-0000-0000-0000-000000000004",
+              "category": "motherboard"
+            }
+          ],
+          "unsupported_fields": []
         },
         {
           "code": "STORAGE_MOTHERBOARD",
@@ -80,9 +92,20 @@
             "abcdefab-0000-0000-0000-000000000004"
           ],
           "missing_fields": [
-            "storage.specs.host",
-            "motherboard.specs.connectivity_profiles"
-          ]
+            {
+              "location": "catalog",
+              "path": "/specs/host/connection_type",
+              "product_id": "90000000-0000-0000-0000-000000000002",
+              "category": "storage"
+            },
+            {
+              "location": "catalog",
+              "path": "/specs/connectivity_profiles",
+              "product_id": "abcdefab-0000-0000-0000-000000000004",
+              "category": "motherboard"
+            }
+          ],
+          "unsupported_fields": []
         },
         {
           "code": "MOTHERBOARD_RESOURCES",
@@ -96,8 +119,14 @@
             "abcdefab-0000-0000-0000-000000000004"
           ],
           "missing_fields": [
-            "motherboard.specs.connectivity_profiles"
-          ]
+            {
+              "location": "catalog",
+              "path": "/specs/connectivity_profiles",
+              "product_id": "abcdefab-0000-0000-0000-000000000004",
+              "category": "motherboard"
+            }
+          ],
+          "unsupported_fields": []
         },
         {
           "code": "GPU_PSU",
@@ -109,9 +138,20 @@
             "90000000-0000-0000-0000-000000000001"
           ],
           "missing_fields": [
-            "psu",
-            "gpu.specs.power"
-          ]
+            {
+              "location": "catalog",
+              "path": "/specs/power/connector_options",
+              "product_id": "90000000-0000-0000-0000-000000000001",
+              "category": "gpu"
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "psu"
+            }
+          ],
+          "unsupported_fields": []
         },
         {
           "code": "GPU_CASE",
@@ -123,9 +163,20 @@
             "90000000-0000-0000-0000-000000000001"
           ],
           "missing_fields": [
-            "case",
-            "gpu.specs.dimensions"
-          ]
+            {
+              "location": "catalog",
+              "path": "/specs/dimensions/length_mm",
+              "product_id": "90000000-0000-0000-0000-000000000001",
+              "category": "gpu"
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "case"
+            }
+          ],
+          "unsupported_fields": []
         },
         {
           "code": "STORAGE_PSU",
@@ -137,9 +188,20 @@
             "90000000-0000-0000-0000-000000000002"
           ],
           "missing_fields": [
-            "psu",
-            "storage.specs.power"
-          ]
+            {
+              "location": "catalog",
+              "path": "/specs/power/max_operating_power_w",
+              "product_id": "90000000-0000-0000-0000-000000000002",
+              "category": "storage"
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "psu"
+            }
+          ],
+          "unsupported_fields": []
         },
         {
           "code": "STORAGE_CASE",
@@ -151,10 +213,26 @@
             "90000000-0000-0000-0000-000000000002"
           ],
           "missing_fields": [
-            "case",
-            "storage.specs.host.form_factor",
-            "storage.specs.dimensions"
-          ]
+            {
+              "location": "catalog",
+              "path": "/specs/dimensions/height_mm",
+              "product_id": "90000000-0000-0000-0000-000000000002",
+              "category": "storage"
+            },
+            {
+              "location": "catalog",
+              "path": "/specs/host/form_factor",
+              "product_id": "90000000-0000-0000-0000-000000000002",
+              "category": "storage"
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "case"
+            }
+          ],
+          "unsupported_fields": []
         },
         {
           "code": "SYSTEM_PSU",
@@ -169,9 +247,20 @@
             "90000000-0000-0000-0000-000000000002"
           ],
           "missing_fields": [
-            "psu",
-            "system_power_envelope"
-          ]
+            {
+              "location": "context",
+              "path": "/system_power_envelope",
+              "product_id": null,
+              "category": null
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "psu"
+            }
+          ],
+          "unsupported_fields": []
         },
         {
           "code": "SYSTEM_CASE",
@@ -186,16 +275,27 @@
             "90000000-0000-0000-0000-000000000002"
           ],
           "missing_fields": [
-            "case",
-            "installation_context"
-          ]
+            {
+              "location": "context",
+              "path": "/installation_context",
+              "product_id": null,
+              "category": null
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "case"
+            }
+          ],
+          "unsupported_fields": []
         }
       ],
       "warnings": [],
       "unverified_domains": [
+        "case",
         "motherboard",
-        "psu",
-        "case"
+        "psu"
       ],
       "build_completeness": "not_evaluated"
     }

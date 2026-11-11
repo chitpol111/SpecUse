@@ -1,0 +1,295 @@
+{
+  "data": {
+    "compatible": false,
+    "issues": [
+      {
+        "code": "STORAGE_INTERFACE_MISMATCH",
+        "message": "NVMe ต้องการพอร์ตที่ synthetic Board B ไม่มี"
+      },
+      {
+        "code": "MOTHERBOARD_RESOURCE_CONFLICT",
+        "message": "ไม่มี allocation สำหรับอุปกรณ์ทั้งหมดใน synthetic Board B"
+      }
+    ],
+    "items": [
+      {
+        "product_id": "91000000-0000-4000-8000-000000000001",
+        "quantity": 1,
+        "owned_quantity": 1,
+        "purchase_quantity": 0,
+        "unit_price_thb": 8000,
+        "purchase_price_thb": 0
+      },
+      {
+        "product_id": "91000000-0000-4000-8000-000000000007",
+        "quantity": 1,
+        "owned_quantity": 0,
+        "purchase_quantity": 1,
+        "unit_price_thb": 3500,
+        "purchase_price_thb": 3500
+      },
+      {
+        "product_id": "91000000-0000-4000-8000-000000000004",
+        "quantity": 1,
+        "owned_quantity": 1,
+        "purchase_quantity": 0,
+        "unit_price_thb": 6000,
+        "purchase_price_thb": 0
+      },
+      {
+        "product_id": "91000000-0000-4000-8000-000000000005",
+        "quantity": 1,
+        "owned_quantity": 0,
+        "purchase_quantity": 1,
+        "unit_price_thb": 2000,
+        "purchase_price_thb": 2000
+      },
+      {
+        "product_id": "91000000-0000-4000-8000-000000000006",
+        "quantity": 2,
+        "owned_quantity": 1,
+        "purchase_quantity": 1,
+        "unit_price_thb": 1000,
+        "purchase_price_thb": 1000
+      }
+    ],
+    "ram_selections": [
+      {
+        "ram_model_id": "92000000-0000-4000-8000-000000000001",
+        "required_modules": 2,
+        "owned_modules": 1,
+        "purchase_modules": 1,
+        "supplied_modules": 1,
+        "excess_modules": 0,
+        "packages": [
+          {
+            "product_id": "91000000-0000-4000-8000-000000000003",
+            "quantity": 1,
+            "modules_per_package": 1,
+            "unit_price_thb": 1000
+          }
+        ],
+        "total_price_thb": 1000
+      }
+    ],
+    "total_price_thb": 7500,
+    "compatibility": {
+      "mode": "gpu_storage_v1",
+      "status": "failed",
+      "checks": [
+        {
+          "code": "CPU_SOCKET",
+          "scope": "basic",
+          "status": "passed",
+          "reason_code": "MATCH",
+          "message": "ซ็อกเก็ตตรงกันภายใน synthetic model เท่านั้น",
+          "product_ids": [
+            "91000000-0000-4000-8000-000000000001",
+            "91000000-0000-4000-8000-000000000007"
+          ],
+          "missing_fields": [],
+          "unsupported_fields": []
+        },
+        {
+          "code": "RAM_TYPE",
+          "scope": "basic",
+          "status": "passed",
+          "reason_code": "MATCH",
+          "message": "RAM type ตรงกันภายใน synthetic model",
+          "product_ids": [
+            "91000000-0000-4000-8000-000000000003",
+            "91000000-0000-4000-8000-000000000007"
+          ],
+          "missing_fields": [],
+          "unsupported_fields": []
+        },
+        {
+          "code": "GPU_MOTHERBOARD",
+          "scope": "motherboard",
+          "status": "passed",
+          "reason_code": "MATCH",
+          "message": "GPU ใช้ PCIE_1 ตาม synthetic CPU profile",
+          "product_ids": [
+            "91000000-0000-4000-8000-000000000004",
+            "91000000-0000-4000-8000-000000000007"
+          ],
+          "missing_fields": [],
+          "unsupported_fields": []
+        },
+        {
+          "code": "STORAGE_MOTHERBOARD",
+          "scope": "motherboard",
+          "status": "failed",
+          "reason_code": "INCOMPATIBLE",
+          "message": "synthetic Board B มีเฉพาะ SATA; ไม่มีพอร์ตสำหรับ NVMe และ profile ครบพอพิสูจน์ข้อขัดแย้ง",
+          "product_ids": [
+            "91000000-0000-4000-8000-000000000005",
+            "91000000-0000-4000-8000-000000000006",
+            "91000000-0000-4000-8000-000000000007"
+          ],
+          "missing_fields": [],
+          "unsupported_fields": []
+        },
+        {
+          "code": "MOTHERBOARD_RESOURCES",
+          "scope": "motherboard",
+          "status": "failed",
+          "reason_code": "INCOMPATIBLE",
+          "message": "ไม่สามารถจัด NVMe ลงพอร์ตใดได้ใน synthetic profile ที่ระบุครบแล้ว",
+          "product_ids": [
+            "91000000-0000-4000-8000-000000000004",
+            "91000000-0000-4000-8000-000000000005",
+            "91000000-0000-4000-8000-000000000006",
+            "91000000-0000-4000-8000-000000000007"
+          ],
+          "missing_fields": [],
+          "unsupported_fields": []
+        },
+        {
+          "code": "GPU_PSU",
+          "scope": "psu",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ช่วง A/B ยังไม่ implement check นี้; อุปกรณ์ปลายทางยังไม่ได้เลือก",
+          "product_ids": [
+            "91000000-0000-4000-8000-000000000004"
+          ],
+          "missing_fields": [
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "psu"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "GPU_CASE",
+          "scope": "case",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ช่วง A/B ยังไม่ implement check นี้; อุปกรณ์ปลายทางยังไม่ได้เลือก",
+          "product_ids": [
+            "91000000-0000-4000-8000-000000000004"
+          ],
+          "missing_fields": [
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "case"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "STORAGE_PSU",
+          "scope": "psu",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ช่วง A/B ยังไม่ implement check นี้; อุปกรณ์ปลายทางยังไม่ได้เลือก",
+          "product_ids": [
+            "91000000-0000-4000-8000-000000000005",
+            "91000000-0000-4000-8000-000000000006"
+          ],
+          "missing_fields": [
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "psu"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "STORAGE_CASE",
+          "scope": "case",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ช่วง A/B ยังไม่ implement check นี้; อุปกรณ์ปลายทางยังไม่ได้เลือก",
+          "product_ids": [
+            "91000000-0000-4000-8000-000000000005",
+            "91000000-0000-4000-8000-000000000006"
+          ],
+          "missing_fields": [
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "case"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "SYSTEM_PSU",
+          "scope": "psu",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ช่วง A/B ยังไม่มี system checker; ยังไม่ได้เลือกอุปกรณ์ปลายทางและไม่มีบริบทระบบที่จำเป็น",
+          "product_ids": [
+            "91000000-0000-4000-8000-000000000001",
+            "91000000-0000-4000-8000-000000000007",
+            "91000000-0000-4000-8000-000000000004",
+            "91000000-0000-4000-8000-000000000005",
+            "91000000-0000-4000-8000-000000000006",
+            "91000000-0000-4000-8000-000000000003"
+          ],
+          "missing_fields": [
+            {
+              "location": "context",
+              "path": "/system_power_envelope",
+              "product_id": null,
+              "category": null
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "psu"
+            }
+          ],
+          "unsupported_fields": []
+        },
+        {
+          "code": "SYSTEM_CASE",
+          "scope": "case",
+          "status": "unknown",
+          "reason_code": "NOT_IMPLEMENTED",
+          "message": "ช่วง A/B ยังไม่มี system checker; ยังไม่ได้เลือกอุปกรณ์ปลายทางและไม่มีบริบทระบบที่จำเป็น",
+          "product_ids": [
+            "91000000-0000-4000-8000-000000000001",
+            "91000000-0000-4000-8000-000000000007",
+            "91000000-0000-4000-8000-000000000004",
+            "91000000-0000-4000-8000-000000000005",
+            "91000000-0000-4000-8000-000000000006",
+            "91000000-0000-4000-8000-000000000003"
+          ],
+          "missing_fields": [
+            {
+              "location": "context",
+              "path": "/installation_context",
+              "product_id": null,
+              "category": null
+            },
+            {
+              "location": "request",
+              "path": "/items",
+              "product_id": null,
+              "category": "case"
+            }
+          ],
+          "unsupported_fields": []
+        }
+      ],
+      "warnings": [],
+      "unverified_domains": [
+        "case",
+        "psu"
+      ],
+      "build_completeness": "not_evaluated"
+    }
+  }
+}

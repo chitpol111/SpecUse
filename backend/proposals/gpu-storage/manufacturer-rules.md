@@ -2,6 +2,7 @@
 
 ตรวจแหล่งข้อมูลวันที่ 2026-11-11 ใช้เฉพาะเอกสารผู้ผลิตโดยตรง
 ข้อมูลด้านล่างรองรับว่าต้องเก็บ/ตรวจอะไร ไม่ใช่ specs ของสินค้าใน SpecUse
+รอบแก้ PR #3 ไม่เพิ่มคำกล่าวอ้างฮาร์ดแวร์จริงหรือคัดลอกตัวเลขผู้ผลิตมาใส่สินค้าใหม่
 กฎของรุ่นที่อ้างอิงใช้ได้เฉพาะรุ่น/เงื่อนไขนั้น ไม่ถูกใช้แทน default ของ motherboard/GPU/Case ทุกรุ่น
 ห้ามนำตัวอย่างชื่อรุ่นในหน้านี้ไปสร้าง catalog product หรือคัดลอกตัวเลขเข้า fixture อัตโนมัติ
 
@@ -33,3 +34,17 @@
 - ไม่ยืนยันว่า VRAM/drive capacity/ราคามากแปลว่าต้องใช้ PSU รุ่นใด
 - ไม่ให้สูตร power headroom สากล หรือสิทธิ์ใช้สาย/adapter ข้ามรุ่นโดยไม่ตรวจคู่มือ
 - ไม่ยืนยัน boot/OS/driver, display path หรือความครบของ build จาก socket/RAM type ที่ตรงกัน
+
+## Synthetic fixture สำหรับ review PR #3
+
+ชุดตัวอย่างใน [examples/README.md](examples/README.md) และ `catalog.synthetic.proposed.json`
+เป็นข้อมูลแต่งเพื่อทดสอบ contract โดยเฉพาะ ชื่อขึ้นต้น `[SYNTHETIC FIXTURE ONLY]`, UUID แยก namespace,
+source_id=`synthetic-v1`, manufacturer=`SYNTHETIC FIXTURE ONLY` และ URL `.invalid`
+ไม่ใช่หลักฐานผู้ผลิต ไม่ใช่สินค้าที่มีอยู่จริง และห้าม ingest เป็น production catalog/evidence
+ค่าพลังงาน/ขนาด/ความเร็ว/ราคา/profile/resource_rules=[] ของชุดนี้ไม่ถูกอนุมานจาก S1–S7
+การผ่านหรือไม่ผ่านในตัวอย่างเป็นผลภายใน test model ที่ประกาศสมมติฐานไว้เท่านั้น
+
+การทดสอบด้วยข้อมูลจำลองไม่ได้ผ่อนเงื่อนไขหลักฐานสินค้าจริง: ก่อนเปิดใช้ check กับ SKU จริง
+ยังต้องตรวจเอกสารตรง SKU/revision/CPU profile และแหล่งข้อมูลตามเกณฑ์ด้านบน
+ตัวอย่าง overall passed ของอนาคต C เป็นเงื่อนไขแสดงรูปแบบ response เท่านั้น ไม่ใช่หลักฐาน
+ว่า PSU/Case ที่เป็น placeholders ใน Catalog ผ่านการตรวจแล้ว
