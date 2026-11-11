@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { fetchProducts, validateBuild } from "../api/specUseApi";
+import { getOwnedQuantitiesAfterSelection } from "./buildSelection";
 
 const CATEGORIES = [
   { id: "cpu", label: "ซีพียู", shortLabel: "CPU", mark: "CPU" },
@@ -457,10 +458,12 @@ export default function BuildPage() {
     psu: "",
     case: "",
   });
-  const [cpuOwned, setCpuOwned] = useState(0);
-  const [motherboardOwned, setMotherboardOwned] = useState(0);
+  const [ownedQuantities, setOwnedQuantities] = useState({
+    cpu: 0,
+    motherboard: 0,
+    ram: 0,
+  });
   const [requiredModules, setRequiredModules] = useState(2);
-  const [ownedModules, setOwnedModules] = useState(0);
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState("price-asc");
   const [budget, setBudget] = useState("");
@@ -549,14 +552,14 @@ export default function BuildPage() {
           ? [{
               product_id: selectedComponents.cpu,
               quantity: 1,
-              owned_quantity: cpuOwned,
+              owned_quantity: ownedQuantities.cpu,
             }]
           : []),
         ...(selectedComponents.motherboard
           ? [{
               product_id: selectedComponents.motherboard,
               quantity: 1,
-              owned_quantity: motherboardOwned,
+              owned_quantity: ownedQuantities.motherboard,
             }]
           : []),
       ],
@@ -564,14 +567,12 @@ export default function BuildPage() {
         ? [{
             ram_model_id: selectedComponents.ram,
             required_modules: requiredModules,
-            owned_modules: ownedModules,
+            owned_modules: ownedQuantities.ram,
           }]
         : [],
     }),
     [
-      cpuOwned,
-      motherboardOwned,
-      ownedModules,
+      ownedQuantities,
       requiredModules,
       selectedComponents.cpu,
       selectedComponents.motherboard,
@@ -717,18 +718,16 @@ export default function BuildPage() {
             : productDetails(item).join(" · ") || item.brand,
         quantity: category.id === "ram" ? `${requiredModules} โมดูล` : "1 ชิ้น",
         status:
-          (category.id === "cpu" && cpuOwned > 0) ||
-          (category.id === "motherboard" && motherboardOwned > 0) ||
-          (category.id === "ram" && ownedModules >= requiredModules)
+          (category.id === "cpu" && ownedQuantities.cpu > 0) ||
+          (category.id === "motherboard" && ownedQuantities.motherboard > 0) ||
+          (category.id === "ram" && ownedQuantities.ram >= requiredModules)
             ? "มีแล้ว"
             : "ยังไม่มี",
         total: "รอตรวจราคา",
       }];
     });
   }, [
-    cpuOwned,
-    motherboardOwned,
-    ownedModules,
+    ownedQuantities,
     productsByID,
     requiredModules,
     selectedItems,
@@ -746,6 +745,14 @@ export default function BuildPage() {
 
   function addToBuild(item) {
     if (!categorySupported) return;
+    setOwnedQuantities((current) =>
+      getOwnedQuantitiesAfterSelection(
+        current,
+        activeCategory,
+        selectedComponents[activeCategory],
+        item.id,
+      ),
+    );
     setSelectedComponents((current) => ({
       ...current,
       [activeCategory]: item.id,
@@ -982,8 +989,13 @@ export default function BuildPage() {
                         <label className="text-xs text-slate-300">
                           CPU
                           <select
-                            value={cpuOwned}
-                            onChange={(event) => setCpuOwned(Number(event.target.value))}
+                            value={ownedQuantities.cpu}
+                            onChange={(event) =>
+                              setOwnedQuantities((current) => ({
+                                ...current,
+                                cpu: Number(event.target.value),
+                              }))
+                            }
                             disabled={!selectedComponents.cpu || validating}
                             className="mt-1 min-h-10 w-full rounded-lg border border-white/10 bg-obsidian-900 px-3 text-sm text-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                           >
@@ -994,8 +1006,13 @@ export default function BuildPage() {
                         <label className="text-xs text-slate-300">
                           เมนบอร์ด
                           <select
-                            value={motherboardOwned}
-                            onChange={(event) => setMotherboardOwned(Number(event.target.value))}
+                            value={ownedQuantities.motherboard}
+                            onChange={(event) =>
+                              setOwnedQuantities((current) => ({
+                                ...current,
+                                motherboard: Number(event.target.value),
+                              }))
+                            }
                             disabled={!selectedComponents.motherboard || validating}
                             className="mt-1 min-h-10 w-full rounded-lg border border-white/10 bg-obsidian-900 px-3 text-sm text-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                           >
@@ -1017,7 +1034,10 @@ export default function BuildPage() {
                               onChange={(event) => {
                                 const nextRequired = Math.max(1, Number(event.target.value) || 1);
                                 setRequiredModules(nextRequired);
-                                setOwnedModules((current) => Math.min(current, nextRequired));
+                                setOwnedQuantities((current) => ({
+                                  ...current,
+                                  ram: Math.min(current.ram, nextRequired),
+                                }));
                               }}
                               className="mt-1 min-h-10 w-full rounded-lg border border-white/10 bg-obsidian-900 px-3 text-sm text-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                             />
@@ -1029,15 +1049,16 @@ export default function BuildPage() {
                               min="0"
                               max={requiredModules}
                               step="1"
-                              value={ownedModules}
+                              value={ownedQuantities.ram}
                               disabled={validating}
                               onChange={(event) => {
-                                setOwnedModules(
-                                  Math.min(
+                                setOwnedQuantities((current) => ({
+                                  ...current,
+                                  ram: Math.min(
                                     requiredModules,
                                     Math.max(0, Number(event.target.value) || 0),
                                   ),
-                                );
+                                }));
                               }}
                               className="mt-1 min-h-10 w-full rounded-lg border border-white/10 bg-obsidian-900 px-3 text-sm text-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                             />
