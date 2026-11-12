@@ -54,3 +54,5 @@ jobs:
         run: go test -race ./internal/...
       - name: PostgreSQL migrations and permissions
         run: bash integration/postgres.sh
+      - name: Private draft E2E fixture checks
+        run: bash integration/private_draft_e2e_seed.sh

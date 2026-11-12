@@ -27,3 +27,15 @@ BE ไม่สามารถทราบเจตนาว่าแถวท�
 availability เป็น catalog readiness ไม่ใช่ราคา 0/compatible/public permission; RAM ที่ owned ครบไม่บล็อกเมื่อไม่มีแพ็ก active
 
 ก่อนเปิดใช้ต้องตกลง PR/base, ตรวจ schema/history ของฐานจริง และประสาน migration 007/deployment แยกกัน
+
+## เตรียม native Supabase E2E แยก — 2026-11-12
+
+คู่มือ PRIVATE_BUILDS_E2E.md แยก Backend worktree ออกจาก FE ที่ยังไม่ push และใช้ Supabase local stack ใหม่
+ไม่เริ่ม Supabase CLI stack/สร้าง hosted project/ใช้ credentials จริงในรอบเตรียมนี้
+ตรวจ guide bash syntax/links, JSON fixtures และ Python helper syntax ผ่าน
+integration/private_draft_e2e_seed.sh ผ่านบน PostgreSQL disposable พร้อม Auth schema จำลอง:
+- opt-in guard และห้าม overwrite catalog เดิม
+- 13 synthetic products (active11), RAM models4, ไม่สร้าง Auth users/profiles/builds หรือ hardware evidence
+- export SQL catalog ให้ Go guest API บน loopback ตรวจ quotes3600/5600/2500
+- inactive/RAM-unavailable404 และ CPU conflict3800/RAM conflict3850 ผ่าน
+นี่ไม่ใช่ native Supabase Auth/Data API หรือ FE integration PASS; ตาราง T01–T23 ในคู่มือยังต้องบันทึกผลจริง

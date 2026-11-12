@@ -1,0 +1,13 @@
+{
+  "name": "[LOCAL E2E ONLY] inactive",
+  "description": "ข้อมูลสังเคราะห์ในฐานทดสอบ local เท่านั้น",
+  "visibility": "private",
+  "items": [
+    {
+      "product_id": "10101010-0000-4000-8000-000000000011",
+      "quantity": 3,
+      "owned_quantity": 2
+    }
+  ],
+  "ram_items": []
+}

@@ -110,7 +110,7 @@ const body = {
 ```
 
 Backend แยกไม่ได้ว่าแถวที่หายจาก replacement array เป็นการลบโดยเจตนาหรือข้อจำกัด UI
-tests รอบนี้ยืนยัน backend roundtrip/metadata patch/full-array replacement; FE ใหม่ที่ยังไม่ commit ยังไม่ได้ทดสอบร่วม
+tests รอบนี้ยืนยัน backend roundtrip/metadata patch/full-array replacement; ยังไม่ได้ทดสอบร่วมกับ FE private draft ล่าสุด
 
 ## Errors
 
@@ -142,6 +142,8 @@ create/patch เป็น transaction; PATCH lock row ก่อนแก้ ไ�
 ไม่รัน 001–006 ซ้ำ ไม่มี migration/seed อัตโนมัติเมื่อ server เริ่ม
 
 ผลรันจริงดู [PRIVATE_BUILDS_VERIFICATION.md](PRIVATE_BUILDS_VERIFICATION.md)
+
+คู่มือทดสอบร่วม FE ที่ยังไม่ push กับ Supabase local แยก: [PRIVATE_BUILDS_E2E.md](PRIVATE_BUILDS_E2E.md)
 
 ## รันและ curl
 

@@ -7,6 +7,7 @@ Go REST API ด้วย `net/http` และ JSON แยก handler, service �
 
 เพิ่ม private draft ใน branch แยก ดู [PRIVATE_BUILDS_API.md](PRIVATE_BUILDS_API.md)
 ยังไม่ apply migration 007 กับ specuse-dev และยังไม่ deploy งานนี้
+ทดสอบร่วม FE บนฐานแยกตาม [PRIVATE_BUILDS_E2E.md](PRIVATE_BUILDS_E2E.md)
 
 เริ่มงานสมาชิกด้วย [AUTH_API.md](AUTH_API.md), ตั้งค่า DB ด้วย [SUPABASE_SETUP.md](SUPABASE_SETUP.md),
 สิทธิ์สินค้าใน [ADMIN_API.md](ADMIN_API.md) และเตรียม deploy ด้วย [RENDER.md](RENDER.md)
