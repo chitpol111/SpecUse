@@ -23,7 +23,14 @@ const emptyForm = {
   price: "",
   isActive: true,
   ramModelId: "",
-  specsText: "",
+  cpuSocket: "",
+  ramType: "",
+  modulesPerPackage: "",
+  chipsetName: "",
+  vramGB: "",
+  storageType: "",
+  storageGB: "",
+  specsByCategory: {},
 };
 
 function categoryName(category) {
@@ -34,7 +41,21 @@ function formatPrice(price) {
   return new Intl.NumberFormat("th-TH").format(price);
 }
 
+function capacityBytes(value) {
+  if (!value) return null;
+  if (!/^\d+(?:\.\d{1,9})?$/.test(value)) {
+    throw new Error("ความจุ GB ต้องเป็นเลขทศนิยมไม่เกิน 9 ตำแหน่ง");
+  }
+  const [whole, fraction = ""] = value.split(".");
+  const bytes = Number(whole + fraction.padEnd(9, "0"));
+  if (!Number.isSafeInteger(bytes) || bytes <= 0) {
+    throw new Error("ความจุต้องมากกว่า 0 และไม่เกินขนาดที่รองรับ");
+  }
+  return bytes;
+}
+
 function formFromProduct(product) {
+  const specs = product.specs;
   return {
     name: product.name,
     category: product.category,
@@ -42,7 +63,14 @@ function formFromProduct(product) {
     price: String(product.price_thb),
     isActive: product.is_active,
     ramModelId: product.ram_model_id || "",
-    specsText: product.specs ? JSON.stringify(product.specs, null, 2) : "",
+    cpuSocket: specs?.cpu_socket || "",
+    ramType: specs?.ram_type || "",
+    modulesPerPackage: specs?.modules_per_package ? String(specs.modules_per_package) : "",
+    chipsetName: specs?.display?.chipset_name || "",
+    vramGB: specs?.display?.vram_capacity_bytes != null ? String(specs.display.vram_capacity_bytes / 1e9) : "",
+    storageType: specs?.display?.media_type || "",
+    storageGB: specs?.display?.capacity_bytes != null ? String(specs.display.capacity_bytes / 1e9) : "",
+    specsByCategory: { [product.category]: specs ? JSON.stringify(specs, null, 2) : "" },
   };
 }
 
@@ -120,9 +148,10 @@ export default function AdminProductsPage() {
     }
 
     let specs;
-    if (form.specsText.trim()) {
+    const specsText = form.specsByCategory[form.category] || "";
+    if (specsText.trim()) {
       try {
-        specs = JSON.parse(form.specsText);
+        specs = JSON.parse(specsText);
       } catch {
         throw new Error("ข้อมูลสเปกต้องเป็น JSON ที่ถูกต้อง");
       }
@@ -131,16 +160,41 @@ export default function AdminProductsPage() {
       }
     }
 
-    if (form.category === "cpu" && !specs?.cpu_socket) {
-      throw new Error("CPU ต้องระบุ specs.cpu_socket");
+    if (form.category === "cpu" || form.category === "motherboard") {
+      if (!form.cpuSocket.trim()) throw new Error("กรุณาระบุซ็อกเก็ต CPU");
+      specs = { ...specs, cpu_socket: form.cpuSocket.trim() };
     }
-    if (form.category === "motherboard" && (!specs?.cpu_socket || !specs?.ram_type)) {
-      throw new Error("เมนบอร์ดต้องระบุ specs.cpu_socket และ specs.ram_type");
+    if (form.category === "motherboard" || form.category === "ram") {
+      if (!form.ramType.trim()) throw new Error("กรุณาระบุชนิด RAM");
+      specs = { ...specs, ram_type: form.ramType.trim() };
     }
     if (form.category === "ram") {
       if (!form.ramModelId.trim()) throw new Error("RAM ต้องระบุ ram_model_id ที่มีอยู่ในฐานข้อมูล");
-      if (!specs?.ram_type || ![1, 2].includes(specs.modules_per_package)) {
-        throw new Error("RAM ต้องระบุ specs.ram_type และ modules_per_package เป็น 1 หรือ 2");
+      if (!["1", "2"].includes(form.modulesPerPackage)) {
+        throw new Error("กรุณาเลือกจำนวนแรมต่อแพ็ก");
+      }
+      specs = { ...specs, modules_per_package: Number(form.modulesPerPackage) };
+    }
+
+    if (form.category === "gpu" || form.category === "storage") {
+      const isGpu = form.category === "gpu";
+      const originalDisplay = selected?.specs?.display;
+      const label = isGpu ? form.chipsetName.trim() : form.storageType;
+      const capacity = isGpu ? form.vramGB.trim() : form.storageGB.trim();
+      const originalLabel = isGpu ? originalDisplay?.chipset_name || "" : originalDisplay?.media_type || "";
+      const originalCapacity = isGpu ? originalDisplay?.vram_capacity_bytes : originalDisplay?.capacity_bytes;
+      const originalCapacityText = originalCapacity == null ? "" : String(originalCapacity / 1e9);
+      if (label !== originalLabel || capacity !== originalCapacityText) {
+        const bytes = capacityBytes(capacity);
+        const display = { ...specs?.display };
+        if (isGpu) {
+          display.chipset_name = label || null;
+          display.vram_capacity_bytes = bytes;
+        } else {
+          display.media_type = label || null;
+          display.capacity_bytes = bytes;
+        }
+        specs = { ...specs, display };
       }
     }
 
@@ -394,18 +448,84 @@ export default function AdminProductsPage() {
                   <label htmlFor="product-price" className="text-sm font-bold text-slate-200">ราคาอ้างอิง (บาท)</label>
                   <input id="product-price" name="price" type="number" min="0" step="1" value={form.price} onChange={updateForm} required className={inputClass} />
                 </div>
-                <div>
-                  <label htmlFor="product-specs" className="text-sm font-bold text-slate-200">สเปกสินค้า (JSON)</label>
-                  <textarea id="product-specs" name="specsText" value={form.specsText} onChange={updateForm} rows={7} spellCheck="false" placeholder={'เช่น CPU: {"cpu_socket":"AM5"}'} className={`${inputClass} min-h-40 font-mono`} />
-                  <p className="mt-2 text-xs leading-6 text-slate-300">CPU: cpu_socket · เมนบอร์ด: cpu_socket, ram_type · RAM: ram_type, modules_per_package และ RAM model ID · GPU/Storage: metadata ตามสัญญา Backend ระบบจะตรวจสอบสเปกก่อนบันทึก</p>
-                </div>
+                <fieldset className="space-y-4 border-t border-white/10 pt-4">
+                  <legend className="px-1 text-sm font-bold text-slate-100">ข้อมูลสเปก</legend>
+                  {(form.category === "cpu" || form.category === "motherboard") && (
+                    <div>
+                      <label htmlFor="cpu-socket" className="text-sm font-bold text-slate-200">ซ็อกเก็ต CPU</label>
+                      <input id="cpu-socket" name="cpuSocket" value={form.cpuSocket} onChange={updateForm} required placeholder="เช่น AM5" className={inputClass} />
+                      <p className="mt-2 text-xs leading-6 text-slate-300">ใช้ตรวจว่าซ็อกเก็ต CPU ตรงกับเมนบอร์ด</p>
+                    </div>
+                  )}
+                  {(form.category === "motherboard" || form.category === "ram") && (
+                    <div>
+                      <label htmlFor="ram-type" className="text-sm font-bold text-slate-200">ชนิด RAM</label>
+                      <input id="ram-type" name="ramType" value={form.ramType} onChange={updateForm} required placeholder="เช่น DDR5" className={inputClass} />
+                      <p className="mt-2 text-xs leading-6 text-slate-300">ระบุชนิดให้ตรงกับข้อมูลสินค้า เช่น DDR4 หรือ DDR5</p>
+                    </div>
+                  )}
+                  {form.category === "ram" && (
+                    <div>
+                      <label htmlFor="ram-modules" className="text-sm font-bold text-slate-200">จำนวนแรมต่อแพ็ก</label>
+                      <select id="ram-modules" name="modulesPerPackage" value={form.modulesPerPackage} onChange={updateForm} required className={inputClass}>
+                        <option value="">เลือกจำนวน</option>
+                        <option value="1">1 แถว</option>
+                        <option value="2">2 แถว</option>
+                      </select>
+                    </div>
+                  )}
+                  {form.category === "gpu" && (
+                    <>
+                      <div>
+                        <label htmlFor="gpu-chipset" className="text-sm font-bold text-slate-200">ชื่อชิปการ์ดจอ <span className="font-normal text-slate-300">(ถ้าทราบ)</span></label>
+                        <input id="gpu-chipset" name="chipsetName" value={form.chipsetName} onChange={updateForm} className={inputClass} />
+                      </div>
+                      <div>
+                        <label htmlFor="gpu-vram" className="text-sm font-bold text-slate-200">หน่วยความจำการ์ดจอ (GB) <span className="font-normal text-slate-300">(ถ้าทราบ)</span></label>
+                        <input id="gpu-vram" name="vramGB" type="number" min="0" step="any" value={form.vramGB} onChange={updateForm} className={inputClass} />
+                      </div>
+                    </>
+                  )}
+                  {form.category === "storage" && (
+                    <>
+                      <div>
+                        <label htmlFor="storage-type" className="text-sm font-bold text-slate-200">ชนิดอุปกรณ์จัดเก็บ <span className="font-normal text-slate-300">(ถ้าทราบ)</span></label>
+                        <select id="storage-type" name="storageType" value={form.storageType} onChange={updateForm} className={inputClass}>
+                          <option value="">ไม่ระบุ</option>
+                          <option value="ssd">SSD</option>
+                          <option value="hdd">HDD</option>
+                          <option value="other">อื่น ๆ</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label htmlFor="storage-capacity" className="text-sm font-bold text-slate-200">ความจุ (GB) <span className="font-normal text-slate-300">(ถ้าทราบ)</span></label>
+                        <input id="storage-capacity" name="storageGB" type="number" min="0" step="any" value={form.storageGB} onChange={updateForm} className={inputClass} />
+                      </div>
+                    </>
+                  )}
+                  {(form.category === "gpu" || form.category === "storage") && (
+                    <p className="text-xs leading-6 text-slate-300">ระบุเฉพาะข้อมูลที่ตรวจสอบแล้ว ไม่ทราบให้เว้นว่าง ความจุ 1 GB เท่ากับ 1,000,000,000 ไบต์</p>
+                  )}
+                  {(form.category === "psu" || form.category === "case") && (
+                    <p className="text-sm leading-6 text-slate-300">หมวดนี้ยังไม่มีช่องสเปกที่จำเป็นต่อการบันทึก</p>
+                  )}
+                </fieldset>
                 {form.category === "ram" && (
                   <div>
-                    <label htmlFor="ram-model-id" className="text-sm font-bold text-slate-200">RAM model ID</label>
+                    <label htmlFor="ram-model-id" className="text-sm font-bold text-slate-200">รหัสรุ่น RAM (RAM model ID)</label>
                     <input id="ram-model-id" name="ramModelId" value={form.ramModelId} onChange={updateForm} required className={inputClass} />
-                    <p className="mt-2 text-xs leading-6 text-slate-300">ต้องเป็น ID ที่ผู้ดูแลเตรียมไว้ในฐานข้อมูล</p>
+                    <p className="mt-2 text-xs leading-6 text-slate-300">ต้องใช้รหัสรุ่นที่เตรียมไว้ในฐานข้อมูลแล้ว รุ่นเดียวกันต้องมีชนิด RAM ตรงกัน</p>
                   </div>
                 )}
+                <details className="rounded-xl border border-white/10 px-4 py-3">
+                  <summary className="cursor-pointer text-sm font-bold text-slate-200">ข้อมูลสเปกขั้นสูง (JSON)</summary>
+                  <p className="mt-3 text-xs leading-6 text-slate-300">สำหรับข้อมูลเพิ่มเติมตามสัญญา Backend เท่านั้น หากแก้ช่องสเปกด้านบน ค่าจากช่องนั้นจะใช้แทนค่าที่ซ้ำกัน</p>
+                  <label htmlFor="product-specs" className="mt-3 block text-sm text-slate-200">ข้อมูลสเปกขั้นสูง</label>
+                  <textarea id="product-specs" value={form.specsByCategory[form.category] || ""} onChange={(event) => {
+                    const value = event.target.value;
+                    setForm((current) => ({ ...current, specsByCategory: { ...current.specsByCategory, [current.category]: value } }));
+                  }} rows={7} spellCheck="false" className={`${inputClass} min-h-40 font-mono`} />
+                </details>
                 <label className="flex min-h-11 items-center gap-3 text-sm text-slate-200">
                   <input type="checkbox" name="isActive" checked={form.isActive} onChange={updateForm} className="h-4 w-4 accent-ruby-500" />
                   เปิดแสดงในแค็ตตาล็อก

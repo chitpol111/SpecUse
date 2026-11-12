@@ -47,7 +47,7 @@ describe("admin products page", () => {
     const setter = Object.getOwnPropertyDescriptor(element.constructor.prototype, "value").set;
     act(() => {
       setter.call(element, value);
-      element.dispatchEvent(new Event("input", { bubbles: true }));
+      element.dispatchEvent(new Event(element.tagName === "SELECT" ? "change" : "input", { bubbles: true }));
     });
   }
 
@@ -101,7 +101,7 @@ describe("admin products page", () => {
     setValue("#product-name", "Test CPU");
     setValue("#product-brand", "Example");
     setValue("#product-price", "1000");
-    setValue("#product-specs", JSON.stringify({ cpu_socket: "AM5" }));
+    setValue("#cpu-socket", "AM5");
     await act(async () => container.querySelector("#product-name").form.dispatchEvent(
       new Event("submit", { bubbles: true, cancelable: true }),
     ));
@@ -137,5 +137,113 @@ describe("admin products page", () => {
     expect(window.confirm).toHaveBeenCalledTimes(1);
     expect(container.querySelector("main").textContent).toContain("ปิดใช้งาน Test CPU แล้ว");
     expect(container.querySelector("main").textContent).toContain("ปิดใช้งาน");
+  });
+
+  it("uses category-specific fields and keeps motherboard advanced metadata when editing", async () => {
+    await signInAsAdminAndOpenProducts();
+    setValue("#product-name", "Test board");
+    setValue("#product-brand", "Example");
+    setValue("#product-price", "2000");
+    setValue("#product-category", "motherboard");
+    setValue("#cpu-socket", "AM5");
+    setValue("#ram-type", "DDR5");
+    setValue("#product-specs", JSON.stringify({ connectivity_profiles: null, sources: null, evidence: null }));
+    await act(async () => container.querySelector("#product-name").form.dispatchEvent(
+      new Event("submit", { bubbles: true, cancelable: true }),
+    ));
+    const createCall = global.fetch.mock.calls.find(([url, options]) =>
+      url.includes("/admin/products") && options?.method === "POST");
+    expect(JSON.parse(createCall[1].body).specs).toEqual({
+      cpu_socket: "AM5", ram_type: "DDR5", connectivity_profiles: null, sources: null, evidence: null,
+    });
+    await act(async () => Array.from(container.querySelectorAll("button"))
+      .find((button) => button.textContent === "แก้ไข").click());
+    setValue("#product-price", "2200");
+    await act(async () => container.querySelector("#product-name").form.dispatchEvent(
+      new Event("submit", { bubbles: true, cancelable: true }),
+    ));
+    const updateCall = global.fetch.mock.calls.find(([, options]) => options?.method === "PATCH");
+    expect(JSON.parse(updateCall[1].body).specs).toEqual({
+      cpu_socket: "AM5", ram_type: "DDR5", connectivity_profiles: null, sources: null, evidence: null,
+    });
+  });
+
+  it("builds optional GPU display metadata from simple fields without inventing other data", async () => {
+    await signInAsAdminAndOpenProducts();
+    setValue("#product-name", "Test GPU");
+    setValue("#product-brand", "Example");
+    setValue("#product-price", "5000");
+    setValue("#product-category", "gpu");
+    setValue("#gpu-chipset", "Test chip");
+    setValue("#gpu-vram", "1.28");
+    await act(async () => container.querySelector("#product-name").form.dispatchEvent(
+      new Event("submit", { bubbles: true, cancelable: true }),
+    ));
+    const createCall = global.fetch.mock.calls.find(([url, options]) =>
+      url.includes("/admin/products") && options?.method === "POST");
+    expect(JSON.parse(createCall[1].body).specs).toEqual({
+      display: { chipset_name: "Test chip", vram_capacity_bytes: 1280000000 },
+    });
+  });
+
+  it("uses the chosen RAM type, package size and existing model ID", async () => {
+    await signInAsAdminAndOpenProducts();
+    setValue("#product-name", "Test RAM");
+    setValue("#product-brand", "Example");
+    setValue("#product-price", "1000");
+    setValue("#product-category", "ram");
+    setValue("#ram-type", "DDR5");
+    setValue("#ram-modules", "2");
+    setValue("#ram-model-id", "model-id");
+    await act(async () => container.querySelector("#product-name").form.dispatchEvent(
+      new Event("submit", { bubbles: true, cancelable: true }),
+    ));
+    const createCall = global.fetch.mock.calls.find(([url, options]) =>
+      url.includes("/admin/products") && options?.method === "POST");
+    expect(JSON.parse(createCall[1].body)).toEqual(expect.objectContaining({
+      category: "ram",
+      ram_model_id: "model-id",
+      specs: { ram_type: "DDR5", modules_per_package: 2 },
+    }));
+  });
+
+  it("preserves storage metadata while updating its displayed capacity", async () => {
+    await signInAsAdminAndOpenProducts();
+    setValue("#product-name", "Test SSD");
+    setValue("#product-brand", "Example");
+    setValue("#product-price", "1000");
+    setValue("#product-category", "storage");
+    setValue("#storage-type", "ssd");
+    setValue("#storage-capacity", "500");
+    setValue("#product-specs", JSON.stringify({ host: { connection_type: "sata" } }));
+    await act(async () => container.querySelector("#product-name").form.dispatchEvent(
+      new Event("submit", { bubbles: true, cancelable: true }),
+    ));
+    await act(async () => Array.from(container.querySelectorAll("button"))
+      .find((button) => button.textContent === "แก้ไข").click());
+    setValue("#storage-capacity", "1000");
+    await act(async () => container.querySelector("#product-name").form.dispatchEvent(
+      new Event("submit", { bubbles: true, cancelable: true }),
+    ));
+    const updateCall = global.fetch.mock.calls.find(([, options]) => options?.method === "PATCH");
+    expect(JSON.parse(updateCall[1].body).specs).toEqual({
+      display: { media_type: "ssd", capacity_bytes: 1000000000000 },
+      host: { connection_type: "sata" },
+    });
+  });
+
+  it("rejects malformed advanced specs before sending a request", async () => {
+    await signInAsAdminAndOpenProducts();
+    setValue("#product-name", "Test CPU");
+    setValue("#product-brand", "Example");
+    setValue("#product-price", "1000");
+    setValue("#cpu-socket", "AM5");
+    setValue("#product-specs", "{");
+    await act(async () => container.querySelector("#product-name").form.dispatchEvent(
+      new Event("submit", { bubbles: true, cancelable: true }),
+    ));
+    expect(container.querySelector('[role="alert"]').textContent).toContain("JSON ที่ถูกต้อง");
+    expect(global.fetch.mock.calls.some(([url, options]) =>
+      url.includes("/admin/products") && options?.method === "POST")).toBe(false);
   });
 });
