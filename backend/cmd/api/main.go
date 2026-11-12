@@ -14,6 +14,7 @@ import (
 
 	"specuse/backend/internal/build"
 	"specuse/backend/internal/catalog"
+	"specuse/backend/internal/draft"
 	"specuse/backend/internal/handler"
 	"specuse/backend/internal/management"
 )
@@ -43,10 +44,13 @@ func main() {
 		address = "127.0.0.1:" + port
 	}
 	var adminService *management.Service
+	var draftService *draft.Service
 	if app.database != nil {
 		adminService = management.New(app.database)
+		draftService = draft.New(app.database)
 	}
 	routes := handler.WithAdmin(handler.WithMembers(handler.NewAPI(catalog.NewService(app.catalog), build.NewService(app.builds)), app.members), app.members, adminService)
+	routes = handler.WithDrafts(routes, app.members, draftService)
 	if app.database != nil {
 		routes = handler.WithHealth(routes, "supabase", app.database.Ping)
 	} else {

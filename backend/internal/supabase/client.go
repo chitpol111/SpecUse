@@ -79,6 +79,8 @@ func (c *Client) request(ctx context.Context, method, path, key, token string, b
 		return nil, account.ErrReauth
 	}
 	switch e.Code {
+	case "22023", "22003":
+		return nil, account.ErrInput
 	case "23505", "23503", "23514", "22P02":
 		return nil, account.ErrConflict
 	case "42501":

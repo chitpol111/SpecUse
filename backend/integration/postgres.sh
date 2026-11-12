@@ -17,3 +17,5 @@ for task_migration in "$task_root"/migrations/*.up.sql; do
   docker exec -i "$task_container" psql -h 127.0.0.1 -q -U postgres -v ON_ERROR_STOP=1 < "$task_migration"
 done
 docker exec -i "$task_container" psql -h 127.0.0.1 -q -U postgres -v ON_ERROR_STOP=1 < "$task_root/integration/permissions.sql"
+
+docker exec -i "$task_container" psql -h 127.0.0.1 -q -U postgres -v ON_ERROR_STOP=1 < "$task_root/integration/member_builds.sql"

@@ -160,7 +160,8 @@ Supabase Dashboard → Authentication → Sign In / Providers → Email: เป�
 ไม่ต้องตั้ง signup OTP template/SMTP เพื่อให้ flow สมัครแบบนี้ทำงาน; recovery/email-change ยังอยู่นอก milestone
 local Supabase ใช้ [auth.email] enable_confirmations=false ใน supabase/config.toml แล้ว restart local stack
 unit tests ใช้ fake Auth/Data API; integration ต้องตั้ง local/test Supabase แยก
-ยังไม่เปิด forgot-password/recovery/OAuth/สมาชิกบันทึก build ใน milestone นี้
+Auth milestone นี้ยังไม่เปิด forgot-password/recovery/OAuth
+private draft กำลังเพิ่มบน branch แยกตาม [PRIVATE_BUILDS_API.md](PRIVATE_BUILDS_API.md) ยังไม่ deploy/merge
 
 ## ข้อความส่งให้ Fluke
 

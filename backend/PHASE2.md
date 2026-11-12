@@ -1,5 +1,9 @@
 # Phase 2: schema, repository และ validation ภายใน
 
+บันทึกการออกแบบระยะเดิม: Supabase/Auth/Admin เพิ่มแล้วในงานถัดมา
+private draft ปัจจุบันดู [PRIVATE_BUILDS_API.md](PRIVATE_BUILDS_API.md) บน branch แยกที่ยังไม่ deploy
+ข้อความสถานะในเนื้อหาด้านล่างอ้างถึงช่วง Phase 2 เดิม
+
 งานนี้มี domain/service และ unit tests สำหรับ compatibility และ RAM selection
 เชื่อม `POST /api/v1/builds/validate` แล้ว ดู [HTTP contract และตัวอย่าง](BUILD_API.md)
 GET Catalog คง 6 fields เดิมและเพิ่ม specs/ram_model_id จาก snapshot เดียวกับ validate
