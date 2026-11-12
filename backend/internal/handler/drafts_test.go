@@ -13,6 +13,7 @@ import (
 
 	"specuse/backend/internal/account"
 	"specuse/backend/internal/draft"
+	"specuse/backend/internal/supabase"
 )
 
 const draftOwner = "11111111-1111-4111-8111-111111111111"
@@ -225,5 +226,67 @@ func TestDraftHTTPContractAuthorizationAndInput(t *testing.T) {
 	}
 	if w := call("GET", collection+"/"+draftID, "", token); w.Code != 404 {
 		t.Fatal("deleted draft readable")
+	}
+}
+
+func TestDraftHTTPPostgRESTNotFoundForOtherOwnersAndMissingIDs(t *testing.T) {
+	const issuer = "https://unit.invalid/auth/v1"
+	const memberB = "44444444-4444-4444-8444-444444444444"
+	const missingID = "55555555-5555-4555-8555-555555555555"
+	for _, actor := range []struct{ name, id string }{
+		{"member_B", memberB}, {"admin_C", draftOther}, {"owner_A", draftOwner},
+	} {
+		for _, id := range []string{draftID, missingID} {
+			if actor.id == draftOwner && id == draftID {
+				continue // This test only models hidden or nonexistent records.
+			}
+			for _, method := range []string{http.MethodGet, http.MethodPatch, http.MethodDelete} {
+				t.Run(actor.name+"/"+id+"/"+method, func(t *testing.T) {
+					calls := 0
+					rpcMethod := strings.ToLower(method)
+					if method == http.MethodPatch {
+						rpcMethod = "get" // PATCH verifies ownership before attempting a write.
+					}
+					upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+						calls++
+						if r.Method != http.MethodPost || r.URL.Path != "/rest/v1/rpc/backend_member_build_"+rpcMethod {
+							t.Errorf("unexpected RPC: %s %s", r.Method, r.URL.Path)
+						}
+						if r.Header.Get("apikey") != "server-test" || r.Header.Get("Authorization") != "" {
+							t.Error("wrong privileged RPC credentials")
+						}
+						var args struct {
+							Actor string `json:"p_actor"`
+							ID    string `json:"p_id"`
+						}
+						if err := json.NewDecoder(r.Body).Decode(&args); err != nil || args.Actor != actor.id || args.ID != id {
+							t.Errorf("incorrect actor or draft ID: %+v, %v", args, err)
+						}
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusInternalServerError)
+						_, _ = w.Write([]byte(`{"code":"P0002","message":"private database detail","details":null,"hint":null}`))
+					}))
+					defer upstream.Close()
+					client, err := supabase.New(upstream.URL, "public-test", "server-test", true)
+					if err != nil {
+						t.Fatal(err)
+					}
+					token := memberToken(actor.id, issuer)
+					auth := account.New(draftProvider{tokens: map[string]string{token: actor.id}}, draftProfiles{}, issuer, "authenticated")
+					h := WithDrafts(http.NotFoundHandler(), auth, draft.New(supabase.NewRepository(client)))
+					r := httptest.NewRequest(method, "/api/v1/me/builds/"+id, strings.NewReader(`{"name":"Changed"}`))
+					r.Header.Set("Authorization", "Bearer "+token)
+					r.Header.Set("Content-Type", "application/json")
+					w := httptest.NewRecorder()
+					h.ServeHTTP(w, r)
+					if w.Code != http.StatusNotFound || strings.TrimSpace(w.Body.String()) != `{"error":{"code":"NOT_FOUND","message":"ไม่พบข้อมูล"}}` {
+						t.Fatalf("got HTTP %d %s, want the same generic 404 for hidden and missing drafts", w.Code, w.Body.String())
+					}
+					if calls != 1 {
+						t.Fatalf("got %d RPC calls, want 1", calls)
+					}
+				})
+			}
+		}
 	}
 }

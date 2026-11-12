@@ -4,6 +4,8 @@ Branch `feat/backend-member-builds`, worktree แยกจาก `a303f7c4dead2e
 ไม่แก้ Frontend หรือ branch ที่ deploy ไม่ merge/เปลี่ยน deployment source และไม่ apply 007 กับ specuse-dev
 ส่งตรวจเป็น Draft PR จาก feat/backend-member-builds เข้า feat/backend-render-ready ต่อจาก PR #11
 
+ผลตรวจชุดแรกที่ `3734a95`:
+
 | Check | ผลที่รันจริง |
 |---|---|
 | go test ./... -json -count=1 | 112 tests หลัก + 354 subtests ผ่าน, fail 0; 10 packages ผ่าน |
@@ -18,7 +20,7 @@ Branch `feat/backend-member-builds`, worktree แยกจาก `a303f7c4dead2e
 
 ราคา 11500 เป็น legacy regression fixture ไม่ใช่ราคาสินค้าจริง 7779 ที่เจ้าของรายงาน smoke test ก่อนหน้านี้
 SQL integration คือ PostgreSQL container local ไม่ใช่ Supabase hosted; provider/token checks ใช้ fake Auth/httptest
-ไม่ได้ทดสอบ saved-build flow กับ specuse-dev/Render จริง และยังไม่ได้ทดสอบ private draft ร่วมกับ FE ล่าสุด
+ไม่ได้ทดสอบ saved-build flow กับ specuse-dev/Render จริง ผลอัตโนมัติข้างต้นไม่ใช่ผล FE integration; ผลบางส่วนที่ผู้ใช้รายงานอยู่ด้านล่าง
 ผล CI ต้องตรวจจาก SHA/Checks ของ Draft PR แยกจาก local tests; CI ของงาน Auth เดิมไม่ใช้แทนผล private draft
 
 Backend เก็บและคืนรายการทุกแถว/จำนวนตาม request โดยไม่บังคับหมวดละหนึ่ง
@@ -39,3 +41,30 @@ integration/private_draft_e2e_seed.sh ผ่านบน PostgreSQL disposable �
 - export SQL catalog ให้ Go guest API บน loopback ตรวจ quotes3600/5600/2500
 - inactive/RAM-unavailable404 และ CPU conflict3800/RAM conflict3850 ผ่าน
 นี่ไม่ใช่ native Supabase Auth/Data API หรือ FE integration PASS; ตาราง T01–T23 ในคู่มือยังต้องบันทึกผลจริง
+
+## ผลทดสอบร่วมบางส่วนจากผู้ใช้ และแก้ P0002 mapping — 2026-11-12
+
+ผู้ใช้รายงานว่าทดสอบ FE กับ Backend `c9d2eba` และ Supabase local ที่มี007แล้ว:
+
+- บันทึก/แก้ชื่อ/ลบผ่าน; metadata PATCH เก็บครบ7 items และ2 RAM models ราคา5600
+- inactive และ RAM ไม่มีแพ็ก active แสดงว่าตรวจราคาไม่ได้ตามคาด
+- Member B และ Admin C ไม่เห็นdraftของAในlist และข้อมูลAไม่เปลี่ยน
+- แต่ GET/PATCH/DELETE draftของA และIDที่ไม่มีอยู่ตอบ503แทน404
+- ยังไม่ได้ทดสอบครบ23กรณี และไม่ใช่ผล hosted Supabase/Render
+
+สาเหตุ: PostgREST ส่ง HTTP500 พร้อม SQLSTATE `P0002` แต่ client จัดการ5xxก่อนอ่านcode
+แก้เฉพาะ Data API RPC ที่มีJSON errorถูกต้องและcode `P0002` ให้เป็น `NOT_FOUND`/404ก่อน generic5xx fallback
+unknown SQLSTATE, malformed response, Auth5xx, redirect และrate limitยังคงพฤติกรรมเดิม ไม่คืนรายละเอียดDB
+ไม่มีการเปลี่ยนSQL/ownership/schema และไม่ต้องรันmigrationเพิ่ม
+
+Regression tests จำลอง HTTP500/P0002 ผ่าน HTTP client จริง และ handler→service→repository:
+
+- Member B/Admin C เข้าถึงdraftคนอื่น และA/B/Cเข้าถึงIDที่ไม่มีอยู่: GET/PATCH/DELETEต้องได้error404แบบเดียวกัน
+- PATCH ที่ไม่พบ/ไม่มีสิทธิ์หยุดที่ GETตรวจเจ้าของ ไม่เรียก RPCเขียนต่อ
+- ทดสอบ P0002 ของget/patch/delete RPCโดยตรง และคง503สำหรับserver errorsที่ไม่ใช่not-found
+
+ผลรัน local หลังแก้: `go test ./... -json -count=1` ผ่าน114 testsหลัก +382 subtests =496รายการ, fail0, 10packages
+`go vet ./...` ผ่าน และ `go test -race ./internal/... -count=1` ผ่าน9packages
+diff/secrets review ผ่าน ไม่มีactual tracked .env หรือ Frontend changes
+
+ผลแก้ไขนี้ยังต้องให้ผู้ใช้รันซ้ำกับ FE+native Supabase local; ไม่อ้างว่ารอบจริงหลังแก้ผ่านแล้ว

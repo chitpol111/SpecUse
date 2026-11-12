@@ -1,6 +1,8 @@
 # ทดสอบร่วม FE + Backend PR #12 + Supabase local แยก
 
-คู่มือนี้ยังไม่ใช่ผล PASS ของ FE+native Supabase: รอบนี้ตรวจเอกสาร/fixtures เท่านั้น
+คู่มือนี้เป็นขั้นตอนและ expected results ไม่ใช่ผล PASS ครบทุกกรณีของ FE+native Supabase
+มีผลทดสอบบางส่วนที่ผู้ใช้รายงานจาก `c9d2eba` ดู [บันทึกผล](PRIVATE_BUILDS_VERIFICATION.md)
+commit ดังกล่าวยังตอบ503เมื่อ RPC ส่ง HTTP500/P0002; ใช้ HEAD ล่าสุดของ PR #12 ที่แก้ mapping แล้วและทดสอบ T15/ID ที่ไม่มีอยู่ซ้ำ
 ไม่ merge/deploy/เปลี่ยน source และไม่ใช้ specuse-dev หรือฐาน hosted ที่ใช้งานอยู่
 [Contract](PRIVATE_BUILDS_API.md) · [Draft PR #12](https://github.com/chitpol111/SpecUse/pull/12)
 

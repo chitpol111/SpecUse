@@ -64,14 +64,24 @@ func (c *Client) request(ctx context.Context, method, path, key, token string, b
 	if res.StatusCode == 429 {
 		return nil, account.ErrRateLimit
 	}
-	if res.StatusCode >= 500 || res.StatusCode >= 300 && res.StatusCode < 400 {
+	if res.StatusCode >= 300 && res.StatusCode < 400 {
 		return nil, account.ErrUnavailable
 	}
 	var e struct {
 		Code      string `json:"code"`
 		ErrorCode string `json:"error_code"`
 	}
-	_ = json.Unmarshal(raw, &e)
+	decoded := json.Unmarshal(raw, &e) == nil
+	// PostgREST reports the RPC's explicit no_data_found SQLSTATE as HTTP 500.
+	// Preserve its domain meaning before the generic upstream failure fallback.
+	// Auth failures, redirects, malformed responses and unknown SQLSTATEs keep
+	// their existing handling; never infer not-found from an error message.
+	if decoded && strings.HasPrefix(path, "/rest/v1/rpc/") && e.Code == "P0002" {
+		return nil, account.ErrNotFound
+	}
+	if res.StatusCode >= 500 {
+		return nil, account.ErrUnavailable
+	}
 	switch e.ErrorCode {
 	case "email_not_confirmed":
 		return nil, account.ErrConfirm

@@ -159,3 +159,44 @@ func TestConfigErrorsProviderFailuresAndNoRedirectCredentialLeak(t *testing.T) {
 		}
 	}
 }
+
+func TestPostgRESTNotFoundPrecedesServerErrorFallback(t *testing.T) {
+	for _, tt := range []struct {
+		name   string
+		path   string
+		status int
+		body   string
+		want   error
+	}{
+		{"RPC no_data_found with HTTP 500", "/rest/v1/rpc/backend_member_build_get", 500, `{"code":"P0002","message":"private database detail","details":null,"hint":null}`, account.ErrNotFound},
+		{"PATCH RPC no_data_found", "/rest/v1/rpc/backend_member_build_patch", 500, `{"code":"P0002"}`, account.ErrNotFound},
+		{"DELETE RPC no_data_found", "/rest/v1/rpc/backend_member_build_delete", 500, `{"code":"P0002"}`, account.ErrNotFound},
+		{"RPC no_data_found with HTTP 404", "/rest/v1/rpc/backend_member_build_get", 404, `{"code":"P0002"}`, account.ErrNotFound},
+		{"unknown SQLSTATE", "/rest/v1/rpc/backend_member_build_get", 500, `{"code":"XX000","message":"private database detail"}`, account.ErrUnavailable},
+		{"unclassified server error", "/rest/v1/rpc/backend_member_build_get", 500, `{"message":"not found"}`, account.ErrUnavailable},
+		{"unavailable upstream", "/rest/v1/rpc/backend_member_build_get", 503, `{}`, account.ErrUnavailable},
+		{"gateway HTML", "/rest/v1/rpc/backend_member_build_get", 502, `<html>Bad gateway</html>`, account.ErrUnavailable},
+		{"malformed JSON", "/rest/v1/rpc/backend_member_build_get", 500, `{"code":"P0002"`, account.ErrUnavailable},
+		{"invalid error shape", "/rest/v1/rpc/backend_member_build_get", 500, `{"code":"P0002","error_code":123}`, account.ErrUnavailable},
+		{"redirect cannot become not found", "/rest/v1/rpc/backend_member_build_get", 302, `{"code":"P0002"}`, account.ErrUnavailable},
+		{"rate limit stays rate limit", "/rest/v1/rpc/backend_member_build_get", 429, `{"code":"P0002"}`, account.ErrRateLimit},
+		{"Auth server errors are unchanged", "/auth/v1/user", 500, `{"code":"P0002"}`, account.ErrUnavailable},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(tt.status)
+				_, _ = w.Write([]byte(tt.body))
+			}))
+			defer server.Close()
+			client, err := New(server.URL, "public-test", "server-test", true)
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, err = client.request(context.Background(), http.MethodPost, tt.path, "server-test", "", nil)
+			if !errors.Is(err, tt.want) {
+				t.Fatalf("HTTP %d: got %v, want %v", tt.status, err, tt.want)
+			}
+		})
+	}
+}
