@@ -110,5 +110,9 @@ export async function fetchProducts({ signal } = {}) {
 }
 
 export function validateBuild(build, { signal } = {}) {
-  return request("/builds/validate", { method: "POST", body: build, signal });
+  return request("/builds/validate?validation_mode=gpu_storage_v1", {
+    method: "POST",
+    body: build,
+    signal,
+  });
 }
