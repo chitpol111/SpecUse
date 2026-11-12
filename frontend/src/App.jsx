@@ -5,6 +5,7 @@ import AdminProductsPage from "./pages/AdminProductsPage";
 import BuildPage from "./pages/BuildPage";
 import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
+import SavedBuildsPage from "./pages/SavedBuildsPage";
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
         <Route path="/login" element={<AuthPage key="login" mode="login" />} />
         <Route path="/register" element={<AuthPage key="register" mode="register" />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/me/builds" element={<SavedBuildsPage />} />
         <Route path="/admin/products" element={<AdminProductsPage />} />
         <Route path="*" element={<HomePage />} />
       </Routes>

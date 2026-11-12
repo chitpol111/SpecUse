@@ -79,6 +79,11 @@ export default function SiteHeader() {
         </nav>
         <div className="flex items-center gap-2 sm:gap-3">
           {authenticated && (
+            <Link to="/me/builds" className="hidden rounded-full px-3 py-2.5 text-sm font-bold text-slate-100 transition hover:text-ruby-200 lg:inline-flex">
+              สเปกของฉัน
+            </Link>
+          )}
+          {authenticated && (
             <Link to="/profile" className="hidden rounded-full px-3 py-2.5 text-sm font-bold text-slate-100 transition hover:text-ruby-200 sm:inline-flex">
               ข้อมูลส่วนตัว
             </Link>
@@ -126,6 +131,11 @@ export default function SiteHeader() {
       {menuOpen && (
         <nav className="border-t border-white/10 bg-[#0b0202] px-5 py-4 lg:hidden" aria-label="เมนูมือถือ">
           <div className="mx-auto flex max-w-7xl flex-col gap-1">
+            {authenticated && (
+              <Link to="/me/builds" className="rounded-lg px-3 py-3 font-bold text-ruby-200 transition hover:bg-white/5" onClick={() => setMenuOpen(false)}>
+                สเปกของฉัน
+              </Link>
+            )}
             {authenticated && (
               <Link to="/profile" className="rounded-lg px-3 py-3 font-bold text-ruby-200 transition hover:bg-white/5" onClick={() => setMenuOpen(false)}>
                 ข้อมูลส่วนตัว

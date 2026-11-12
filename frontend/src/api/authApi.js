@@ -58,6 +58,28 @@ function validProfile(profile) {
     ["member", "admin"].includes(profile.role);
 }
 
+function validBuildSummary(build) {
+  return build && typeof build.id === "string" && typeof build.name === "string" &&
+    typeof build.description === "string" && build.visibility === "private" &&
+    typeof build.created_at === "string" && typeof build.updated_at === "string";
+}
+
+function validBuild(build) {
+  return validBuildSummary(build) && Array.isArray(build.items) &&
+    build.items.every((item) => item && typeof item.product_id === "string" &&
+      Number.isInteger(item.quantity) && Number.isInteger(item.owned_quantity) &&
+      typeof item.product_summary?.name === "string" &&
+      typeof item.product_summary?.category === "string" &&
+      typeof item.product_summary?.is_active === "boolean") &&
+    Array.isArray(build.ram_items) &&
+    build.ram_items.every((item) => item && typeof item.ram_model_id === "string" &&
+      Number.isInteger(item.required_modules) && Number.isInteger(item.owned_modules) &&
+      typeof item.ram_model_summary?.ram_type === "string") &&
+    typeof build.availability?.ready_for_validation === "boolean" &&
+    Array.isArray(build.availability?.issues) &&
+    build.availability.issues.every((issue) => issue && typeof issue.message === "string");
+}
+
 export function createAuthClient(onChange) {
   let session = null;
   let user = null;
@@ -189,6 +211,14 @@ export function createAuthClient(onChange) {
     return data;
   }
 
+  async function buildRequest(path, options) {
+    const data = await protectedRequest(path, options);
+    if (!validBuild(data?.build)) {
+      throw new AuthError("ข้อมูลสเปกจาก Backend ไม่ตรงกับ API contract");
+    }
+    return data.build;
+  }
+
   return {
     register: (body) => authenticate("/auth/register", body, true),
     login: (body) => authenticate("/auth/login", body, false),
@@ -212,6 +242,25 @@ export function createAuthClient(onChange) {
     },
     deactivateAdminProduct: (id) => protectedRequest(
       `/admin/products/${encodeURIComponent(id)}`,
+      { method: "DELETE", expectedStatus: 204 },
+    ),
+    async listBuilds(page = 1) {
+      const data = await protectedRequest(`/me/builds?page=${page}&page_size=20`);
+      if (!data || !Array.isArray(data.items) || !data.items.every(validBuildSummary) ||
+          !Number.isInteger(data.page) || !Number.isInteger(data.page_size) ||
+          data.page < 1 || data.page_size < 1 || !Number.isInteger(data.total) || data.total < 0) {
+        throw new AuthError("รายการสเปกจาก Backend ไม่ตรงกับ API contract");
+      }
+      return data;
+    },
+    getBuild: (id) => buildRequest(`/me/builds/${encodeURIComponent(id)}`),
+    createBuild: (body) => buildRequest("/me/builds", { method: "POST", body, expectedStatus: 201 }),
+    updateBuildDetails: (id, name, description) => buildRequest(
+      `/me/builds/${encodeURIComponent(id)}`,
+      { method: "PATCH", body: { name, description } },
+    ),
+    deleteBuild: (id) => protectedRequest(
+      `/me/builds/${encodeURIComponent(id)}`,
       { method: "DELETE", expectedStatus: 204 },
     ),
     async loadProfile() {

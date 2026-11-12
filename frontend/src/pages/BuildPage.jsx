@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { fetchProducts, validateBuild } from "../api/specUseApi";
 import { getOwnedQuantitiesAfterSelection } from "./buildSelection";
+import { useAuth } from "../auth/AuthContext";
 
 const CATEGORIES = [
   { id: "cpu", label: "ซีพียู", shortLabel: "CPU", mark: "CPU" },
@@ -148,7 +149,6 @@ function BuildNotice() {
       </svg>
       <p>
         ราคาเป็นข้อมูลอ้างอิงจาก Backend และการตรวจยังไม่ครอบคลุมอุปกรณ์ทุกส่วน
-        ระบบบันทึกสเปกยังไม่พร้อมใช้งาน
       </p>
     </div>
   );
@@ -388,7 +388,7 @@ function BuilderSummary({
         สร้างชุดสเปก · ดูรายการที่เลือก
       </button>
       <p className="mt-2 text-center text-xs leading-5 text-slate-400">
-        ยังไม่สามารถบันทึกสเปกได้ในต้นแบบนี้
+        บันทึกสเปกส่วนตัวได้ในหน้าสรุปรายการ
       </p>
     </aside>
   );
@@ -483,6 +483,7 @@ function BuildList({ rows }) {
 }
 
 export default function BuildPage() {
+  const { authenticated, client } = useAuth();
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [productsError, setProductsError] = useState("");
@@ -514,6 +515,11 @@ export default function BuildPage() {
   const [validation, setValidation] = useState(null);
   const [validationError, setValidationError] = useState("");
   const [validating, setValidating] = useState(false);
+  const [saveName, setSaveName] = useState("");
+  const [saveDescription, setSaveDescription] = useState("");
+  const [savePending, setSavePending] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [saveMessage, setSaveMessage] = useState("");
 
   const loadProducts = useCallback(async (signal) => {
     setLoadingProducts(true);
@@ -611,11 +617,26 @@ export default function BuildPage() {
       selectedComponents,
     ],
   );
+  const saveSnapshot = useRef(null);
+  saveSnapshot.current = { authenticated, requestPayload, saveName, saveDescription };
+
+  useEffect(() => {
+    setSaveMessage("");
+    setSaveError("");
+  }, [authenticated, requestPayload, saveName, saveDescription]);
 
   useEffect(() => {
     if (!selectedComponents.cpu || !selectedComponents.motherboard) {
       setValidation(null);
       setValidationError("");
+      setValidating(false);
+      return undefined;
+    }
+    if (selectedComponents.ram && (!Number.isSafeInteger(requiredModules) ||
+        !Number.isSafeInteger(ownedQuantities.ram) || requiredModules < 1 ||
+        ownedQuantities.ram < 0 || ownedQuantities.ram > requiredModules)) {
+      setValidation(null);
+      setValidationError("จำนวน RAM ต้องเป็นจำนวนเต็มในช่วงที่รองรับ");
       setValidating(false);
       return undefined;
     }
@@ -653,7 +674,7 @@ export default function BuildPage() {
       });
 
     return () => controller.abort();
-  }, [requestPayload, selectedComponents.cpu, selectedComponents.motherboard]);
+  }, [requestPayload, selectedComponents.cpu, selectedComponents.motherboard, selectedComponents.ram, requiredModules, ownedQuantities.ram]);
 
   const categoryProducts = useMemo(() => {
     const category = CATEGORIES.find((item) => item.id === activeCategory);
@@ -799,6 +820,39 @@ export default function BuildPage() {
       category: selectedCategory?.label || "อุปกรณ์",
       name: itemName,
     });
+  }
+
+  async function saveBuild(event) {
+    event.preventDefault();
+    if (savePending) return;
+    const name = saveName.trim();
+    if (!name || [...name].length > 100 || [...saveDescription].length > 2000 ||
+        name.includes("\0") || saveDescription.includes("\0")) {
+      setSaveError("ชื่อสเปกต้องมี 1–100 ตัวอักษร และคำอธิบายไม่เกิน 2,000 ตัวอักษร");
+      return;
+    }
+    if (selectedComponents.ram && (!Number.isSafeInteger(requiredModules) ||
+        !Number.isSafeInteger(ownedQuantities.ram) || requiredModules < 1 ||
+        ownedQuantities.ram < 0 || ownedQuantities.ram > requiredModules)) {
+      setSaveError("จำนวน RAM ต้องเป็นจำนวนเต็มในช่วงที่รองรับ");
+      return;
+    }
+    setSavePending(true);
+    setSaveError("");
+    setSaveMessage("");
+    const snapshot = saveSnapshot.current;
+    try {
+      await client.createBuild({ name, description: saveDescription, visibility: "private", ...requestPayload });
+      const current = saveSnapshot.current;
+      if (current.authenticated && current.requestPayload === snapshot.requestPayload &&
+          current.saveName === snapshot.saveName && current.saveDescription === snapshot.saveDescription) {
+        setSaveMessage("บันทึกสเปกส่วนตัวแล้ว");
+      }
+    } catch (error) {
+      if (saveSnapshot.current.authenticated) setSaveError(error.message);
+    } finally {
+      setSavePending(false);
+    }
   }
 
   const openSummary = () => {
@@ -1127,14 +1181,25 @@ export default function BuildPage() {
                       </p>
                     )}
                     <div className="mt-5 grid gap-2">
-                      <button
-                        type="button"
-                        disabled
-                        aria-describedby="build-actions-note"
-                        className="min-h-11 cursor-not-allowed rounded-lg bg-ruby-700/50 px-4 py-2 text-sm font-bold text-white/60"
-                      >
-                        บันทึกชุดสเปก
-                      </button>
+                      {authenticated ? (
+                        <form onSubmit={saveBuild} className="grid gap-3">
+                          <label className="text-sm font-semibold text-slate-200">
+                            ชื่อสเปก
+                            <input value={saveName} onChange={(event) => setSaveName(event.target.value)} required className="mt-2 min-h-11 w-full rounded-lg border border-white/15 bg-obsidian-900 px-3 py-2 text-slate-100 focus:border-ruby-300 focus:outline-none focus:ring-2 focus:ring-ruby-300/20" />
+                          </label>
+                          <label className="text-sm font-semibold text-slate-200">
+                            คำอธิบาย (ไม่บังคับ)
+                            <textarea value={saveDescription} onChange={(event) => setSaveDescription(event.target.value)} rows={2} className="mt-2 w-full rounded-lg border border-white/15 bg-obsidian-900 px-3 py-2 text-slate-100 focus:border-ruby-300 focus:outline-none focus:ring-2 focus:ring-ruby-300/20" />
+                          </label>
+                          {saveError && <p role="alert" className="text-sm text-ruby-200">{saveError}</p>}
+                          {saveMessage && <p role="status" className="text-sm text-emerald-200">{saveMessage} · <Link to="/me/builds" className="underline">ดูสเปกของฉัน</Link></p>}
+                          <button type="submit" disabled={savePending} className="min-h-11 rounded-lg bg-ruby-600 px-4 py-2 text-sm font-bold text-white hover:bg-ruby-500 disabled:opacity-50">
+                            {savePending ? "กำลังบันทึก..." : "บันทึกสเปกส่วนตัว"}
+                          </button>
+                        </form>
+                      ) : (
+                        <p className="text-sm text-slate-300"><Link to="/login" className="text-ruby-200 underline">เข้าสู่ระบบ</Link> เพื่อบันทึกสเปกส่วนตัว</p>
+                      )}
                       <button
                         type="button"
                         disabled
@@ -1145,7 +1210,7 @@ export default function BuildPage() {
                       </button>
                     </div>
                     <p id="build-actions-note" className="mt-3 text-xs leading-5 text-slate-400">
-                      บันทึกและแชร์ยังไม่เปิดใช้ในต้นแบบนี้
+                      การแชร์ยังไม่เปิดใช้ สเปกที่บันทึกเป็นส่วนตัว
                     </p>
                   </div>
                 </section>

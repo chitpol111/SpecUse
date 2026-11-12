@@ -18,6 +18,40 @@ describe("auth API client", () => {
     delete global.fetch;
   });
 
+  it("uses protected private-draft endpoints and patches only metadata", async () => {
+    const client = createAuthClient(jest.fn());
+    const build = {
+      id: "build", name: "Draft", description: "", visibility: "private", created_at: "now", updated_at: "now",
+      items: [{ product_id: "cpu", quantity: 2, owned_quantity: 1, product_summary: { name: "CPU", category: "cpu", is_active: false } }],
+      ram_items: [{ ram_model_id: "ram", required_modules: 4, owned_modules: 2, ram_model_summary: { ram_type: "DDR4" } }],
+      availability: { ready_for_validation: false, issues: [{ message: "inactive" }] },
+    };
+    global.fetch
+      .mockResolvedValueOnce(response(200, { data: { session } }))
+      .mockResolvedValueOnce(response(201, { data: { build } }))
+      .mockResolvedValueOnce(response(200, { data: { items: [build], page: 1, page_size: 20, total: 1 } }))
+      .mockResolvedValueOnce(response(200, { data: { build } }))
+      .mockResolvedValueOnce(response(204));
+    await client.login({});
+    const body = { name: "Draft", items: [], ram_items: [] };
+    await expect(client.createBuild(body)).resolves.toEqual(build);
+    await expect(client.listBuilds()).resolves.toMatchObject({ total: 1 });
+    await expect(client.updateBuildDetails("build", "Draft", "")).resolves.toEqual(build);
+    await client.deleteBuild("build");
+    expect(global.fetch.mock.calls[1][1]).toMatchObject({ method: "POST", body: JSON.stringify(body), headers: { "Content-Type": "application/json", Authorization: "Bearer first" } });
+    expect(global.fetch.mock.calls[3][1].body).toBe(JSON.stringify({ name: "Draft", description: "" }));
+    expect(global.fetch.mock.calls[4][1].method).toBe("DELETE");
+  });
+
+  it("rejects malformed draft responses", async () => {
+    const client = createAuthClient(jest.fn());
+    global.fetch
+      .mockResolvedValueOnce(response(200, { data: { session } }))
+      .mockResolvedValueOnce(response(200, { data: { build: { items: [] } } }));
+    await client.login({});
+    await expect(client.getBuild("build")).rejects.toThrow("ไม่ตรงกับ API contract");
+  });
+
   it("refreshes once for simultaneous 401s and retries with the new token", async () => {
     const onChange = jest.fn();
     const client = createAuthClient(onChange);
