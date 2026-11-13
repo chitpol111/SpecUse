@@ -91,6 +91,68 @@ describe("build page extended components", () => {
       .find((button) => button.textContent.includes("สร้างชุดสเปก ·")).click());
   }
 
+  async function reloadPage() {
+    await act(async () => root.unmount());
+    root = createRoot(container);
+    await render();
+  }
+
+  it("restores selected components, owned quantities, RAM count and budget after a refresh", async () => {
+    await render();
+    await choose("ซีพียู", "CPU A");
+    await choose("เมนบอร์ด", "Board A");
+    await choose("หน่วยความจำ", "DDR4 RAM");
+    await openSummary();
+    const cpuSelect = Array.from(container.querySelectorAll("label"))
+      .find((label) => label.textContent.trim().startsWith("CPU")).querySelector("select");
+    await act(async () => {
+      cpuSelect.value = "1";
+      cpuSelect.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    const ramInput = Array.from(container.querySelectorAll("label"))
+      .find((label) => label.textContent.includes("โมดูล RAM ที่ต้องการ")).querySelector("input");
+    const budgetInput = container.querySelector("#summary-budget");
+    await act(async () => {
+      const setValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set;
+      setValue.call(ramInput, "3");
+      ramInput.dispatchEvent(new Event("input", { bubbles: true }));
+      setValue.call(budgetInput, "9000");
+      budgetInput.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+    validateBuild.mockClear();
+    await reloadPage();
+    expect(container.textContent).toContain("CPU A");
+    expect(container.textContent).toContain("Board A");
+    expect(container.textContent).toContain("DDR4 RAM");
+    expect(container.querySelector("#build-budget").value).toBe("9000");
+    expect(validateBuild.mock.lastCall[0]).toEqual({
+      items: [
+        { product_id: "cpu", quantity: 1, owned_quantity: 1 },
+        { product_id: "board", quantity: 1, owned_quantity: 0 },
+      ],
+      ram_items: [{ ram_model_id: "ram-model", required_modules: 3, owned_modules: 0 }],
+    });
+  });
+
+  it("shows a restored selection as unavailable if the catalog no longer contains it", async () => {
+    await render();
+    await choose("ซีพียู", "CPU A");
+    fetchProducts.mockResolvedValue(products.filter((product) => product.id !== "cpu"));
+    await reloadPage();
+    expect(container.textContent).toContain("สินค้าไม่พร้อมใช้งาน กรุณาเลือกใหม่");
+    expect(container.textContent).toContain("1/7");
+  });
+
+  it("warns when the browser cannot store a draft", async () => {
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("Storage blocked", "SecurityError");
+    });
+    await render();
+    expect(container.textContent).toContain("เบราว์เซอร์ไม่อนุญาตให้เก็บสเปกชั่วคราว");
+    vi.restoreAllMocks();
+  });
+
   it("prices each extra category through the backend and resets owned status when replacing a GPU", async () => {
     await render();
     await choose("ซีพียู", "CPU A");
