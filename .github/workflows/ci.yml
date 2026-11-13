@@ -27,9 +27,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Run tests
-        run: npm test -- --watchAll=false
+        run: npm test
       - name: Build production bundle
         run: npm run build
+        env:
+          REACT_APP_API_BASE_URL: https://example.test/api/v1
+      - name: Verify configured API URL in bundle
+        run: grep -lF 'https://example.test/api/v1' build/assets/*.js
 
   backend:
     name: Backend tests

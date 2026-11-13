@@ -20,7 +20,7 @@ describe("admin products page", () => {
 
   beforeEach(() => {
     global.IS_REACT_ACT_ENVIRONMENT = true;
-    global.fetch = jest.fn();
+    global.fetch = vi.fn();
     products = [];
     container = document.createElement("div");
     document.body.appendChild(container);
@@ -150,7 +150,7 @@ describe("admin products page", () => {
     const updateCalls = global.fetch.mock.calls.filter(([, options]) => options?.method === "PATCH");
     expect(JSON.parse(updateCalls[1][1].body).expected_revision).toBe("b".repeat(64));
 
-    window.confirm = jest.fn(() => true);
+    window.confirm = vi.fn(() => true);
     const deactivateButton = Array.from(container.querySelectorAll("button"))
       .find((button) => button.textContent === "ปิดใช้งาน");
     await act(async () => deactivateButton.click());
