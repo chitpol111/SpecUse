@@ -1,9 +1,9 @@
 # Member private drafts — API contract และวิธีทดสอบ
 
 เริ่มจาก `a303f7c` ใน branch/worktree แยก `feat/backend-member-builds` ตามที่ยืนยัน 2026-11-12
-เตรียม Draft PR เข้า `feat/backend-render-ready` เพื่อ review เฉพาะ private draft ต่อจาก PR #11
-ยังไม่ merge และไม่เปลี่ยน Render/Vercel deployment source; เมื่อรวมงานเดิมแล้วค่อยตกลง retarget ไป main
-Render ใช้ `feat/backend-render-ready` ที่เปิด Auto-Deploy ตามข้อมูลเจ้าของ: ห้าม push งานนี้ไป branch นั้นโดยไม่ประสาน
+Draft PR #12 retarget ไป `main` หลัง PR #11 รวมแล้ว; private draft ยังไม่ merge หรือ deploy
+Render ใช้ `feat/backend-render-ready`; ห้าม push งานนี้ไป branch นั้นโดยไม่ประสาน
+เจ้าของรายงานว่า Auto-Deploy ปิดแล้ว ให้ตรวจอีกครั้งก่อน release
 ผล hosted Auth/Admin/Catalog ก่อนหน้านี้เป็นผลที่เจ้าของรายงาน; รอบ private draft นี้ยังทดสอบเฉพาะ local/จำลอง
 
 ## ขอบเขตที่ยืนยัน
@@ -143,7 +143,7 @@ create/patch เป็น transaction; PATCH lock row ก่อนแก้ ไ�
 
 ผลรันจริงดู [PRIVATE_BUILDS_VERIFICATION.md](PRIVATE_BUILDS_VERIFICATION.md)
 
-คู่มือทดสอบร่วม FE ที่ยังไม่ push กับ Supabase local แยก: [PRIVATE_BUILDS_E2E.md](PRIVATE_BUILDS_E2E.md)
+คู่มือทดสอบร่วม FE กับ Supabase local แยก: [PRIVATE_BUILDS_E2E.md](PRIVATE_BUILDS_E2E.md)
 
 ## รันและ curl
 
@@ -157,7 +157,7 @@ bash integration/postgres.sh
 ```
 
 SQL integration ต้องมี Docker ใช้ PostgreSQL ชั่วคราวพร้อม Auth schema/roles จำลอง แล้วลบ container
-ตรวจ migrations 001–007 ในฐานว่างชั่วคราว ไม่ใช่คำสั่งสำหรับรันซ้ำบน project จริง
+ตรวจ migrations 001–008 ในฐานว่างชั่วคราว ไม่ใช่คำสั่งสำหรับรันซ้ำบน project จริง
 ไม่ใช้ synthetic examples เป็นข้อมูล specuse-dev
 
 Manual API test: ใช้ **test Supabase ที่ตั้งค่าและมี 001–008 แล้ว** ตาม SUPABASE_SETUP.md

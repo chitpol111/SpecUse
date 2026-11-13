@@ -7,7 +7,7 @@
 ## สถานะก่อน release
 
 ณ 2026-11-13 PR #8–#11 รวมเข้า main แล้ว; PR #12 และ Frontend PR #13 ยังเป็น draft
-PR #12 retarget ไป main แล้ว ต้องแก้ conflict และตรวจ candidate/CI ก่อนตัดสินใจ merge
+PR #12 retarget ไป main แล้ว ต้องตรวจ merge candidate และ CI ก่อนตัดสินใจ merge
 เจ้าของรายงานว่า Render Auto-Deploy ปิดแล้วและ live ยังเป็น `a303f7c`;
 Vercel Production ยังใช้ branch `feat/frontend-auth-admin` ตามที่ตรวจครั้งก่อน
 ให้เจ้าของยืนยัน deployment settings และ SHA อีกครั้งก่อน release window
