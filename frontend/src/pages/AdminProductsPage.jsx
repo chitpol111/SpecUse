@@ -84,6 +84,7 @@ export default function AdminProductsPage() {
   const [search, setSearch] = useState("");
   const [searchDraft, setSearchDraft] = useState("");
   const [loading, setLoading] = useState(false);
+  const [catalogReady, setCatalogReady] = useState(false);
   const [pending, setPending] = useState(false);
   const [checkingProfile, setCheckingProfile] = useState(false);
   const [error, setError] = useState("");
@@ -104,10 +105,12 @@ export default function AdminProductsPage() {
       });
       const nextPageCount = Math.max(1, Math.ceil(result.total / result.page_size));
       setProducts(result.items);
+      setCatalogReady(true);
       setTotal(result.total);
       setPageCount(nextPageCount);
       if (page > nextPageCount) setPage(nextPageCount);
     } catch (requestError) {
+      setCatalogReady(false);
       setError(requestError.status === 403
         ? "บัญชีนี้ไม่มีสิทธิ์จัดการสินค้า"
         : requestError.message);
@@ -213,6 +216,10 @@ export default function AdminProductsPage() {
   async function handleSave(event) {
     event.preventDefault();
     if (pending) return;
+    if (!catalogReady) {
+      setError("ยังโหลดรายการสินค้าที่รองรับการตรวจข้อมูลล่าสุดไม่ได้ กรุณาลองอีกครั้ง");
+      return;
+    }
     setPending(true);
     setError("");
     setMessage("");
@@ -220,7 +227,10 @@ export default function AdminProductsPage() {
       const payload = makePayload();
       if (selected) {
         const { category: _category, ...editable } = payload;
-        const result = await client.updateAdminProduct(selected.id, editable);
+        const result = await client.updateAdminProduct(selected.id, {
+          ...editable,
+          expected_revision: selected.revision,
+        });
         setSelected(result.product);
         setForm(formFromProduct(result.product));
         setMessage(`บันทึกการแก้ไข ${result.product.name} แล้ว`);
@@ -236,13 +246,19 @@ export default function AdminProductsPage() {
     } catch (saveError) {
       setError(saveError.status === 403
         ? "บัญชีนี้ไม่มีสิทธิ์จัดการสินค้า"
-        : saveError.message);
+        : saveError.status === 409
+          ? "ข้อมูลสินค้าขัดแย้งกับข้อมูลล่าสุด กรุณาออกจากหน้านี้แล้วเปิดจัดการสินค้าอีกครั้งก่อนแก้ไข"
+          : saveError.message);
     } finally {
       setPending(false);
     }
   }
 
   async function handleDeactivate(product) {
+    if (!catalogReady) {
+      setError("ยังโหลดรายการสินค้าที่รองรับการตรวจข้อมูลล่าสุดไม่ได้ กรุณาลองอีกครั้ง");
+      return;
+    }
     if (!window.confirm(`ปิดใช้งาน “${product.name}” หรือไม่? สินค้าจะยังอยู่ในประวัติและสามารถเปิดใช้งานใหม่ได้`)) return;
     setPending(true);
     setError("");
@@ -380,7 +396,7 @@ export default function AdminProductsPage() {
                             </td>
                             <td className="px-4 py-4 text-right">
                               <button type="button" onClick={() => startEdit(product)} className={secondaryClass}>แก้ไข</button>
-                              {product.is_active && <button type="button" onClick={() => handleDeactivate(product)} disabled={pending} className="ml-2 min-h-10 rounded-xl px-3 py-2 text-sm font-bold text-ruby-200 hover:bg-ruby-500/10 disabled:opacity-50">ปิดใช้งาน</button>}
+                              {product.is_active && <button type="button" onClick={() => handleDeactivate(product)} disabled={pending || !catalogReady} className="ml-2 min-h-10 rounded-xl px-3 py-2 text-sm font-bold text-ruby-200 hover:bg-ruby-500/10 disabled:opacity-50">ปิดใช้งาน</button>}
                             </td>
                           </tr>
                         ))}
@@ -401,7 +417,7 @@ export default function AdminProductsPage() {
                         <p className="mt-3 tabular-nums text-sm text-slate-100">{formatPrice(product.price_thb)} ฿</p>
                         <div className="mt-4 flex flex-wrap gap-2">
                           <button type="button" onClick={() => startEdit(product)} className={secondaryClass}>แก้ไขสินค้า</button>
-                          {product.is_active && <button type="button" onClick={() => handleDeactivate(product)} disabled={pending} className="min-h-10 rounded-xl px-3 py-2 text-sm font-bold text-ruby-200 hover:bg-ruby-500/10 disabled:opacity-50">ปิดใช้งาน</button>}
+                          {product.is_active && <button type="button" onClick={() => handleDeactivate(product)} disabled={pending || !catalogReady} className="min-h-10 rounded-xl px-3 py-2 text-sm font-bold text-ruby-200 hover:bg-ruby-500/10 disabled:opacity-50">ปิดใช้งาน</button>}
                         </div>
                       </li>
                     ))}
@@ -531,7 +547,7 @@ export default function AdminProductsPage() {
                   เปิดแสดงในแค็ตตาล็อก
                 </label>
                 <p className="text-xs leading-6 text-slate-300">การปิดใช้งานจะเก็บแถวสินค้าไว้เพื่อรักษารายการอ้างอิง</p>
-                <button type="submit" disabled={pending || loading} className={`${primaryClass} w-full`}>
+                <button type="submit" disabled={pending || loading || !catalogReady} className={`${primaryClass} w-full`}>
                   {pending ? "กำลังบันทึก..." : selected ? "บันทึกการแก้ไข" : "เพิ่มสินค้า"}
                 </button>
               </form>

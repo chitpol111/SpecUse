@@ -35,7 +35,7 @@ Go เรียก Supabase Auth / Data API ฝั่ง server; Supabase เป
 | PATCH /me/password | Bearer, {current_password,new_password} | 200 data:{user,session}; FE แทน session เดิม |
 | GET /admin/products | Bearer admin, category/search/page/page_size เดิม | 200 data:{items,page,page_size,total}; รวม inactive |
 | POST /admin/products | Bearer admin, ProductWrite ด้านล่าง | 201 data:{product} |
-| PATCH /admin/products/{id} | Bearer admin, sparse ProductWrite | 200 data:{product} |
+| PATCH /admin/products/{id} | Bearer admin, sparse ProductWrite พร้อม expected_revision | 200 data:{product} |
 | DELETE /admin/products/{id} | Bearer admin | 204; deactivate เสมอเพื่อรักษา references |
 
 user เป็น JSON ของ Supabase ตามที่ provider คืน ไม่เพิ่ม app role ลง user_metadata
@@ -50,6 +50,8 @@ profile เป็น `{id,display_name,role,created_at,updated_at}`; role enum m
 
 ProductWrite POST ต้องมี name/category/brand/price_thb/is_active; specs/ram_model_id ตาม catalog contract เดิม
 id สร้าง UUID ที่ server; PATCH เปลี่ยนเฉพาะ name/brand/price_thb/is_active/specs/ram_model_id
+GET รายการและผล POST/PATCH มี `revision`; PATCH ต้องส่งค่านั้นเป็น `expected_revision`
+ข้อมูลเก่าตอบ 409 และไม่มี revision หรือรูปแบบไม่ถูกต้องตอบ 400 ดูขั้นตอน release ใน [ADMIN_API.md](ADMIN_API.md)
 category เปลี่ยนหลังสร้างไม่ได้ใน milestone นี้; specs เป็น replacement ของทั้ง object
 CPU/MB/RAM metadata ต้องครบตาม domain เดิม; RAM model ต้องมีอยู่ใน DB ที่ provision อย่างควบคุม
 ไม่มี admin endpoint สร้าง RAM models/ยกระดับ role ใน milestone นี้

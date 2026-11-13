@@ -44,16 +44,32 @@ public Register สร้าง member เสมอ; SQL owner promotion เป�
 ## Product operations
 
 - GET /api/v1/admin/products: pagination/filter แบบ catalog แต่รวม inactive
+- GET รายการมี `revision_format: "sha256"` แม้ไม่มีสินค้า และแต่ละรายการรวมถึงผล
+  POST/PATCH มี `revision` ของสินค้าสำหรับใช้ตรวจข้อมูลเก่า
 - POST /api/v1/admin/products: name/category/brand/price_thb/is_active ต้องครบ; server สร้าง UUID
 - PATCH /api/v1/admin/products/{id}: sparse name/brand/price_thb/is_active/specs/ram_model_id
-  category immutable ใน milestone นี้; specs replace ทั้ง object; id/role ไม่รับจาก request
+  ต้องส่ง `expected_revision` ที่ได้จากสินค้าที่เปิดแก้เสมอ; category immutable;
+  specs replace ทั้ง object; id/role ไม่รับจาก request
 - DELETE /api/v1/admin/products/{id}: 204 และ is_active=false เสมอ ไม่ลบแถว/metadata เพื่อรักษา references
 - CPU/MB/RAM ต้องมี typed metadata ที่จำเป็น; RAM model ต้อง provision ใน DB อย่างควบคุมก่อน
 - nullable GPU/Storage metadata ตาม contract เดิม; synthetic evidence ถูกปฏิเสธก่อนเขียนผ่าน DB adapter
 - Guest เห็นเฉพาะ active; Validate ใช้ราคาปัจจุบันจาก snapshot ที่อ่านจาก DB หลัง mutation
 - Postgres transaction เขียน products และ typed rows พร้อมกัน; FK/constraint error rollback ทั้ง mutation
-- PATCH ใช้ snapshot ตรวจพร้อม lock ในฐานข้อมูล; หากสินค้าเปลี่ยนระหว่างคำขอ ตอบ 409
-  ให้โหลดข้อมูลล่าสุดก่อนลองใหม่ ไม่เขียนทับการแก้ของคนอื่น
+- PATCH ตอบ 400 เมื่อไม่มี `expected_revision` หรือรูปแบบไม่ถูกต้อง และตอบ 409 หาก
+  ข้อมูลสินค้าที่เปิดแก้ไม่ตรงกับข้อมูลปัจจุบัน หรือเปลี่ยนระหว่างคำขอ หลัง 409 ให้เปิด
+  รายการใหม่แล้วตรวจข้อมูลก่อนแก้ซ้ำ; ห้าม retry payload เก่าอัตโนมัติ
+- `revision` เป็น fingerprint ของข้อมูลสินค้าที่ API ส่ง ไม่ใช่เลขลำดับหรือ secret;
+  หากข้อมูลเปลี่ยนแล้วกลับมาเหมือนเดิม fingerprint อาจเหมือนเดิม
+- DELETE สำหรับปิดใช้งานยังไม่ตรวจ revision จากหน้าจอ ควรประสานผู้ดูแลก่อนปิดสินค้า
+
+### การ deploy รุ่นตรวจ revision
+
+ต้องอัปเดต Backend ก่อน Frontend และงดแก้สินค้าในช่วงเปลี่ยนรุ่น: หน้า Admin รุ่นเก่า
+ไม่ส่ง `expected_revision` จึง PATCH ไม่ได้กับ Backend ใหม่ และ Frontend ใหม่ไม่สามารถ
+แก้สินค้ากับ Backend เก่าได้ การดู catalog และ member builds ไม่เปลี่ยน contract
+หลัง deploy ทั้งสองส่วนให้ตรวจการแก้ไขจากหน้าค้างสองหน้ากับสินค้าทดสอบที่ได้รับอนุญาต
+โดยให้คำขอที่สองได้ 409 ก่อนกลับมาแก้สินค้าใช้งานจริง การ rollback Backend ไปเวอร์ชัน
+เดิมจะนำข้อจำกัดการเขียนทับกลับมา จึงต้องงดแก้สินค้าระหว่าง rollback และตรวจคู่เวอร์ชัน
 
 Backend รุ่นนี้ต้องติดตั้ง migration 008 หลัง migrations 001–005 ก่อน deploy; migration 005 เดิมไม่ถูกแก้
 ฐานที่ติดตั้ง 005 แล้วต้องลง 008 แยก ไม่รัน 005 ซ้ำ และตรวจ release plan ก่อนเปลี่ยนฐานจริง

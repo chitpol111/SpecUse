@@ -3,6 +3,8 @@ package management
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -21,14 +23,38 @@ type Repository interface {
 	DeactivateProduct(context.Context, string, string) error
 }
 type Change struct {
-	Name       *string         `json:"name"`
-	Category   *string         `json:"category"`
-	Brand      *string         `json:"brand"`
-	Price      *int64          `json:"price_thb"`
-	Active     *bool           `json:"is_active"`
-	Specs      json.RawMessage `json:"specs"`
-	RAMModelID *string         `json:"ram_model_id"`
+	Name             *string         `json:"name"`
+	Category         *string         `json:"category"`
+	Brand            *string         `json:"brand"`
+	Price            *int64          `json:"price_thb"`
+	Active           *bool           `json:"is_active"`
+	Specs            json.RawMessage `json:"specs"`
+	RAMModelID       *string         `json:"ram_model_id"`
+	ExpectedRevision string          `json:"expected_revision"`
 }
+
+type Product struct {
+	catalog.ProductDetails
+	Revision string `json:"revision"`
+}
+
+type Page struct {
+	Items          []Product `json:"items"`
+	Page           int       `json:"page"`
+	PageSize       int       `json:"page_size"`
+	Total          int       `json:"total"`
+	RevisionFormat string    `json:"revision_format"`
+}
+
+func withRevision(p catalog.ProductDetails) (Product, error) {
+	raw, err := json.Marshal(p)
+	if err != nil {
+		return Product{}, account.ErrUnavailable
+	}
+	sum := sha256.Sum256(raw)
+	return Product{ProductDetails: p, Revision: hex.EncodeToString(sum[:])}, nil
+}
+
 type Service struct{ repo Repository }
 
 func New(repo Repository) *Service { return &Service{repo: repo} }
@@ -66,20 +92,20 @@ func views(snapshot build.Snapshot) ([]catalog.ProductDetails, error) {
 	}
 	return rows, nil
 }
-func (s *Service) List(ctx context.Context, id account.Identity, f catalog.Filter) (catalog.Page, error) {
+func (s *Service) List(ctx context.Context, id account.Identity, f catalog.Filter) (Page, error) {
 	if err := admin(id); err != nil {
-		return catalog.Page{}, err
+		return Page{}, err
 	}
 	if catalog.ValidateFilter(f) != nil {
-		return catalog.Page{}, account.ErrInput
+		return Page{}, account.ErrInput
 	}
 	snapshot, err := s.repo.LoadSnapshot(ctx)
 	if err != nil {
-		return catalog.Page{}, err
+		return Page{}, err
 	}
 	rows, err := views(snapshot)
 	if err != nil {
-		return catalog.Page{}, err
+		return Page{}, err
 	}
 	filtered := []catalog.ProductDetails{}
 	for _, p := range rows {
@@ -89,15 +115,21 @@ func (s *Service) List(ctx context.Context, id account.Identity, f catalog.Filte
 	}
 	total := len(filtered)
 	offset := (f.Page - 1) * f.PageSize
-	result := []catalog.ProductDetails{}
+	result := []Product{}
 	if offset < total {
 		end := offset + f.PageSize
 		if end < offset || end > total {
 			end = total
 		}
-		result = filtered[offset:end]
+		for _, row := range filtered[offset:end] {
+			product, err := withRevision(row)
+			if err != nil {
+				return Page{}, err
+			}
+			result = append(result, product)
+		}
 	}
-	return catalog.Page{Items: result, Page: f.Page, PageSize: f.PageSize, Total: total}, nil
+	return Page{Items: result, Page: f.Page, PageSize: f.PageSize, Total: total, RevisionFormat: "sha256"}, nil
 }
 func newID() (string, error) {
 	var b [16]byte
@@ -108,35 +140,41 @@ func newID() (string, error) {
 	b[8] = (b[8] & 63) | 128
 	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:]), nil
 }
-func (s *Service) Save(ctx context.Context, actor account.Identity, id string, c Change, create bool) (catalog.ProductDetails, error) {
+func (s *Service) Save(ctx context.Context, actor account.Identity, id string, c Change, create bool) (Product, error) {
 	if err := admin(actor); err != nil {
-		return catalog.ProductDetails{}, err
+		return Product{}, err
 	}
 	if create {
-		if c.Name == nil || c.Category == nil || c.Brand == nil || c.Price == nil || c.Active == nil {
-			return catalog.ProductDetails{}, account.ErrInput
+		if c.Name == nil || c.Category == nil || c.Brand == nil || c.Price == nil || c.Active == nil || c.ExpectedRevision != "" {
+			return Product{}, account.ErrInput
 		}
 	} else {
 		if !catalog.ValidUUID(id) || c.Category != nil {
-			return catalog.ProductDetails{}, account.ErrInput
+			return Product{}, account.ErrInput
 		}
 		if c.Name == nil && c.Brand == nil && c.Price == nil && c.Active == nil && len(c.Specs) == 0 && c.RAMModelID == nil {
-			return catalog.ProductDetails{}, account.ErrInput
+			return Product{}, account.ErrInput
+		}
+		if len(c.ExpectedRevision) != sha256.Size*2 {
+			return Product{}, account.ErrInput
+		}
+		if _, err := hex.DecodeString(c.ExpectedRevision); err != nil {
+			return Product{}, account.ErrInput
 		}
 	}
 	snapshot, expected, err := s.repo.LoadSnapshotForWrite(ctx)
 	if err != nil {
-		return catalog.ProductDetails{}, err
+		return Product{}, err
 	}
 	rows, err := views(snapshot)
 	if err != nil {
-		return catalog.ProductDetails{}, err
+		return Product{}, err
 	}
 	p := catalog.ProductDetails{}
 	if create {
 		id, err = newID()
 		if err != nil {
-			return p, err
+			return Product{}, err
 		}
 		p.ID = id
 	} else {
@@ -149,7 +187,14 @@ func (s *Service) Save(ctx context.Context, actor account.Identity, id string, c
 			}
 		}
 		if !found {
-			return p, account.ErrNotFound
+			return Product{}, account.ErrNotFound
+		}
+		current, err := withRevision(p)
+		if err != nil {
+			return Product{}, err
+		}
+		if current.Revision != c.ExpectedRevision {
+			return Product{}, account.ErrConflict
 		}
 	}
 	if c.Name != nil {
@@ -178,10 +223,10 @@ func (s *Service) Save(ctx context.Context, actor account.Identity, id string, c
 	}
 	encoded, err = json.Marshal(object)
 	if err != nil {
-		return p, account.ErrInput
+		return Product{}, account.ErrInput
 	}
 	if json.Unmarshal(encoded, &p) != nil {
-		return catalog.ProductDetails{}, account.ErrInput
+		return Product{}, account.ErrInput
 	}
 	specs := catalog.Specs{}
 	if p.Specs != nil {
@@ -200,16 +245,20 @@ func (s *Service) Save(ctx context.Context, actor account.Identity, id string, c
 		snapshot.Products = append(snapshot.Products, component)
 	}
 	if _, err := repository.NewBuildMemory(snapshot); err != nil {
-		return catalog.ProductDetails{}, account.ErrInput
+		return Product{}, account.ErrInput
 	}
 	var original json.RawMessage
 	if !create {
 		original = expected[p.ID]
 		if len(original) == 0 {
-			return catalog.ProductDetails{}, account.ErrUnavailable
+			return Product{}, account.ErrUnavailable
 		}
 	}
-	return s.repo.SaveProduct(ctx, actor.ID, p, create, original)
+	saved, err := s.repo.SaveProduct(ctx, actor.ID, p, create, original)
+	if err != nil {
+		return Product{}, err
+	}
+	return withRevision(saved)
 }
 func (s *Service) Delete(ctx context.Context, actor account.Identity, id string) error {
 	if err := admin(actor); err != nil {

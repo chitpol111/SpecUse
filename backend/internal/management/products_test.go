@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"sync"
 	"testing"
 
@@ -58,7 +59,7 @@ func TestAdminCRUDAndInactiveVisibility(t *testing.T) {
 	if err != nil || !catalog.ValidUUID(created.ID) || created.ID == productID || repo.actor != actorID || created.PriceTHB != 200 {
 		t.Fatalf("create %+v %v", created, err)
 	}
-	patched, err := svc.Save(context.Background(), admin, productID, Change{Price: ptr(int64(300))}, false)
+	patched, err := svc.Save(context.Background(), admin, productID, Change{Price: ptr(int64(300)), ExpectedRevision: page.Items[0].Revision}, false)
 	if err != nil || patched.PriceTHB != 300 || patched.IsActive {
 		t.Fatal("sparse patch changed other data")
 	}
@@ -157,13 +158,18 @@ func TestConcurrentSparseEditsConflictInsteadOfLosingUpdates(t *testing.T) {
 	}
 	svc := New(repo)
 	admin := account.Identity{ID: actorID, Profile: account.Profile{Role: "admin"}}
+	page, err := svc.List(context.Background(), admin, catalog.Filter{Page: 1, PageSize: 20})
+	if err != nil {
+		t.Fatal(err)
+	}
+	revision := page.Items[0].Revision
 	errs := make(chan error, 2)
 	go func() {
-		_, err := svc.Save(context.Background(), admin, productID, Change{Name: ptr("New")}, false)
+		_, err := svc.Save(context.Background(), admin, productID, Change{Name: ptr("New"), ExpectedRevision: revision}, false)
 		errs <- err
 	}()
 	go func() {
-		_, err := svc.Save(context.Background(), admin, productID, Change{Price: ptr(int64(200))}, false)
+		_, err := svc.Save(context.Background(), admin, productID, Change{Price: ptr(int64(200)), ExpectedRevision: revision}, false)
 		errs <- err
 	}()
 	a, b := <-errs, <-errs
@@ -179,10 +185,53 @@ func TestConcurrentSparseEditsConflictInsteadOfLosingUpdates(t *testing.T) {
 	} else {
 		retry.Price = ptr(int64(200))
 	}
+	page, err = svc.List(context.Background(), admin, catalog.Filter{Page: 1, PageSize: 20})
+	if err != nil {
+		t.Fatal(err)
+	}
+	retry.ExpectedRevision = page.Items[0].Revision
 	if _, err := svc.Save(context.Background(), admin, productID, retry, false); err != nil {
 		t.Fatalf("retry after reloading: %v", err)
 	}
 	if repo.product.Name != "New" || repo.product.PriceTHB != 200 {
 		t.Fatalf("retry lost a change: %+v", repo.product.Product)
+	}
+}
+
+func TestStaleAdminEditIsRejectedBeforeWriting(t *testing.T) {
+	repo := &repoStub{snapshot: build.Snapshot{Products: []build.Component{{Product: catalog.Product{
+		ID: productID, Name: "Original", Category: "case", Brand: "Demo", PriceTHB: 100, IsActive: true,
+	}}}}}
+	svc := New(repo)
+	admin := account.Identity{ID: actorID, Profile: account.Profile{Role: "admin"}}
+	page, err := svc.List(context.Background(), admin, catalog.Filter{Page: 1, PageSize: 20})
+	if err != nil {
+		t.Fatal(err)
+	}
+	oldRevision := page.Items[0].Revision
+	repo.snapshot.Products[0].Product.Name = "Changed by another admin"
+	for _, change := range []Change{
+		{Name: ptr("Stale"), ExpectedRevision: oldRevision},
+		{Price: ptr(int64(200)), ExpectedRevision: oldRevision},
+	} {
+		if _, err := svc.Save(context.Background(), admin, productID, change, false); !errors.Is(err, account.ErrConflict) {
+			t.Fatalf("stale edit should conflict, got %v", err)
+		}
+	}
+	for _, revision := range []string{"", "invalid", strings.Repeat("x", 64)} {
+		if _, err := svc.Save(context.Background(), admin, productID, Change{Name: ptr("Bad"), ExpectedRevision: revision}, false); !errors.Is(err, account.ErrInput) {
+			t.Fatalf("invalid revision %q: %v", revision, err)
+		}
+	}
+	if repo.writes != 0 {
+		t.Fatal("invalid or stale edit reached repository")
+	}
+	page, err = svc.List(context.Background(), admin, catalog.Filter{Page: 1, PageSize: 20})
+	if err != nil {
+		t.Fatal(err)
+	}
+	saved, err := svc.Save(context.Background(), admin, productID, Change{Name: ptr("Fresh"), ExpectedRevision: page.Items[0].Revision}, false)
+	if err != nil || saved.Name != "Fresh" || saved.Revision == page.Items[0].Revision {
+		t.Fatalf("fresh edit failed or revision was not updated: %+v %v", saved, err)
 	}
 }

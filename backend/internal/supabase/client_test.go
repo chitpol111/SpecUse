@@ -15,6 +15,7 @@ import (
 	"specuse/backend/internal/account"
 	"specuse/backend/internal/build"
 	"specuse/backend/internal/catalog"
+	"specuse/backend/internal/management"
 )
 
 func testToken() string {
@@ -215,6 +216,7 @@ func TestProductSaveUsesOriginalDatabaseSnapshot(t *testing.T) {
 				Expected json.RawMessage `json:"p_expected"`
 				Create   bool            `json:"p_create"`
 			}
+
 			if json.NewDecoder(r.Body).Decode(&body) != nil || body.Create || string(body.Expected) != original {
 				t.Error("original database product was not forwarded")
 			}
@@ -237,5 +239,55 @@ func TestProductSaveUsesOriginalDatabaseSnapshot(t *testing.T) {
 	product := catalog.ProductDetails{Product: snapshot.Products[0].Product}
 	if _, err := repo.SaveProduct(context.Background(), id, product, false, originals[id]); !errors.Is(err, account.ErrConflict) {
 		t.Fatalf("expected stale product conflict, got %v", err)
+	}
+}
+
+func TestAdminRevisionMatchesReloadedDatabaseProduct(t *testing.T) {
+	const id = "11111111-1111-4111-8111-111111111111"
+	current := json.RawMessage(`{"id":"11111111-1111-4111-8111-111111111111","name":"CPU","category":"cpu","brand":"Demo","price_thb":100,"is_active":false,"specs":{"cpu_socket":"AM5"}}`)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/rest/v1/rpc/backend_catalog_snapshot":
+			_ = json.NewEncoder(w).Encode(map[string]any{"products": []json.RawMessage{current}, "ram_models": []any{}})
+		case "/rest/v1/rpc/backend_product_save_checked":
+			var body struct {
+				Product json.RawMessage `json:"p_product"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+				t.Error(err)
+				w.WriteHeader(400)
+				return
+			}
+			current = body.Product
+			_, _ = w.Write(current)
+		default:
+			t.Errorf("unexpected RPC: %s", r.URL.Path)
+			w.WriteHeader(404)
+		}
+	}))
+	defer server.Close()
+	client, err := New(server.URL, "public-test", "server-test", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	svc := management.New(NewRepository(client))
+	actor := account.Identity{ID: id, Profile: account.Profile{Role: "admin"}}
+	filter := catalog.Filter{Page: 1, PageSize: 20}
+	page, err := svc.List(context.Background(), actor, filter)
+	if err != nil {
+		t.Fatal(err)
+	}
+	oldRevision := page.Items[0].Revision
+	name := "Updated CPU"
+	saved, err := svc.Save(context.Background(), actor, id, management.Change{Name: &name, ExpectedRevision: oldRevision}, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	page, err = svc.List(context.Background(), actor, filter)
+	if err != nil || len(page.Items) != 1 || page.Items[0].Revision != saved.Revision {
+		t.Fatalf("saved revision differs from reloaded product: %+v %v", page, err)
+	}
+	if _, err := svc.Save(context.Background(), actor, id, management.Change{Name: &name, ExpectedRevision: oldRevision}, false); !errors.Is(err, account.ErrConflict) {
+		t.Fatalf("stale revision accepted: %v", err)
 	}
 }
