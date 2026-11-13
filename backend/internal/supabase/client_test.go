@@ -128,6 +128,7 @@ func TestConfigErrorsProviderFailuresAndNoRedirectCredentialLeak(t *testing.T) {
 	if _, err := New("http://project.invalid", "a", "b", false); err == nil {
 		t.Fatal("insecure production URL accepted")
 	}
+
 	if _, err := New("https://user:password@project.invalid", "a", "b", false); err == nil {
 		t.Fatal("credentials in URL accepted")
 	}
@@ -146,6 +147,7 @@ func TestConfigErrorsProviderFailuresAndNoRedirectCredentialLeak(t *testing.T) {
 		want   error
 	}{
 		{429, `{}`, account.ErrRateLimit}, {500, `{"secret":"not-returned"}`, account.ErrUnavailable}, {400, `{"error_code":"email_not_confirmed"}`, account.ErrConfirm}, {400, `{"error_code":"reauthentication_needed"}`, account.ErrReauth},
+		{409, `{"code":"PT409"}`, account.ErrConflict}, {404, `{"code":"P0002"}`, account.ErrNotFound},
 	} {
 		s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(tt.status)
@@ -157,5 +159,42 @@ func TestConfigErrorsProviderFailuresAndNoRedirectCredentialLeak(t *testing.T) {
 		if !errors.Is(err, tt.want) || strings.Contains(err.Error(), "not-returned") {
 			t.Fatalf("unsafe error %v", err)
 		}
+	}
+}
+
+func TestProductSaveUsesOriginalDatabaseSnapshot(t *testing.T) {
+	const id = "11111111-1111-4111-8111-111111111111"
+	const original = `{"id":"11111111-1111-4111-8111-111111111111","name":"GPU","category":"gpu","brand":"Demo","price_thb":100,"is_active":true,"specs":null}`
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/rest/v1/rpc/backend_catalog_snapshot":
+			_, _ = w.Write([]byte(`{"products":[` + original + `],"ram_models":[]}`))
+		case "/rest/v1/rpc/backend_product_save_checked":
+			var body struct {
+				Expected json.RawMessage `json:"p_expected"`
+				Create   bool            `json:"p_create"`
+			}
+			if json.NewDecoder(r.Body).Decode(&body) != nil || body.Create || string(body.Expected) != original {
+				t.Error("original database product was not forwarded")
+			}
+			w.WriteHeader(http.StatusConflict)
+			_, _ = w.Write([]byte(`{"code":"PT409"}`))
+		default:
+			t.Errorf("unexpected RPC: %s", r.URL.Path)
+		}
+	}))
+	defer server.Close()
+	client, err := New(server.URL, "public-test", "server-test", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	repo := NewRepository(client)
+	snapshot, originals, err := repo.LoadSnapshotForWrite(context.Background())
+	if err != nil || len(snapshot.Products) != 1 || string(originals[id]) != original {
+		t.Fatalf("snapshot or original product lost: %v", err)
+	}
+	product := catalog.ProductDetails{Product: snapshot.Products[0].Product}
+	if _, err := repo.SaveProduct(context.Background(), id, product, false, originals[id]); !errors.Is(err, account.ErrConflict) {
+		t.Fatalf("expected stale product conflict, got %v", err)
 	}
 }

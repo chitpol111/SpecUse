@@ -1,9 +1,11 @@
 package management
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
+	"sync"
 	"testing"
 
 	"specuse/backend/internal/account"
@@ -21,7 +23,15 @@ func (r *repoStub) LoadSnapshot(context.Context) (build.Snapshot, error) {
 	r.calls++
 	return r.snapshot, nil
 }
-func (r *repoStub) SaveProduct(_ context.Context, actor string, p catalog.ProductDetails, create bool) (catalog.ProductDetails, error) {
+func (r *repoStub) LoadSnapshotForWrite(ctx context.Context) (build.Snapshot, map[string]json.RawMessage, error) {
+	snapshot, err := r.LoadSnapshot(ctx)
+	expected := make(map[string]json.RawMessage)
+	for _, c := range snapshot.Products {
+		expected[c.Product.ID], _ = json.Marshal(c.Product)
+	}
+	return snapshot, expected, err
+}
+func (r *repoStub) SaveProduct(_ context.Context, actor string, p catalog.ProductDetails, create bool, expected json.RawMessage) (catalog.ProductDetails, error) {
 	r.writes++
 	r.actor = actor
 	return p, nil
@@ -93,5 +103,86 @@ func TestAdminInputAndSyntheticEvidenceRejected(t *testing.T) {
 	}
 	if _, err := svc.Save(context.Background(), admin, productID, Change{Category: ptr("gpu")}, false); !errors.Is(err, account.ErrInput) {
 		t.Fatal("category changed")
+	}
+}
+
+type concurrentRepo struct {
+	mu       sync.Mutex
+	loaded   int
+	bothRead chan struct{}
+	product  catalog.ProductDetails
+}
+
+func (r *concurrentRepo) LoadSnapshot(context.Context) (build.Snapshot, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return build.Snapshot{Products: []build.Component{{Product: r.product.Product}}}, nil
+}
+func (r *concurrentRepo) LoadSnapshotForWrite(context.Context) (build.Snapshot, map[string]json.RawMessage, error) {
+	r.mu.Lock()
+	snapshot := build.Snapshot{Products: []build.Component{{Product: r.product.Product}}}
+	raw, err := json.Marshal(r.product)
+	r.loaded++
+	if r.loaded == 2 {
+		close(r.bothRead)
+	}
+	r.mu.Unlock()
+	if err != nil {
+		return build.Snapshot{}, nil, err
+	}
+	<-r.bothRead
+	return snapshot, map[string]json.RawMessage{productID: raw}, nil
+}
+func (r *concurrentRepo) SaveProduct(_ context.Context, _ string, p catalog.ProductDetails, _ bool, expected json.RawMessage) (catalog.ProductDetails, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	current, err := json.Marshal(r.product)
+	if err != nil {
+		return catalog.ProductDetails{}, err
+	}
+	if !bytes.Equal(current, expected) {
+		return catalog.ProductDetails{}, account.ErrConflict
+	}
+	r.product = p
+	return p, nil
+}
+func (r *concurrentRepo) DeactivateProduct(context.Context, string, string) error { return nil }
+
+func TestConcurrentSparseEditsConflictInsteadOfLosingUpdates(t *testing.T) {
+	repo := &concurrentRepo{
+		bothRead: make(chan struct{}),
+		product: catalog.ProductDetails{Product: catalog.Product{
+			ID: productID, Name: "Old", Category: "case", Brand: "Demo", PriceTHB: 100, IsActive: true,
+		}},
+	}
+	svc := New(repo)
+	admin := account.Identity{ID: actorID, Profile: account.Profile{Role: "admin"}}
+	errs := make(chan error, 2)
+	go func() {
+		_, err := svc.Save(context.Background(), admin, productID, Change{Name: ptr("New")}, false)
+		errs <- err
+	}()
+	go func() {
+		_, err := svc.Save(context.Background(), admin, productID, Change{Price: ptr(int64(200))}, false)
+		errs <- err
+	}()
+	a, b := <-errs, <-errs
+	if !((a == nil && errors.Is(b, account.ErrConflict)) || (b == nil && errors.Is(a, account.ErrConflict))) {
+		t.Fatalf("want one success and one conflict, got %v and %v", a, b)
+	}
+	if (repo.product.Name == "New") == (repo.product.PriceTHB == 200) {
+		t.Fatalf("expected exactly one change to persist: %+v", repo.product.Product)
+	}
+	var retry Change
+	if repo.product.Name != "New" {
+		retry.Name = ptr("New")
+	} else {
+		retry.Price = ptr(int64(200))
+	}
+	if _, err := svc.Save(context.Background(), admin, productID, retry, false); err != nil {
+		t.Fatalf("retry after reloading: %v", err)
+	}
+	if repo.product.Name != "New" || repo.product.PriceTHB != 200 {
+		t.Fatalf("retry lost a change: %+v", repo.product.Product)
 	}
 }
