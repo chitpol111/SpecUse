@@ -2,6 +2,7 @@ package supabase
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 
 	"specuse/backend/internal/account"
@@ -14,18 +15,31 @@ type Repository struct{ client *Client }
 
 func NewRepository(c *Client) *Repository { return &Repository{client: c} }
 func (r *Repository) LoadSnapshot(ctx context.Context) (build.Snapshot, error) {
+	snapshot, _, err := r.LoadSnapshotForWrite(ctx)
+	return snapshot, err
+}
+func (r *Repository) LoadSnapshotForWrite(ctx context.Context) (build.Snapshot, map[string]json.RawMessage, error) {
 	var data struct {
-		Products  []catalog.ProductDetails `json:"products"`
+		Products  []json.RawMessage `json:"products"`
 		RAMModels []struct {
 			ID      string `json:"id"`
 			RAMType string `json:"ram_type"`
 		} `json:"ram_models"`
 	}
 	if err := r.client.RPC(ctx, "backend_catalog_snapshot", map[string]any{}, &data); err != nil {
-		return build.Snapshot{}, err
+		return build.Snapshot{}, nil, err
+	}
+	if data.Products == nil || data.RAMModels == nil {
+		return build.Snapshot{}, nil, account.ErrUnavailable
 	}
 	snapshot := build.Snapshot{Products: []build.Component{}, RAMModels: []build.RAMModel{}}
-	for _, p := range data.Products {
+	expected := make(map[string]json.RawMessage, len(data.Products))
+	for _, raw := range data.Products {
+		var p catalog.ProductDetails
+		if err := json.Unmarshal(raw, &p); err != nil {
+			return build.Snapshot{}, nil, account.ErrUnavailable
+		}
+		expected[strings.ToLower(p.ID)] = raw
 		specs := catalog.Specs{}
 		if p.Specs != nil {
 			specs = *p.Specs
@@ -39,9 +53,13 @@ func (r *Repository) LoadSnapshot(ctx context.Context) (build.Snapshot, error) {
 	// the database adapter or silently substitute a local fixture on failure.
 	mem, err := repository.NewBuildMemory(snapshot)
 	if err != nil {
-		return build.Snapshot{}, account.ErrUnavailable
+		return build.Snapshot{}, nil, account.ErrUnavailable
 	}
-	return mem.LoadSnapshot(ctx)
+	snapshot, err = mem.LoadSnapshot(ctx)
+	if err != nil {
+		return build.Snapshot{}, nil, err
+	}
+	return snapshot, expected, nil
 }
 func (r *Repository) memory(ctx context.Context) (*repository.BuildMemory, error) {
 	snapshot, err := r.LoadSnapshot(ctx)
