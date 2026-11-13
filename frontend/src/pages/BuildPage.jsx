@@ -1200,17 +1200,9 @@ export default function BuildPage() {
                       ) : (
                         <p className="text-sm text-slate-300"><Link to="/login" className="text-ruby-200 underline">เข้าสู่ระบบ</Link> เพื่อบันทึกสเปกส่วนตัว</p>
                       )}
-                      <button
-                        type="button"
-                        disabled
-                        aria-describedby="build-actions-note"
-                        className="min-h-11 cursor-not-allowed rounded-lg border border-white/10 px-4 py-2 text-sm font-bold text-slate-400"
-                      >
-                        แชร์รายการนี้
-                      </button>
                     </div>
-                    <p id="build-actions-note" className="mt-3 text-xs leading-5 text-slate-400">
-                      การแชร์ยังไม่เปิดใช้ สเปกที่บันทึกเป็นส่วนตัว
+                    <p className="mt-3 text-xs leading-5 text-slate-400">
+                      สเปกที่บันทึกเป็นส่วนตัว
                     </p>
                   </div>
                 </section>

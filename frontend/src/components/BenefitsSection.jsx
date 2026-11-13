@@ -1,7 +1,7 @@
 const benefits = [
   {
     title: "วางแผนราคารวม",
-    text: "แนวคิดคือช่วยรวมราคาของอุปกรณ์ที่เลือก เพื่อเทียบกับงบประมาณได้ง่ายขึ้น",
+    text: "รวมราคาของอุปกรณ์ที่เลือก เพื่อเทียบกับงบประมาณได้ง่ายขึ้น",
     icon: (
       <>
         <path d="M5 7.5h14M5 12h14M5 16.5h8" />
@@ -11,7 +11,7 @@ const benefits = [
   },
   {
     title: "ตรวจสอบความเข้ากันได้เบื้องต้น",
-    text: "มีแผนรองรับข้อมูล Socket ของ CPU กับเมนบอร์ด และชนิด RAM",
+    text: "ตรวจ Socket ของ CPU กับเมนบอร์ด และชนิด RAM เบื้องต้น",
     icon: (
       <>
         <path d="m5 12 4 4L19 6" />
@@ -20,14 +20,11 @@ const benefits = [
     ),
   },
   {
-    title: "บันทึกและแชร์สเปก",
-    text: "ฟีเจอร์สมาชิกที่วางแผนไว้คือบันทึกหลายชุดและกำหนดการแชร์ เมื่อระบบพร้อมใช้งาน",
+    title: "บันทึกสเปกส่วนตัว",
+    text: "สมาชิกสามารถบันทึกหลายชุด ตั้งชื่อและเพิ่มคำอธิบายได้",
     icon: (
       <>
-        <circle cx="18" cy="5" r="2.5" />
-        <circle cx="6" cy="12" r="2.5" />
-        <circle cx="18" cy="19" r="2.5" />
-        <path d="m8.2 10.8 7.6-4.6M8.2 13.2l7.6 4.6" />
+        <path d="M6 4h10l2 2v14H6zM9 4v5h6V4M9 20v-7h6v7" />
       </>
     ),
   },
@@ -40,11 +37,11 @@ export default function BenefitsSection() {
         <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
           <div className="max-w-2xl">
             <h2 className="text-3xl font-black tracking-tight text-slate-50 sm:text-4xl">
-              ฟีเจอร์ที่กำลังพัฒนา
+              เครื่องมือช่วยวางแผนสเปก
             </h2>
           </div>
           <p className="max-w-md leading-7 text-slate-300">
-            ข้อมูลด้านล่างเป็นเป้าหมายการพัฒนา ยังไม่พร้อมใช้งานในขณะนี้
+            เลือกอุปกรณ์ ตรวจสอบเบื้องต้น และบันทึกสเปกไว้ดูภายหลัง
           </p>
         </div>
         <div className="mt-12 grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">

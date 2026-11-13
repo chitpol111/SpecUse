@@ -1,14 +1,14 @@
 const accessLevels = [
   {
     label: "Guest",
-    description: "แนวทางสำหรับผู้เข้าชม เมื่อระบบจัดสเปกพร้อมใช้งาน",
-    features: ["ดู ค้นหา และกรองอุปกรณ์", "เลือกชิ้นส่วนและดูราคารวม", "แชร์สเปกด้วยลิงก์"],
+    description: "จัดสเปกเบื้องต้นได้โดยไม่ต้องเข้าสู่ระบบ",
+    features: ["ดู ค้นหา และกรองอุปกรณ์", "เลือกชิ้นส่วนและดูราคารวม", "ตรวจความเข้ากันได้เบื้องต้น"],
     featured: false,
   },
   {
     label: "Member",
-    description: "แนวทางสำหรับบัญชีสมาชิก เมื่อเปิดให้ใช้งาน",
-    features: ["บันทึกสเปกได้หลายชุด", "ตั้งชื่อและเขียนคำอธิบาย", "เลือกเปิดสาธารณะหรือส่วนตัว"],
+    description: "เข้าสู่ระบบเพื่อเก็บสเปกไว้ดูภายหลัง",
+    features: ["บันทึกสเปกได้หลายชุด", "ตั้งชื่อและเขียนคำอธิบาย", "จัดการสเปกส่วนตัว"],
     featured: true,
   },
 ];
@@ -19,12 +19,12 @@ export default function ServiceSection() {
       <div className="mx-auto grid max-w-7xl gap-12 px-5 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-20">
         <div>
           <h2 className="text-3xl font-black leading-tight tracking-tight text-slate-50 sm:text-4xl">
-            สิทธิ์การใช้งานที่วางแผนไว้
+            สิทธิ์การใช้งาน
             <br />
             สำหรับ Guest และ Member
           </h2>
           <p className="mt-5 max-w-lg leading-8 text-slate-300">
-            ฟีเจอร์ในส่วนนี้ยังไม่เปิดใช้งาน โดยระบบจัดสเปกและสมาชิกอยู่ระหว่างพัฒนา
+            ทดลองจัดสเปกได้ทันที หรือเข้าสู่ระบบเพื่อบันทึกสเปกส่วนตัว
           </p>
           <a href="#start" className="mt-7 inline-flex items-center gap-2 font-extrabold text-ruby-300 transition hover:gap-3">
             ดูวิธีเริ่มต้น
@@ -42,7 +42,7 @@ export default function ServiceSection() {
             >
               <div className="flex items-center justify-between gap-3">
                 <h3 className="text-2xl font-black">{`สำหรับ ${level.label}`}</h3>
-                {level.featured && <span className="rounded-full bg-ruby-400/10 px-3 py-1 text-xs font-bold text-ruby-200">แผนสำหรับสมาชิก</span>}
+                {level.featured && <span className="rounded-full bg-ruby-400/10 px-3 py-1 text-xs font-bold text-ruby-200">สำหรับสมาชิก</span>}
               </div>
               <p className="mt-3 min-h-14 text-sm leading-6 text-slate-300">{level.description}</p>
               <ul className="mt-6 space-y-4">
