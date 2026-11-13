@@ -1,0 +1,188 @@
+# Auth / Profile / Admin contract
+
+ฐาน main 000dd9f; ปรับ requirement ก่อน merge PR #8–11 ตามเจ้าของ Backend 2026-11-11
+ทุก request จาก React ใช้ Go `/api/v1` เท่านั้น ไม่มี Supabase SDK flow ซ้ำและไม่มี cookies
+Go เรียก Supabase Auth / Data API ฝั่ง server; Supabase เป็นผู้เก็บ/ตรวจรหัสผ่านและออก session
+สัญญานี้ส่งก่อน implementation แล้ว; ปัจจุบันมีโค้ด/tests ใน branches แบบต่อกัน ยังไม่ merge
+ต้องตั้งค่า project และทดสอบบริการจริงตาม SUPABASE_SETUP.md/RENDER.md ก่อนอ้างว่าเชื่อมต่อหรือ deploy สำเร็จ
+
+## ค่าเริ่มต้นและขั้นตอน
+
+- Supabase Email provider เปิด, Allow new users to sign up เปิด, Confirm email **ปิด**, minimum password length ตั้งอย่างน้อย 8
+- Profile แก้ได้เฉพาะ display_name (trim, 1–100 Unicode characters, ไม่รับ NUL); email/id/role เป็น readonly
+- สมัคร → ได้ session พร้อมใช้ → GET /me ได้ทันทีโดยไม่ต้อง OTP/ยืนยันอีเมล
+- Register/Login/Refresh/เปลี่ยน password ส่ง session ที่ Supabase ออกให้; FE เปลี่ยน token pair ทั้งชุดแบบ atomic
+- Signup ได้ app role=member จาก DB trigger เสมอ; user.role ของ Supabase (เช่น authenticated) ไม่ใช่ app role
+  FE อ่าน app role จาก GET /me → data.profile.role เท่านั้น ไม่อ่าน user_metadata เป็นสิทธิ์
+- /auth/confirm เดิมเลิกใช้: POST ตอบ 410 ENDPOINT_RETIRED เสมอ ไม่เรียก provider และไม่รับ/แลก OTP
+  FE ไม่ต้องสร้างหน้า/ขั้นตอนรอ OTP; method อื่นตอบ 405 Allow: POST
+- FE เก็บ token pair ใน memory; หากต้องการคงผ่าน reload ให้ใช้ sessionStorage และล้างเมื่อ logout/refresh ใช้ไม่ได้
+  ไม่บันทึก token/password ลง console, URL, analytics หรือ Git; ไม่มี privileged key ใน FE
+- ทุก endpoint ที่ต้องล็อกอินใช้ Authorization: Bearer <access_token>
+- 401 จาก protected API: refresh แบบ single flight หนึ่งครั้งแล้ว retry เดิมหนึ่งครั้ง; ไม่วน refresh บน 403/503
+
+## Endpoints
+
+| Method / path ต่อจาก /api/v1 | Request | Success |
+|---|---|---|
+| POST /auth/register | {email,password,display_name}; ไม่รับ role/metadata | 201 data:{user,session,email_confirmation_required:false}; session ต้องไม่เป็น null |
+| POST /auth/confirm | เลิกใช้ ไม่ต้องส่ง | 410 error:{code:ENDPOINT_RETIRED,message:...}; ไม่มี session |
+| POST /auth/login | {email,password} | 200 data:{user,session} |
+| POST /auth/refresh | {refresh_token} | 200 data:{user,session} |
+| POST /auth/logout | Bearer, ไม่มี body | 204 ไม่มี body; scope=local ที่ server กำหนด |
+| GET /me | Bearer | 200 data:{user,profile} |
+| PATCH /me | Bearer, {display_name} | 200 data:{profile} |
+| PATCH /me/password | Bearer, {current_password,new_password} | 200 data:{user,session}; FE แทน session เดิม |
+| GET /admin/products | Bearer admin, category/search/page/page_size เดิม | 200 data:{items,page,page_size,total}; รวม inactive |
+| POST /admin/products | Bearer admin, ProductWrite ด้านล่าง | 201 data:{product} |
+| PATCH /admin/products/{id} | Bearer admin, sparse ProductWrite | 200 data:{product} |
+| DELETE /admin/products/{id} | Bearer admin | 204; deactivate เสมอเพื่อรักษา references |
+
+user เป็น JSON ของ Supabase ตามที่ provider คืน ไม่เพิ่ม app role ลง user_metadata
+session เป็น `{access_token,refresh_token,token_type,expires_in,expires_at}` ของ Supabase
+expires_at ใช้ JWT exp ถ้า provider ไม่คืน field นี้; token_type=bearer; Register 201 ต้องมี session จริงและ email_confirmation_required=false เสมอ
+หาก provider คืน user แต่ไม่มี session จะตอบ 503 AUTH_CONFIGURATION_ERROR ไม่ส่ง 201/202 หรือ session=null
+ไม่สร้าง session เอง ไม่ auto-login เพื่อข้าม confirmation และไม่ย้อนกลับไป flow OTP
+บัญชีอาจถูกสร้างที่ provider แล้วก่อนพบปัญหา: FE หยุด retry อัตโนมัติและแจ้งให้ติดต่อผู้ดูแล
+เจ้าของแก้ Confirm email และตรวจบัญชีค้างก่อนลองใหม่ ไม่รับประกันว่าปิด toggle แล้วบัญชีเก่าถูกยืนยันย้อนหลัง
+ไม่คืน password, privileged key หรือ provider error body
+profile เป็น `{id,display_name,role,created_at,updated_at}`; role enum member/admin จาก DB ที่ server ควบคุม
+
+ProductWrite POST ต้องมี name/category/brand/price_thb/is_active; specs/ram_model_id ตาม catalog contract เดิม
+id สร้าง UUID ที่ server; PATCH เปลี่ยนเฉพาะ name/brand/price_thb/is_active/specs/ram_model_id
+category เปลี่ยนหลังสร้างไม่ได้ใน milestone นี้; specs เป็น replacement ของทั้ง object
+CPU/MB/RAM metadata ต้องครบตาม domain เดิม; RAM model ต้องมีอยู่ใน DB ที่ provision อย่างควบคุม
+ไม่มี admin endpoint สร้าง RAM models/ยกระดับ role ใน milestone นี้
+Admin อนุญาตแก้ราคา catalog; validate ยังรับเพียง IDs/counts และไม่เชื่อราคาจาก build request
+
+## ตัวอย่าง JSON (ค่า placeholder เท่านั้น)
+
+Register request:
+```json
+{"email":"student@example.test","password":"EXAMPLE-ONLY-password","display_name":"Student"}
+```
+
+Register สำเร็จ (201) — ใช้ access_token นี้เรียก GET /me ได้ทันที:
+```json
+{"data":{"user":{"id":"11111111-1111-4111-8111-111111111111","email":"student@example.test"},"session":{"access_token":"ACCESS_TOKEN_PLACEHOLDER","refresh_token":"REFRESH_TOKEN_PLACEHOLDER","token_type":"bearer","expires_in":3600,"expires_at":1900000000},"email_confirmation_required":false}}
+```
+
+Login/Refresh/เปลี่ยน password response (200):
+```json
+{"data":{"user":{"id":"11111111-1111-4111-8111-111111111111","email":"student@example.test"},"session":{"access_token":"ACCESS_TOKEN_PLACEHOLDER","refresh_token":"REFRESH_TOKEN_PLACEHOLDER","token_type":"bearer","expires_in":3600,"expires_at":1900000000}}}
+```
+
+Provider ยังเปิด confirmation และคืน session ไม่ได้ (503):
+```json
+{"error":{"code":"AUTH_CONFIGURATION_ERROR","message":"ระบบสมัครสมาชิกยังตั้งค่าไม่พร้อม กรุณาติดต่อผู้ดูแล"}}
+```
+
+POST /auth/confirm เดิม (410):
+```json
+{"error":{"code":"ENDPOINT_RETIRED","message":"ไม่ใช้ขั้นตอนยืนยันอีเมลแล้ว กรุณาใช้ Register หรือ Login"}}
+```
+
+GET /me:
+```json
+{"data":{"user":{"id":"11111111-1111-4111-8111-111111111111","email":"student@example.test"},"profile":{"id":"11111111-1111-4111-8111-111111111111","display_name":"Student","role":"member","created_at":"2026-11-11T00:00:00Z","updated_at":"2026-11-11T00:00:00Z"}}}
+```
+
+PATCH /me: `{"display_name":"New name"}`; PATCH /me/password:
+```json
+{"current_password":"EXAMPLE-ONLY-old","new_password":"EXAMPLE-ONLY-new"}
+```
+
+Password flow: ตรวจ current_password ด้วย password grant ของ email จาก verified user
+เปรียบเทียบ user UUID ให้ตรงกัน แล้ว update password ด้วย session ที่ reauthenticate ใหม่
+คืน session ใหม่นั้นให้ FE แทนของเดิม; Supabase เป็นผู้ตัดสิน password policy/recent-auth requirements
+หาก project บังคับ nonce/MFA เพิ่ม ต้องตอบ error ที่ชัดเจน ไม่ข้าม provider policy
+บัญชีที่มี verified MFA factor ต้องใช้ token aal2 สำหรับ protected endpoints; aal1 ตอบ 403 REAUTHENTICATION_REQUIRED
+ยังไม่มี MFA challenge/UI flow ใน milestone นี้ จึงใช้บัญชีทดสอบ email/password ที่ไม่เปิด MFA ก่อน
+หาก update ล้มเหลว Go พยายาม logout session ชั่วคราวที่ reauthenticate; ไม่อ้างว่าเปลี่ยนรหัสผ่านเพิกถอนทุกอุปกรณ์
+
+## Errors / HTTP
+
+คง `{"error":{"code":"...","message":"..."}}` ทุก route
+
+| HTTP | code | กรณี |
+|---|---|---|
+| 400 | VALIDATION_ERROR | JSON/UUID/counts/fields/length ผิด รวม role/id/email ที่ส่งมาแก้ profile |
+| 400 | AUTH_REQUEST_REJECTED | provider ปฏิเสธ signup/password policy; ไม่ส่ง raw error body |
+| 401 | UNAUTHORIZED | ไม่มี token, token ผิด/หมดอายุ/issuer/audience ไม่ตรง |
+| 401 | INVALID_CREDENTIALS | login/current_password ผิด |
+| 401 | INVALID_REFRESH_TOKEN | refresh ใช้ไม่ได้/หมดอายุ |
+| 403 | EMAIL_NOT_CONFIRMED | บัญชีเก่าที่ยังค้างยืนยันที่ provider; ติดต่อผู้ดูแล ไม่เริ่ม OTP flow |
+| 403 | FORBIDDEN | ยืนยันตัวตนได้แต่ไม่มี admin role |
+| 403 | REAUTHENTICATION_REQUIRED | provider ต้องการ nonce/MFA ที่ flow นี้ยังไม่รองรับ |
+| 404 | NOT_FOUND | product/route ไม่พบ; /me ไม่มี parameter ให้เลือกเจ้าของคนอื่น |
+| 410 | ENDPOINT_RETIRED | POST /auth/confirm เลิกใช้ ไม่ติดต่อ Supabase |
+| 409 | CONFLICT | product reference/constraint conflict |
+| 413 / 415 | PAYLOAD_TOO_LARGE / UNSUPPORTED_MEDIA_TYPE | ขนาดหรือ content type ผิด |
+| 429 | RATE_LIMITED | Supabase ปฏิเสธจาก rate limit |
+| 503 | AUTH_CONFIGURATION_ERROR | Register ได้ user แต่ไม่มี session; ตรวจ Confirm email/project configuration ไม่มี session ปลอม |
+| 503 | SERVICE_UNAVAILABLE | configuration/provider/DB ใช้ไม่ได้; ไม่ลดสิทธิ์เป็น guest หรือใช้ mock แทน |
+| 500 | INTERNAL_ERROR | error ภายในที่ไม่คาดคิด |
+
+Auth/member bodies จำกัด 64 KiB; catalog/build contract เดิมคงไว้
+Auth/me responses ใช้ Cache-Control:no-store และไม่บันทึก request body/Authorization/tokens ใน logs
+Signup ที่ provider ปฏิเสธใช้ข้อความทั่วไป ไม่เผย raw provider body; FE ไม่แปลว่าได้รับ session ถ้าไม่ใช่ 201
+ถ้า project ตั้ง confirmation ผิดและ provider คืน obfuscated/no-session user ก็ไม่ถือว่า Register สำเร็จ
+
+## Token verification / Logout / สิทธิ์
+
+Go เรียก Auth GET /auth/v1/user เพื่อให้ Supabase ตรวจลายเซ็น token (รองรับ signing-key rotation/legacy)
+แล้วตรวจ exp/nbf/iss/aud/sub และ UUID ให้ตรงกับ user ที่ verified; ไม่ใช้ decoded claims อย่างเดียว
+iss มาจาก SUPABASE_JWT_ISSUER (default project URL/auth/v1), aud default authenticated ต้องตรง project
+role อ่าน profiles ใน DB ทุกครั้ง ไม่เชื่อ role/user_metadata/app_metadata ที่ client ส่ง
+
+Logout ระบุ scope=local เท่านั้น เพิกถอน refresh session ปัจจุบัน ไม่ใช่ทุกอุปกรณ์
+FE ล้าง token ทั้งคู่แม้ network logout ล้มเหลว แต่ต้องแจ้งว่า server อาจยังไม่เพิกถอน
+access JWT ที่ออกไปแล้วอาจใช้ได้จน exp: ห้ามอ้างว่า logout เพิกถอน JWT ทันที
+GET user ออนไลน์ไม่ถูกอ้างเป็น session-revocation guarantee; ใช้ access token TTL สั้นตาม project policy
+หน้า sign out ใน FE เดิมต้องเพิ่ม server logout เพื่อเพิกถอน refresh แล้วล้าง token ตาม flow นี้
+
+Guest ใช้ catalog/validate เดิมได้; member ใช้ /me ของตนเอง; admin ใช้ protected product routes
+Go ใช้ server-only key สำหรับ Data API RPC; direct anon/authenticated table/RPC access เป็น default-deny
+RPC เฉพาะ service_role และ mutation ตรวจ actor role ใน DB ซ้ำ; ไม่มี public role escalation endpoint
+เจ้าของเตรียมบัญชี Admin ล่วงหน้า: สร้างบัญชีเฉพาะที่ตนควบคุมผ่าน Go Register (เริ่มเป็น member)
+ตรวจ UUID/email ใน Auth Dashboard แล้วเปลี่ยน profiles.role ด้วย owner SQL ตาม ADMIN_API.md ก่อนส่งงาน
+ไม่ส่ง role ผ่าน Register/Profile/metadata, ไม่มี public endpoint สมัคร Admin และไม่ seed รหัสผ่าน/keys
+
+## ค่าที่ต้องตั้งและผลต่อ tests
+
+Backend: SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY (หรือ legacy anon key), SUPABASE_SECRET_KEY
+(หรือ legacy service_role key), SUPABASE_JWT_ISSUER, SUPABASE_JWT_AUDIENCE, CORS_ALLOWED_ORIGINS
+ห้ามใส่ server-only key ใน REACT_APP_* หรือส่ง secret ในแชต ใช้ Render Environment/secret manager
+local ใช้ shell environment หรือไฟล์ .env ที่ Git ignore แล้วโหลดเองอย่างระมัดระวัง
+
+Supabase Dashboard → Authentication → Sign In / Providers → Email: เปิด Email provider และปิด Confirm email แล้ว Save
+ตรวจ Allow new users to sign up เปิด; hosted project เปิด confirmation โดย default จึงต้องตรวจทุก environment
+ไม่ต้องตั้ง signup OTP template/SMTP เพื่อให้ flow สมัครแบบนี้ทำงาน; recovery/email-change ยังอยู่นอก milestone
+local Supabase ใช้ [auth.email] enable_confirmations=false ใน supabase/config.toml แล้ว restart local stack
+unit tests ใช้ fake Auth/Data API; integration ต้องตั้ง local/test Supabase แยก
+ยังไม่เปิด forgot-password/recovery/OAuth/สมาชิกบันทึก build ใน milestone นี้
+
+## ข้อความส่งให้ Fluke
+
+สมัครผ่าน POST /api/v1/auth/register แล้ว 201 จะมี data.session พร้อมใช้ทันทีและ email_confirmation_required=false
+เก็บ token pair แล้วเรียก GET /api/v1/me ด้วย Bearer access_token ได้เลย; data.profile.role เป็น member
+ไม่ต้องรอ OTP และไม่เรียก /auth/confirm (410) ถ้า Register ตอบ 503 AUTH_CONFIGURATION_ERROR ให้แจ้งผู้ดูแลและไม่ retry รัว
+Login/Refresh/Logout/Profile/password ใช้ flow เดิม; refresh/password ต้องแทน session ทั้งคู่
+Admin ใช้บัญชีที่เจ้าของเตรียมไว้ก่อนเท่านั้น ไม่ส่ง role/metadata ใน signup หรือ Profile
+
+## เอกสารทางการที่ตรวจ 2026-11-11
+
+- [Supabase configuration / Confirm Email](https://supabase.com/docs/guides/auth/general-configuration)
+- [Local email configuration](https://supabase.com/docs/guides/local-development/cli/config#auth.email.enable_confirmations)
+- [Signup user/session semantics](https://supabase.com/docs/reference/csharp/auth-signup)
+- [Supabase password/email confirmation](https://supabase.com/docs/guides/auth/passwords)
+- [Auth HTTP API](https://github.com/supabase/auth#api)
+- [User verification](https://supabase.com/docs/reference/javascript/auth-getuser)
+- [JWT](https://supabase.com/docs/guides/auth/jwts), [session](https://supabase.com/docs/guides/auth/sessions)
+- [Logout scopes และ JWT expiry](https://supabase.com/docs/reference/javascript/auth-signout)
+- [API keys / service_role bypasses RLS](https://supabase.com/docs/guides/getting-started/api-keys)
+- [Database permissions/RLS](https://supabase.com/docs/guides/api/securing-your-api)
+- [Render Go](https://render.com/docs/deploy-go-nethttp), [bind/PORT](https://render.com/docs/web-services),
+  [health](https://render.com/docs/health-checks), [Blueprint](https://render.com/docs/blueprint-spec)
+
+Render จะเตรียมไฟล์/คู่มือก่อน: ไม่สร้างบริการ/ค่าใช้จ่ายหรืออ้างว่า deploy สำเร็จจนตรวจจริง
