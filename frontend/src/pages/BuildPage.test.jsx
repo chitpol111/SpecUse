@@ -113,6 +113,8 @@ describe("build page extended components", () => {
 
     await openSummary();
     expect(container.textContent).not.toContain("ยังไม่รองรับการตรวจ PSU");
+    expect(container.textContent).not.toContain("แชร์");
+    expect(container.textContent).toContain("สเปกที่บันทึกเป็นส่วนตัว");
     expect(container.textContent).toContain("ตรวจพื้นฐานเฉพาะ CPU socket และชนิด RAM ที่เลือก");
     expect(container.textContent).toContain("CPU กับเมนบอร์ด — ผ่าน");
     const gpuSelect = Array.from(container.querySelectorAll("label"))
