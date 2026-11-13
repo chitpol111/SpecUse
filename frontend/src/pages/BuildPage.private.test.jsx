@@ -5,10 +5,10 @@ import BuildPage from "./BuildPage";
 import { useAuth } from "../auth/AuthContext";
 import { fetchProducts, validateBuild } from "../api/specUseApi";
 
-jest.mock("../auth/AuthContext", () => ({ useAuth: jest.fn() }));
-jest.mock("../api/specUseApi", () => ({ fetchProducts: jest.fn(), validateBuild: jest.fn() }));
-jest.mock("../components/SiteHeader", () => () => null);
-jest.mock("../components/SiteFooter", () => () => null);
+vi.mock("../auth/AuthContext", () => ({ useAuth: vi.fn() }));
+vi.mock("../api/specUseApi", () => ({ fetchProducts: vi.fn(), validateBuild: vi.fn() }));
+vi.mock("../components/SiteHeader", () => ({ default: () => null }));
+vi.mock("../components/SiteFooter", () => ({ default: () => null }));
 
 const products = [
   { id: "cpu", name: "CPU A", category: "cpu", brand: "A", price_thb: 1000, specs: { cpu_socket: "AM4" } },
@@ -23,13 +23,13 @@ describe("saving a build", () => {
 
   beforeEach(() => {
     global.IS_REACT_ACT_ENVIRONMENT = true;
-    window.scrollTo = jest.fn();
+    window.scrollTo = vi.fn();
     fetchProducts.mockResolvedValue(products);
     validateBuild.mockResolvedValue({
       compatible: true, issues: [], items: [], ram_selections: [], total_price_thb: 3000,
       compatibility: { mode: "gpu_storage_v1", status: "unknown", checks: [] },
     });
-    client = { createBuild: jest.fn().mockResolvedValue({}) };
+    client = { createBuild: vi.fn().mockResolvedValue({}) };
     useAuth.mockReturnValue({ authenticated: true, client });
     container = document.createElement("div");
     document.body.appendChild(container);
@@ -39,7 +39,7 @@ describe("saving a build", () => {
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     delete global.IS_REACT_ACT_ENVIRONMENT;
   });
 

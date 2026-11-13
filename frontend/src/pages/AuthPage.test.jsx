@@ -18,7 +18,7 @@ describe("account pages", () => {
 
   beforeEach(() => {
     global.IS_REACT_ACT_ENVIRONMENT = true;
-    global.fetch = jest.fn();
+    global.fetch = vi.fn();
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);

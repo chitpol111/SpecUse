@@ -45,8 +45,11 @@ go run ./cmd/api
 
 ```sh
 cd frontend
+npm ci
 npm start
 ```
 
 เปิด `http://localhost:3000/build` หาก Frontend หรือ Backend ใช้ URL อื่น
 ให้ตั้ง `REACT_APP_API_BASE_URL` หรือค่า CORS ให้ตรงกับ origin ใน browser
+Frontend ใช้ Node.js รุ่น 20.19+, 22.12+ หรือ 24 ขึ้นไป และ build ด้วย `npm run build`;
+ผลลัพธ์อยู่ใน `frontend/build` โดยยังใช้ตัวแปร `REACT_APP_API_BASE_URL` เดิม

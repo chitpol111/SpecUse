@@ -2,11 +2,11 @@ import { fetchProducts, validateBuild } from "./specUseApi";
 
 describe("SpecUse API client", () => {
   beforeEach(() => {
-    global.fetch = jest.fn();
+    global.fetch = vi.fn();
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it("loads and paginates active products", async () => {

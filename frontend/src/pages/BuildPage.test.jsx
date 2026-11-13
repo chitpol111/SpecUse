@@ -4,9 +4,9 @@ import { MemoryRouter } from "react-router-dom";
 import App from "../App";
 import { fetchProducts, validateBuild } from "../api/specUseApi";
 
-jest.mock("../api/specUseApi", () => ({
-  fetchProducts: jest.fn(),
-  validateBuild: jest.fn(),
+vi.mock("../api/specUseApi", () => ({
+  fetchProducts: vi.fn(),
+  validateBuild: vi.fn(),
 }));
 
 const products = [
@@ -54,7 +54,7 @@ describe("build page extended components", () => {
 
   beforeEach(() => {
     global.IS_REACT_ACT_ENVIRONMENT = true;
-    window.scrollTo = jest.fn();
+    window.scrollTo = vi.fn();
     fetchProducts.mockResolvedValue(products);
     validateBuild.mockImplementation(async (build) => validationResult(build));
     container = document.createElement("div");
@@ -65,7 +65,7 @@ describe("build page extended components", () => {
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     delete global.IS_REACT_ACT_ENVIRONMENT;
   });
 

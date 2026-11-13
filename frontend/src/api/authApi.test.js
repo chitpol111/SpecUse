@@ -12,14 +12,14 @@ const response = (status, payload) => ({
 
 describe("auth API client", () => {
   beforeEach(() => {
-    global.fetch = jest.fn();
+    global.fetch = vi.fn();
   });
   afterEach(() => {
     delete global.fetch;
   });
 
   it("uses protected private-draft endpoints and patches only metadata", async () => {
-    const client = createAuthClient(jest.fn());
+    const client = createAuthClient(vi.fn());
     const build = {
       id: "build", name: "Draft", description: "", visibility: "private", created_at: "now", updated_at: "now",
       items: [{ product_id: "cpu", quantity: 2, owned_quantity: 1, product_summary: { name: "CPU", category: "cpu", is_active: false } }],
@@ -44,7 +44,7 @@ describe("auth API client", () => {
   });
 
   it("rejects malformed draft responses", async () => {
-    const client = createAuthClient(jest.fn());
+    const client = createAuthClient(vi.fn());
     global.fetch
       .mockResolvedValueOnce(response(200, { data: { session } }))
       .mockResolvedValueOnce(response(200, { data: { build: { items: [] } } }));
@@ -53,7 +53,7 @@ describe("auth API client", () => {
   });
 
   it("refreshes once for simultaneous 401s and retries with the new token", async () => {
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     const client = createAuthClient(onChange);
     let releaseRefresh;
     global.fetch.mockImplementation(async (url, options) => {
@@ -79,7 +79,7 @@ describe("auth API client", () => {
   });
 
   it("clears the session when refresh is rejected", async () => {
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     const client = createAuthClient(onChange);
     global.fetch
       .mockResolvedValueOnce(response(200, { data: { session } }))
@@ -91,7 +91,7 @@ describe("auth API client", () => {
   });
 
   it("does not refresh on a 403 and preserves the session", async () => {
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     const client = createAuthClient(onChange);
     global.fetch
       .mockResolvedValueOnce(response(200, { data: { session } }))
@@ -103,7 +103,7 @@ describe("auth API client", () => {
   });
 
   it("preserves the session if refresh fails due to a network error", async () => {
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     const client = createAuthClient(onChange);
     global.fetch
       .mockResolvedValueOnce(response(200, { data: { session } }))
@@ -115,7 +115,7 @@ describe("auth API client", () => {
   });
 
   it("does not restore a session from a refresh completed after logout", async () => {
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     const client = createAuthClient(onChange);
     let releaseRefresh;
     global.fetch.mockImplementation(async (url) => {
@@ -137,7 +137,7 @@ describe("auth API client", () => {
   });
 
   it("rejects a signup response without the required session", async () => {
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     const client = createAuthClient(onChange);
     global.fetch.mockResolvedValue(response(201, { data: { session: null, email_confirmation_required: false } }));
     await expect(client.register({})).rejects.toThrow("session");
@@ -145,7 +145,7 @@ describe("auth API client", () => {
   });
 
   it("updates the display name and uses the new session after changing the password", async () => {
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     const client = createAuthClient(onChange);
     const updatedProfile = { ...profile, display_name: "New name" };
     global.fetch
@@ -174,7 +174,7 @@ describe("auth API client", () => {
   });
 
   it("does not refresh or clear the session when the current password is wrong", async () => {
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     const client = createAuthClient(onChange);
     global.fetch
       .mockResolvedValueOnce(response(200, { data: { session } }))
@@ -186,7 +186,7 @@ describe("auth API client", () => {
   });
 
   it("clears the session if a successful password update returns no usable session", async () => {
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     const client = createAuthClient(onChange);
     global.fetch
       .mockResolvedValueOnce(response(200, { data: { session } }))
@@ -197,7 +197,7 @@ describe("auth API client", () => {
   });
 
   it("uses the admin catalog filters and validates product mutation responses", async () => {
-    const client = createAuthClient(jest.fn());
+    const client = createAuthClient(vi.fn());
     const product = {
       id: "cpu-1",
       name: "Example CPU",
@@ -241,7 +241,7 @@ describe("auth API client", () => {
   });
 
   it("does not send an immutable category in an admin product update", async () => {
-    const client = createAuthClient(jest.fn());
+    const client = createAuthClient(vi.fn());
     global.fetch.mockResolvedValueOnce(response(200, { data: { session } }));
     await client.login({ email: user.email, password: "password" });
 
@@ -251,7 +251,7 @@ describe("auth API client", () => {
   });
 
   it("rejects an admin catalog response without a revision", async () => {
-    const client = createAuthClient(jest.fn());
+    const client = createAuthClient(vi.fn());
     global.fetch
       .mockResolvedValueOnce(response(200, { data: { session } }))
       .mockResolvedValueOnce(response(200, { data: {
@@ -264,7 +264,7 @@ describe("auth API client", () => {
   });
 
   it("rejects an empty admin catalog from an older backend", async () => {
-    const client = createAuthClient(jest.fn());
+    const client = createAuthClient(vi.fn());
     global.fetch
       .mockResolvedValueOnce(response(200, { data: { session } }))
       .mockResolvedValueOnce(response(200, { data: { items: [], page: 1, page_size: 20, total: 0 } }));

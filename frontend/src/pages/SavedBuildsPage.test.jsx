@@ -5,10 +5,10 @@ import SavedBuildsPage from "./SavedBuildsPage";
 import { useAuth } from "../auth/AuthContext";
 import { validateBuild } from "../api/specUseApi";
 
-jest.mock("../auth/AuthContext", () => ({ useAuth: jest.fn() }));
-jest.mock("../api/specUseApi", () => ({ validateBuild: jest.fn() }));
-jest.mock("../components/SiteHeader", () => () => null);
-jest.mock("../components/SiteFooter", () => () => null);
+vi.mock("../auth/AuthContext", () => ({ useAuth: vi.fn() }));
+vi.mock("../api/specUseApi", () => ({ validateBuild: vi.fn() }));
+vi.mock("../components/SiteHeader", () => ({ default: () => null }));
+vi.mock("../components/SiteFooter", () => ({ default: () => null }));
 
 const summary = { id: "one", name: "สเปกแรก", description: "", visibility: "private", created_at: "now", updated_at: "now" };
 const draft = {
@@ -35,10 +35,10 @@ describe("saved builds", () => {
     document.body.appendChild(container);
     root = createRoot(container);
     client = {
-      listBuilds: jest.fn().mockResolvedValue({ items: [summary], page: 1, page_size: 20, total: 21 }),
-      getBuild: jest.fn().mockResolvedValue(draft),
-      updateBuildDetails: jest.fn().mockResolvedValue({ ...draft, name: "ชื่อใหม่" }),
-      deleteBuild: jest.fn().mockResolvedValue(null),
+      listBuilds: vi.fn().mockResolvedValue({ items: [summary], page: 1, page_size: 20, total: 21 }),
+      getBuild: vi.fn().mockResolvedValue(draft),
+      updateBuildDetails: vi.fn().mockResolvedValue({ ...draft, name: "ชื่อใหม่" }),
+      deleteBuild: vi.fn().mockResolvedValue(null),
     };
     useAuth.mockReturnValue({ authenticated: true, client });
   });
@@ -46,7 +46,7 @@ describe("saved builds", () => {
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     delete global.IS_REACT_ACT_ENVIRONMENT;
   });
 
@@ -76,7 +76,7 @@ describe("saved builds", () => {
     expect(client.updateBuildDetails).toHaveBeenCalledWith("one", "สเปกแรก", "");
     expect(container.textContent).toContain("CPU A");
     expect(container.textContent).toContain("DDR5");
-    window.confirm = jest.fn().mockReturnValueOnce(false).mockReturnValueOnce(true);
+    window.confirm = vi.fn().mockReturnValueOnce(false).mockReturnValueOnce(true);
     await click("ลบสเปก");
     expect(client.deleteBuild).not.toHaveBeenCalled();
     await click("ลบสเปก");
