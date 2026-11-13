@@ -8,11 +8,11 @@ export default function CallToAction() {
             <br className="hidden sm:block" /> เริ่มได้จากตรงนี้
           </h2>
           <p className="mx-auto mt-4 max-w-xl leading-7 text-white/85">
-            ชมตัวอย่างแนวทางจัดสเปก ข้อมูลเพื่อประกอบการวางแผนเท่านั้น
+            เลือกอุปกรณ์และตรวจสอบข้อมูลเบื้องต้นเพื่อประกอบการวางแผน
           </p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <a href="#public-builds" className="rounded-full bg-ruby-500 px-7 py-3.5 font-extrabold text-white shadow-lg shadow-ruby-500/20 transition hover:-translate-y-0.5 hover:bg-ruby-400">
-              ดูตัวอย่างแนวทาง
+            <a href="/build" className="rounded-full bg-ruby-500 px-7 py-3.5 font-extrabold text-white shadow-lg shadow-ruby-500/20 transition hover:-translate-y-0.5 hover:bg-ruby-400">
+              เริ่มจัดสเปก
             </a>
             <a href="#member" className="rounded-full border border-white/20 px-7 py-3.5 font-extrabold text-white transition hover:border-ruby-300/50 hover:bg-white/5">
               ดูสิทธิ์สมาชิก

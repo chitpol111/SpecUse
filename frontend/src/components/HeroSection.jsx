@@ -13,17 +13,17 @@ export default function HeroSection() {
             </span>
           </h1>
           <p className="mt-6 max-w-[34rem] text-base leading-8 text-slate-300 sm:text-lg">
-            SpecUse กำลังพัฒนาเครื่องมือช่วยเลือกชิ้นส่วนตามการใช้งานและงบประมาณ พร้อมตรวจความเข้ากันได้เบื้องต้นและแสดงราคารวม
+            เลือกชิ้นส่วนตามการใช้งานและงบประมาณ พร้อมตรวจความเข้ากันได้เบื้องต้นและดูราคารวม
           </p>
           <p className="mt-3 text-sm leading-6 text-ruby-200">
-            ตอนนี้เลือกชมได้เฉพาะตัวอย่างแนวทาง ระบบจัดสเปกจริงยังไม่พร้อมใช้งาน
+            ราคาเป็นข้อมูลอ้างอิง และการตรวจยังไม่ครอบคลุมอุปกรณ์ทุกส่วน
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <a
-              href="#public-builds"
+              href="/build"
               className="inline-flex min-h-14 items-center justify-center gap-2 rounded-full bg-ruby-500 px-7 py-4 font-extrabold text-white shadow-lg shadow-ruby-500/20 transition hover:-translate-y-0.5 hover:bg-ruby-400"
             >
-              ดูตัวอย่างแนวทาง
+              เริ่มจัดสเปก
               <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5" aria-hidden="true">
                 <path d="M4 10h12m-5-5 5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -32,7 +32,7 @@ export default function HeroSection() {
               href="#start"
               className="inline-flex min-h-14 items-center justify-center rounded-full border border-white/15 bg-obsidian-900/80 px-7 py-4 font-bold text-slate-100 transition hover:border-ruby-400/50 hover:bg-obsidian-800"
             >
-              ดูขั้นตอนที่วางแผนไว้
+              ดูขั้นตอนการใช้งาน
             </a>
           </div>
           <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm font-medium text-slate-300">
@@ -40,7 +40,7 @@ export default function HeroSection() {
               <CheckMark /> คำนึงถึงงบประมาณ
             </span>
             <span className="inline-flex items-center gap-2">
-              <CheckMark /> แนวคิดตรวจสอบความเข้ากันได้
+              <CheckMark /> ตรวจสอบความเข้ากันได้เบื้องต้น
             </span>
           </div>
         </div>
@@ -51,7 +51,7 @@ export default function HeroSection() {
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
               <div>
                 <h2 className="mt-1 text-lg font-extrabold text-slate-100">ทำงานและเล่นเกม</h2>
-                <p className="mt-1 text-xs font-medium leading-5 text-ruby-200">ภาพจำลอง · ฟังก์ชันยังไม่เปิดใช้งาน</p>
+                <p className="mt-1 text-xs font-medium leading-5 text-ruby-200">ภาพจำลองเพื่อประกอบการวางแผน</p>
               </div>
               <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-slate-300">ภาพจำลอง</span>
             </div>
