@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "ENDPOINT_RETIRED",
+    "message": "ไม่ใช้ขั้นตอนยืนยันอีเมลแล้ว กรุณาใช้ Register หรือ Login"
+  }
+}

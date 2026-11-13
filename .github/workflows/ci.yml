@@ -48,3 +48,9 @@ jobs:
           cache-dependency-path: backend/go.mod
       - name: Run tests
         run: go test ./...
+      - name: Vet backend
+        run: go vet ./...
+      - name: Race checks
+        run: go test -race ./internal/...
+      - name: PostgreSQL migrations and permissions
+        run: bash integration/postgres.sh

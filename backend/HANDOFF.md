@@ -1,5 +1,13 @@
 # ชุดส่งต่อ Backend ให้ฟลุค
 
+ชุดใหม่ Auth/สมาชิก/สิทธิ์/Render เตรียมใน `feat/backend-render-ready` (เป็น branch ต่อกัน ยังไม่ merge)
+อ่าน [AUTH_API.md](AUTH_API.md), [SUPABASE_SETUP.md](SUPABASE_SETUP.md), [ADMIN_API.md](ADMIN_API.md),
+[RENDER.md](RENDER.md) ก่อน; local fixture ไม่ใช้ keys ส่วน hosted flow ต้องเจ้าของตั้งค่าและทดสอบจริง
+Register คืน session พร้อมใช้ทันที (email_confirmation_required=false), GET /me role=member โดยไม่ต้อง OTP
+POST /auth/confirm เลิกใช้ตอบ 410; หากไม่มี session จาก provider ต้อง 503 AUTH_CONFIGURATION_ERROR
+Admin ใช้บัญชีที่เจ้าของเตรียมและ promote ด้วย owner SQL ล่วงหน้า ไม่มี public Admin signup
+Frontend ใช้ Go `/api/v1` ทุก Auth flow; CORS รองรับ localhost:3000 และ 127.0.0.1:3000 เมื่อระบุใน env
+
 ชุดล่าสุดสำหรับ SATA-first อยู่ที่ [STORAGE_B1.md](STORAGE_B1.md) บน feat/backend-storage-b1
 มี fixture แยกและ JSON/curl ที่รันได้จริง โดย default legacy response ยังคงเดิม
 

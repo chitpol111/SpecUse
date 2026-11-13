@@ -23,6 +23,9 @@ func loadApplication() (application, error) {
 	if mode == "" {
 		mode = "memory"
 	}
+	if os.Getenv("APP_ENV") == "production" && mode != "supabase" {
+		return application{}, errors.New("production requires CATALOG_BACKEND=supabase")
+	}
 	if mode == "memory" {
 		if os.Getenv("SUPABASE_URL") != "" {
 			return application{}, errors.New("set CATALOG_BACKEND=supabase explicitly when configuring Supabase")

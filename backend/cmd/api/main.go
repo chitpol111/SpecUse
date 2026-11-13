@@ -37,7 +37,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	address := ":" + port
+	address := net.JoinHostPort("0.0.0.0", port)
 	if appEnv == "local" {
 		// Local development data must not be served on a public interface.
 		address = "127.0.0.1:" + port
@@ -47,6 +47,11 @@ func main() {
 		adminService = management.New(app.database)
 	}
 	routes := handler.WithAdmin(handler.WithMembers(handler.NewAPI(catalog.NewService(app.catalog), build.NewService(app.builds)), app.members), app.members, adminService)
+	if app.database != nil {
+		routes = handler.WithHealth(routes, "supabase", app.database.Ping)
+	} else {
+		routes = handler.WithHealth(routes, "memory", nil)
+	}
 	server := &http.Server{
 		Addr:              address,
 		Handler:           handler.WithCORS(routes, origins, "GET, POST, PATCH, DELETE"),
