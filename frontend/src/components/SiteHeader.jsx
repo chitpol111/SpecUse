@@ -12,7 +12,7 @@ export default function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [logoutPending, setLogoutPending] = useState(false);
   const [logoutError, setLogoutError] = useState("");
-  const { authenticated, profile, client } = useAuth();
+  const { authenticated, profile, client, sessionWarning } = useAuth();
   const { pathname } = useLocation();
   const isHome = pathname === "/";
   const links = sectionLinks.map((link) => ({
@@ -25,8 +25,10 @@ export default function SiteHeader() {
     setLogoutError("");
     try {
       await client.logout();
-    } catch {
-      setLogoutError("ล้างข้อมูลเข้าสู่ระบบในหน้านี้แล้ว แต่เซิร์ฟเวอร์อาจยังไม่เพิกถอน session");
+    } catch (error) {
+      setLogoutError(error.code === "SESSION_STORAGE_CLEAR_FAILED"
+        ? error.message
+        : "ล้างข้อมูลเข้าสู่ระบบในหน้านี้แล้ว แต่เซิร์ฟเวอร์อาจยังไม่เพิกถอน session");
     } finally {
       setLogoutPending(false);
     }
@@ -126,7 +128,7 @@ export default function SiteHeader() {
         </div>
       </div>
 
-      {logoutError && <p role="alert" className="mx-auto max-w-7xl px-5 pb-3 text-sm text-ruby-200 sm:px-8">{logoutError}</p>}
+      {(logoutError || sessionWarning) && <p role="alert" className="mx-auto max-w-7xl px-5 pb-3 text-sm text-ruby-200 sm:px-8">{logoutError || sessionWarning}</p>}
 
       {menuOpen && (
         <nav className="border-t border-white/10 bg-[#0b0202] px-5 py-4 lg:hidden" aria-label="เมนูมือถือ">

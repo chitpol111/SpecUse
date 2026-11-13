@@ -53,6 +53,29 @@ function validSession(session) {
     typeof session.refresh_token === "string" && session.refresh_token.length > 0;
 }
 
+const SESSION_KEY = "specuse.auth.session";
+
+export function readStoredSession() {
+  let stored;
+  try {
+    stored = window.sessionStorage.getItem(SESSION_KEY);
+  } catch {
+    return { session: null, warning: "เบราว์เซอร์ไม่อนุญาตให้เก็บสถานะเข้าสู่ระบบ การรีเฟรชอาจทำให้ต้องเข้าสู่ระบบใหม่" };
+  }
+  if (stored === null) return { session: null, warning: "" };
+
+  let session;
+  try {
+    session = JSON.parse(stored);
+  } catch {
+    return { session: null, warning: "ข้อมูลเข้าสู่ระบบที่เก็บไว้ไม่ถูกต้อง กรุณาเข้าสู่ระบบใหม่" };
+  }
+  if (!validSession(session)) {
+    return { session: null, warning: "ข้อมูลเข้าสู่ระบบที่เก็บไว้ไม่ถูกต้อง กรุณาเข้าสู่ระบบใหม่" };
+  }
+  return { session, warning: "" };
+}
+
 function validProfile(profile) {
   return profile && typeof profile.display_name === "string" &&
     ["member", "admin"].includes(profile.role);
@@ -80,8 +103,10 @@ function validBuild(build) {
     build.availability.issues.every((issue) => issue && typeof issue.message === "string");
 }
 
-export function createAuthClient(onChange) {
-  let session = null;
+export function createAuthClient(onChange, { initialSession = null, onStorageStatus = (message) => {
+  if (message) console.error(message);
+} } = {}) {
+  let session = initialSession;
   let user = null;
   let profile = null;
   let generation = 0;
@@ -96,7 +121,20 @@ export function createAuthClient(onChange) {
     session = null;
     user = null;
     profile = null;
+    let storageError = null;
+    try {
+      window.sessionStorage.removeItem(SESSION_KEY);
+      onStorageStatus("");
+    } catch {
+      storageError = new AuthError(
+        "ล้างข้อมูลเข้าสู่ระบบที่เก็บไว้ไม่ได้ กรุณาปิดแท็บและล้างข้อมูลเว็บไซต์ในเบราว์เซอร์",
+        undefined,
+        "SESSION_STORAGE_CLEAR_FAILED",
+      );
+      onStorageStatus(storageError.message);
+    }
     notify();
+    if (storageError) throw storageError;
   }
 
   function setSession(next) {
@@ -104,6 +142,21 @@ export function createAuthClient(onChange) {
       throw new AuthError("Backend ไม่ได้ส่ง session ที่ใช้งานได้ กรุณาติดต่อผู้ดูแล", undefined, "INVALID_SESSION");
     }
     session = next;
+    try {
+      window.sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+        access_token: next.access_token,
+        refresh_token: next.refresh_token,
+      }));
+      onStorageStatus("");
+    } catch {
+      let warning = "เก็บสถานะเข้าสู่ระบบไม่ได้ การรีเฟรชอาจทำให้ต้องเข้าสู่ระบบใหม่";
+      try {
+        window.sessionStorage.removeItem(SESSION_KEY);
+      } catch {
+        warning += " และล้างสถานะเก่าไม่ได้ กรุณาปิดแท็บและล้างข้อมูลเว็บไซต์ในเบราว์เซอร์";
+      }
+      onStorageStatus(warning);
+    }
     notify();
   }
 
@@ -218,6 +271,19 @@ export function createAuthClient(onChange) {
     return data.build;
   }
 
+  async function loadProfile() {
+    const started = generation;
+    const data = await protectedRequest("/me");
+    if (started !== generation) throw new AuthError("สถานะการเข้าสู่ระบบเปลี่ยนไป");
+    if (!validProfile(data?.profile) || typeof data?.user?.email !== "string") {
+      throw new AuthError("ข้อมูลโปรไฟล์จาก Backend ไม่ตรงกับ API contract");
+    }
+    user = data.user;
+    profile = data.profile;
+    notify();
+    return profile;
+  }
+
   return {
     register: (body) => authenticate("/auth/register", body, true),
     login: (body) => authenticate("/auth/login", body, false),
@@ -262,17 +328,18 @@ export function createAuthClient(onChange) {
       `/me/builds/${encodeURIComponent(id)}`,
       { method: "DELETE", expectedStatus: 204 },
     ),
-    async loadProfile() {
+    loadProfile,
+    async restoreProfile() {
       const started = generation;
-      const data = await protectedRequest("/me");
-      if (started !== generation) throw new AuthError("สถานะการเข้าสู่ระบบเปลี่ยนไป");
-      if (!validProfile(data?.profile) || typeof data?.user?.email !== "string") {
-        throw new AuthError("ข้อมูลโปรไฟล์จาก Backend ไม่ตรงกับ API contract");
+      try {
+        return await loadProfile();
+      } catch (error) {
+        if (generation !== started &&
+            (session || !["INVALID_REFRESH_TOKEN", "INVALID_SESSION", "SESSION_STORAGE_CLEAR_FAILED"].includes(error.code))) {
+          return;
+        }
+        throw error;
       }
-      user = data.user;
-      profile = data.profile;
-      notify();
-      return profile;
     },
     async updateProfile(displayName) {
       const started = generation;

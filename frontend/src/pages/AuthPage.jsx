@@ -71,7 +71,7 @@ export default function AuthPage({ mode }) {
               {profile ? (
                 <>
                   <p role="status">เข้าสู่ระบบแล้ว: {profile.display_name} ({profile.role})</p>
-                  <p className="text-sm text-slate-300">เมื่อรีเฟรชหรือปิดหน้าเว็บ จะต้องเข้าสู่ระบบใหม่</p>
+                  <p className="text-sm text-slate-300">สถานะเข้าสู่ระบบจะคงอยู่เมื่อรีเฟรชในแท็บนี้</p>
                   <Link to="/profile" className="block font-bold text-ruby-300 underline">ดูข้อมูลส่วนตัว</Link>
                   <Link to="/build" className="font-bold text-ruby-300 underline">ไปหน้าจัดสเปก</Link>
                 </>
