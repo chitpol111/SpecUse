@@ -81,7 +81,7 @@ func ValidEmail(email string) bool {
 func ValidPassword(p string) bool { return utf8.RuneCountInString(p) >= 8 && len(p) <= 1024 }
 func DisplayName(name string) (string, error) {
 	name = strings.TrimSpace(name)
-	if !utf8.ValidString(name) || utf8.RuneCountInString(name) < 1 || utf8.RuneCountInString(name) > 100 {
+	if !utf8.ValidString(name) || strings.ContainsRune(name, '\x00') || utf8.RuneCountInString(name) < 1 || utf8.RuneCountInString(name) > 100 {
 		return "", ErrInput
 	}
 	return name, nil

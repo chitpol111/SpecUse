@@ -150,7 +150,7 @@ func TestPasswordRequiresCurrentPasswordAndReturnsReplacementSession(t *testing.
 }
 func TestInputPolicy(t *testing.T) {
 	s, _, _ := fixture()
-	for _, name := range []string{"", strings.Repeat("ก", 101)} {
+	for _, name := range []string{"", "Name\x00Suffix", strings.Repeat("ก", 101)} {
 		if _, err := DisplayName(name); !errors.Is(err, ErrInput) {
 			t.Fatal("bad name accepted")
 		}
@@ -160,6 +160,9 @@ func TestInputPolicy(t *testing.T) {
 	}
 	if _, err := s.Register(context.Background(), "x@example.test", "short", "Test"); !errors.Is(err, ErrInput) {
 		t.Fatal("bad password")
+	}
+	if _, err := s.Register(context.Background(), "x@example.test", "password123", "Name\x00Suffix"); !errors.Is(err, ErrInput) {
+		t.Fatal("name containing NUL accepted during signup")
 	}
 	if _, err := s.Refresh(context.Background(), ""); !errors.Is(err, ErrInput) {
 		t.Fatal("empty refresh")
