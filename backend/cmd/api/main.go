@@ -32,7 +32,7 @@ func main() {
 	}
 	appEnv := os.Getenv("APP_ENV")
 	fixturePath := os.Getenv("LOCAL_CATALOG_FILE")
-	repo, err := loadCatalog(appEnv, fixturePath)
+	app, err := loadApplication()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -43,10 +43,10 @@ func main() {
 	}
 	server := &http.Server{
 		Addr:              address,
-		Handler:           handler.WithCORS(handler.NewAPI(catalog.NewService(repo), build.NewService(repo)), origins),
+		Handler:           handler.WithCORS(handler.WithMembers(handler.NewAPI(catalog.NewService(app.catalog), build.NewService(app.builds)), app.members), origins, "GET, POST, PATCH, DELETE"),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
-		WriteTimeout:      15 * time.Second,
+		WriteTimeout:      30 * time.Second,
 		IdleTimeout:       60 * time.Second,
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -58,7 +58,7 @@ func main() {
 	if fixturePath != "" {
 		log.Print("LOCAL DEVELOPMENT: using synthetic catalog fixture; not Supabase data")
 	}
-	log.Printf("catalog API listening on %s (in-memory repository)", server.Addr)
+	log.Printf("API listening on %s", server.Addr)
 	if err := serve(ctx, server, listener, 15*time.Second); err != nil {
 		log.Fatal(err)
 	}

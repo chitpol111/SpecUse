@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"specuse/backend/internal/account"
 	"specuse/backend/internal/catalog"
 )
 
@@ -51,6 +52,8 @@ func writeError(w http.ResponseWriter, status int, code, message string) {
 
 func serviceError(w http.ResponseWriter, err error) {
 	switch {
+	case errors.Is(err, account.ErrUnavailable), errors.Is(err, account.ErrRateLimit):
+		accountError(w, err)
 	case errors.Is(err, catalog.ErrInvalidInput):
 		writeError(w, http.StatusBadRequest, "VALIDATION_ERROR", "ข้อมูลคำขอไม่ถูกต้อง")
 	case errors.Is(err, catalog.ErrNotFound):

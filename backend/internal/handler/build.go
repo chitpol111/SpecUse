@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"specuse/backend/internal/account"
 	"specuse/backend/internal/build"
 )
 
@@ -125,6 +126,8 @@ func publicBuildResult(result build.Result) buildResponse {
 func buildError(w http.ResponseWriter, err error) {
 	var tooLarge *http.MaxBytesError
 	switch {
+	case errors.Is(err, account.ErrUnavailable), errors.Is(err, account.ErrRateLimit):
+		accountError(w, err)
 	case errors.Is(err, build.ErrUnsupportedScope):
 		writeError(w, http.StatusBadRequest, "UNSUPPORTED_BUILD_SCOPE", "โหมดนี้รองรับ GPU รวมไม่เกิน 1 ใบและ Storage ทุกชนิดรวมไม่เกิน 8 ลูก รวมอุปกรณ์ที่มีอยู่แล้ว")
 	case errors.As(err, &tooLarge):
