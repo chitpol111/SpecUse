@@ -1,10 +1,21 @@
-# แผนรวมงาน / migration 007 / deploy private draft
+# แผนรวมงาน / migrations 007 และ 008 / deploy private draft
 
 เตรียมเมื่อ 2026-11-12 เวลาไทย เป็นแผนสำหรับ review ยังไม่อนุญาตให้รันขั้น mutation
 รอบนี้ไม่ได้ merge/retarget PR, เปลี่ยน deployment source, deploy หรือใช้ฐาน hosted ผ่าน SQL
 ไม่แก้ implementation/Frontend; การส่งเอกสารแผนเข้า PR ไม่ใช่การอนุมัติให้ merge, migrate หรือ deploy
 
-## สถานะที่ตรวจแล้ว
+## สถานะก่อน release
+
+ณ 2026-11-13 PR #8–#11 รวมเข้า main แล้ว; PR #12 และ Frontend PR #13 ยังเป็น draft
+PR #12 retarget ไป main แล้ว ต้องแก้ conflict และตรวจ candidate/CI ก่อนตัดสินใจ merge
+เจ้าของรายงานว่า Render Auto-Deploy ปิดแล้วและ live ยังเป็น `a303f7c`;
+Vercel Production ยังใช้ branch `feat/frontend-auth-admin` ตามที่ตรวจครั้งก่อน
+ให้เจ้าของยืนยัน deployment settings และ SHA อีกครั้งก่อน release window
+การ merge code ไม่ใช่การอนุมัติ migration หรือ deployment
+
+ส่วนต่อไปเป็น snapshot ประวัติการเตรียมแผนวันที่ 2026-11-12 ไม่ใช่สถานะ PR ปัจจุบัน
+
+## Snapshot ประวัติที่ตรวจแล้ว
 
 | งาน | Head ที่ตรวจ | Base ปัจจุบัน | สถานะ |
 |---|---|---|---|
@@ -53,8 +64,10 @@ SELECT version FROM supabase_migrations.schema_migrations ORDER BY version;
 
 4. เทียบ schema/constraints/triggers/function definitions กับ migrations001–006 และบันทึกวิธีที่เคยติดตั้ง
    signature/existence ไม่พิสูจน์ว่า definition ตรงกัน; export schema แบบ owner ไว้นอก Gitเพื่อเทียบเมื่อจำเป็น
-   ก่อนติดตั้ง007ต้องมี dependencies001–006ครบ และไม่มีตาราง/ฟังก์ชัน007อยู่เลย
-   หากมี007บางส่วนหรือมีครบแล้วให้หยุดตรวจประวัติ/นิยาม ไม่รันซ้ำ ไม่เติม IF NOT EXISTS เพื่อข้ามความต่าง
+      ก่อนติดตั้ง007ต้องมี dependencies001–006ครบ และไม่มีตาราง/ฟังก์ชัน007อยู่เลย
+      ตรวจ `backend_product_save_checked(uuid,jsonb,boolean,jsonb)` ของ008 แยกด้วย
+      หาก007หรือ008มีบางส่วน มีครบแล้ว หรือสถานะไม่แน่ใจ ให้หยุดตรวจประวัติ/นิยาม ไม่รันซ้ำ
+      ไม่เติม IF NOT EXISTS เพื่อข้ามความต่าง
 5. อย่ารัน001–006ซ้ำ, seed, integration/bootstrap.sql หรือ integration/member_builds.sql บนฐานนี้
    อย่าใช้ supabase db push/reset/repair จนรู้ว่า history/ไฟล์ local ตรงกัน:
    repo นี้ใช้ backend/migrations/*.up.sql ไม่ใช่ Supabase CLI layout; CLI history อาจไม่ได้บันทึก SQL ที่รันก่อนหน้า
@@ -64,7 +77,8 @@ SELECT version FROM supabase_migrations.schema_migrations ORDER BY version;
    ต้องเลือก successful deploy เดิมที่ artifact ยังใช้ rollback ได้ และจดขั้นตอนคืน source/environment
    ตรวจว่าไม่มี deployment กำลังรัน/queued อยู่ก่อนเปลี่ยนแผน
 
-**Gate ผ่านเมื่อ:** เจ้าของยืนยัน project, dependencies/history,007ยังไม่ติดตั้ง, backup และ live rollback targets
+**Gate ผ่านเมื่อ:** เจ้าของยืนยัน project, dependencies/history, สถานะ007และ008,
+backup และ live rollback targets; ถ้า migration มีแล้วต้องตรวจนิยามและสิทธิ์ก่อนตัดสินใจ
 ถ้า schema/history ต่างจากคาด แผน migration ยัง blocked จนเทียบเสร็จ แม้ health จะ200
 
 ## Gate 1 — รวม code โดยยังไม่ deploy
@@ -79,14 +93,11 @@ SELECT version FROM supabase_migrations.schema_migrations ORDER BY version;
 
 | ลำดับ | งานที่ทำเมื่ออนุญาต | เงื่อนไขก่อน merge |
 |---|---|---|
-| 1 | review/merge #8 → main | ยืนยัน contract no-OTP |
-| 2 | retarget #9 → main | ตรวจ diff/CI ใหม่ แล้ว merge |
-| 3 | retarget #10 → main | รักษา signup/member/Admin และไม่เอา OTP กลับมา; CI ใหม่ผ่าน |
-| 4 | retarget #11 → main | ตรวจ Render/config/health diff; CI ใหม่ผ่าน |
-| 5 | retarget #12 → main; review แล้ว Ready for review | ต้องมี P0002 fix126a51e, private-only,007 และ CI ใหม่ผ่านก่อน merge |
-| 6 | ฟลุคเปิด/review FE PR feat/frontend-private-builds → main | รวม Auth/Admin/private draftในPRเดียวได้; แก้ README conflictร่วมกันแล้ว CI ผ่าน |
+| 1–4 | #8–#11 → main | รวมแล้ว; ตรวจ main SHA ใหม่ก่อน release |
+| 5 | review #12 → main แล้ว Ready for review | รักษา P0002 fix, private-only, 007 และ Admin concurrency 008; แก้ conflict และตรวจ CI ก่อน merge |
+| 6 | review FE PR #13 → main | รวม Auth/Admin/private draftในPRเดียว; แก้ README conflictร่วมกันแล้ว CI ผ่าน |
 
-retarget ต้องทำทีละขั้นหลัง PR ก่อนหน้า mergeเข้าmainแล้ว ไม่ merge child เข้า parent branch
+ไม่ merge child เข้า parent branch
 หาก retarget แล้ว conflict ให้หยุด review ใช้ commit แก้ conflict แบบปกติบน branch ที่เกี่ยวข้อง
 ไม่แก้หรือ push branch liveโดยอัตโนมัติ โดยเฉพาะ #11 ให้ประสานเจ้าของก่อน
 PR #3 GPU/Storage proposal อยู่นอก release นี้ ไม่ต้อง mergeตามมา
@@ -117,27 +128,35 @@ npm run build
 private/public409แบบatomic, own-data/quantities preservation, unavailable-price UI และ CORSจริง
 กรณีที่ยังไม่รันต้องระบุผู้รับผิดชอบและผลกระทบ ห้ามสรุปว่า checklistผ่านครบ
 
-## Gate 2 — ติดตั้ง007ครั้งเดียว ก่อนเปิด private draft ใน Go
+## Gate 2 — ติดตั้ง 007 และ 008 ก่อน deploy Go รุ่นใหม่
 
 ทำขั้นนี้หลังอนุมัติแผนและตรวจ Gate0/1 พร้อมแล้วเท่านั้น ให้เจ้าของคนเดียวรัน
 Go/FEเดิมยังให้บริการอยู่ และ deployอัตโนมัติยังปิดเพื่อคุมลำดับ
 
 1. ตรวจ project/schema/history/backup อีกครั้งใน window
-2. ใช้เฉพาะ migrations/007_member_builds.up.sql จาก release SHAที่reviewแล้ว
-   checksumไฟล์ที่ตรวจรอบนี้:
+2. ใช้ไฟล์จาก release SHA ที่ review แล้ว ตรวจ checksum ก่อนติดตั้ง:
+   - `migrations/007_member_builds.up.sql`:
    `e74c74721fb610d72574851be61baa99696fcdee186630f35ca304bebc261dc0`
-3. ถ้าประวัติเดิมติดตั้ง versioned SQL ด้วย owner connection ให้ใช้เส้นทางเดียวกันกับไฟล์007นี้
+   - `migrations/008_admin_product_concurrency.up.sql`:
+   `6de8258522963d9324abe65c656256b61568911c0c1edb1f85e6f9922e5e0d53`
+3. ถ้าประวัติเดิมติดตั้ง versioned SQL ด้วย owner connection ให้ใช้เส้นทางเดียวกัน
    ถ้าใช้ Supabase CLI historyจริง ให้ reconcile mappingกับownerก่อน ห้ามสลับrunnerหรือrepairเอง
-   ตัวอย่าง owner psql หลังตั้ง private service/passfileนอกGitแล้ว (ยังไม่รันรอบนี้):
+   เมื่อยืนยันว่าแต่ละ migration ยังไม่มี ให้ติดตั้ง 007 แล้ว 008 ตามลำดับ โดยตรวจผลแต่ละขั้น
+   หากมีตัวใดอยู่แล้ว ให้หยุด reconcile และตรวจนิยาม/สิทธิ์ก่อน ไม่รันตัวนั้นซ้ำ
+   ตัวอย่าง owner psql สำหรับแต่ละไฟล์ หลังตั้ง private service/passfileนอกGitแล้ว (ยังไม่รันรอบนี้):
 
 ```bash
 # PGSERVICE/PGPASSFILE ตั้งไว้ใน owner environment ไม่ใส่ URL/password ลงคำสั่งหรือhistory
 psql -X -v ON_ERROR_STOP=1 \
   -c "SET lock_timeout='5s'; SET statement_timeout='60s';" \
   -f backend/migrations/007_member_builds.up.sql
+# หลัง 007 สำเร็จและตรวจ state แล้ว จึงรัน 008 หากตรวจยืนยันว่าไม่มี:
+psql -X -v ON_ERROR_STOP=1 \
+  -c "SET lock_timeout='5s'; SET statement_timeout='60s';" \
+  -f backend/migrations/008_admin_product_concurrency.up.sql
 ```
 
-ไฟล์มี BEGIN/COMMIT ในตัว ไม่ใช้ --single-transactionซ้อน ไม่ตัด transactionออก
+แต่ละไฟล์มี BEGIN/COMMIT ในตัว ไม่ใช้ --single-transactionซ้อน ไม่ตัด transactionออก
 ถ้าtimeout/errorให้หยุดตรวจ stateและlogที่redactแล้ว ไม่ retryโดยข้ามCREATEบางส่วน
 4. จด project reference,releaseSHA,checksum,เวลา,operator และผลใน change recordนอกGit
    ไม่อ้างว่ามีSupabaseCLI historyหากติดตั้งแบบSQLเอง
@@ -145,21 +164,25 @@ psql -X -v ON_ERROR_STOP=1 \
    table privilegesของanon/authenticated/service_roleเป็นfalse,
    CRUD RPCเป็นtrueเฉพาะservice_role; helpersและPUBLIC EXECUTEต้องfalse
    ตรวจ FK/count/order constraints, builds_owner_updated_idx และ trigger privateครบ
+   ตรวจนิยาม 008 และ `backend_product_save_checked(uuid,jsonb,boolean,jsonb)` ว่า SECURITY DEFINER,
+   search_path ว่าง, PUBLIC/anon/authenticated ไม่มี EXECUTE และ service_role เรียกได้
 6. หลังCOMMITแล้ว reload Data API schema cache ด้วย owner:
 
 ```sql
 NOTIFY pgrst, 'reload schema';
 ```
 
-ไม่มี backfill/seed/แก้ราคา/แก้บัญชีใน007 ไม่ใส่ synthetic evidenceหรือ fixture IDsลงฐานจริง
-007เป็น additive; rollbackแอปให้คงschema007และdraftsไว้ ไม่DROPเพื่อถอยrelease
+ไม่มี backfill/seed/แก้ราคา/แก้บัญชีใน007หรือ008 ไม่ใส่ synthetic evidenceหรือ fixture IDsลงฐานจริง
+ทั้งสอง migration เป็น additive; rollbackแอปให้คง schema และ drafts ไว้ ไม่ DROP เพื่อถอย release
 
 ## Gate 3 — Deploy Go ก่อน FE
 
 ใช้ Render service เดิม ไม่สร้างบริการ/planใหม่ เปลี่ยน sourceเป็นmainหลังตกลงกับเจ้าของ
-การบันทึก source/settings อาจ trigger deployment ให้ถือเป็นขั้นdeployและทำหลัง007ผ่านเท่านั้น
+การบันทึก source/settings อาจ trigger deployment ให้ถือเป็นขั้นdeployและทำหลัง007และ008ผ่านเท่านั้น
 Manual Deploy specific final release SHA ที่CIผ่าน แล้วตรวจ live SHAจริงในDeploys
 ไม่ใช้ latest แบบไม่จด SHA และไม่เปิดAuto-Deployกลับระหว่างตรวจ
+งดแก้สินค้าระหว่าง rollout หรือ rollback ที่ยังมี Backend รุ่นเก่าทำงาน:
+รุ่นเก่าใช้ RPC เดิมและไม่ป้องกัน Admin แก้ทับพร้อมกัน
 
 ตรวจ Root Directory=backend, Build/Start/healthตามRENDER.md และenvironmentที่ใช้อยู่:
 - APP_ENV=production, CATALOG_BACKEND=supabase, PORTจากRender
@@ -190,7 +213,8 @@ CRUD/7items+2RAM preservation, unavailable-price UI, Loading/Empty/Error
 ## Rollback และการหยุดขั้นตอน
 
 - preflight/historyผิดหรือmigrationfail: ไม่deployGoใหม่ คงแอปเดิม ตรวจtransaction stateก่อนแก้
-- Goใหม่ผิด: อย่าdeployFEใหม่; Render rollbackไปsuccessful deployเดิมที่จดไว้ คง007และdataไว้
+- Goใหม่ผิด: อย่าdeployFEใหม่; Render rollbackไปsuccessful deployเดิมที่จดไว้ คง007/008และdataไว้
+  งดแก้สินค้าขณะใช้ Backend รุ่นเก่าที่ไม่มี concurrency guard
 - FEผิดหลังGoผ่าน: rollbackVercelไปdeploymentเดิม Goใหม่ยังรองรับlegacy flowได้
 - ตรวจenvironment/source/auto-deployหลังrollback: Render Dashboard rollbackปิดauto-deploy
   แต่APIrollbackไม่ปิดให้ และrollbackแอปไม่ย้อนฐานข้อมูล
@@ -198,12 +222,12 @@ CRUD/7items+2RAM preservation, unavailable-price UI, Loading/Empty/Error
 
 ## เจ้าของงานและจุดรออนุมัติ
 
-Backend owner: review/retarget/mergeBEตามลำดับ, ownerDBpreflight/backup/007, RenderและAPI smoke
+Backend owner: review/retarget/mergeBEตามลำดับ, ownerDBpreflight/backup/007/008, RenderและAPI smoke
 ฟลุค: FE PR/README conflictร่วมกัน, FE CI/localremainingcases, VercelและBrowser smoke
 ก่อน mutationรอบถัดไปต้องได้ผลread-onlyฐาน,live settings,backup/rollbackและความเห็นชอบrelease window
 ไม่ต้องส่งsecretsในแชต; ส่งได้เฉพาะผลschema/historyที่redactแล้วและdeploySHAs
 
-## ผลตรวจเอกสาร/SQL ในรอบเตรียมนี้
+## ผลตรวจเอกสาร/SQL รอบเตรียมวันที่ 2026-11-12
 
 - SQL preflight รันผ่านทั้งก่อนและหลัง007บน PostgreSQL17 containerชั่วคราวกับ Auth schemaจำลอง
 - ตรวจว่า statementsมีเฉพาะ READ ONLY transaction, metadata SELECT และ ROLLBACK;

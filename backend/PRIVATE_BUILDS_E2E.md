@@ -72,7 +72,7 @@ chmod 600 "$E2E_STACK_DIR/start.private.log" "$E2E_STACK_DIR/stack.private.env"
 ใช้ publishable/secret keys หาก CLI แสดง หรือ ANON_KEY/SERVICE_ROLE_KEY ซึ่ง Go รองรับ
 ไม่ source ไฟล์นี้ใน FE terminal; แก้ auth config หลัง start ต้อง restart stack จาก directory นี้
 
-## 3. ติดตั้ง 001–007 เฉพาะฐาน local ว่างใหม่
+## 3. ติดตั้ง 001–008 เฉพาะฐาน local ว่างใหม่
 
 host ถูก pin ที่ 127.0.0.1; ใช้ port/password ของ local stack เท่านั้น ตัวอย่าง port54322:
 

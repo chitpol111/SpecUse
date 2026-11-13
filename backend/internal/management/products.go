@@ -16,7 +16,8 @@ import (
 
 type Repository interface {
 	LoadSnapshot(context.Context) (build.Snapshot, error)
-	SaveProduct(context.Context, string, catalog.ProductDetails, bool) (catalog.ProductDetails, error)
+	LoadSnapshotForWrite(context.Context) (build.Snapshot, map[string]json.RawMessage, error)
+	SaveProduct(context.Context, string, catalog.ProductDetails, bool, json.RawMessage) (catalog.ProductDetails, error)
 	DeactivateProduct(context.Context, string, string) error
 }
 type Change struct {
@@ -123,7 +124,7 @@ func (s *Service) Save(ctx context.Context, actor account.Identity, id string, c
 			return catalog.ProductDetails{}, account.ErrInput
 		}
 	}
-	snapshot, err := s.repo.LoadSnapshot(ctx)
+	snapshot, expected, err := s.repo.LoadSnapshotForWrite(ctx)
 	if err != nil {
 		return catalog.ProductDetails{}, err
 	}
@@ -201,7 +202,14 @@ func (s *Service) Save(ctx context.Context, actor account.Identity, id string, c
 	if _, err := repository.NewBuildMemory(snapshot); err != nil {
 		return catalog.ProductDetails{}, account.ErrInput
 	}
-	return s.repo.SaveProduct(ctx, actor.ID, p, create)
+	var original json.RawMessage
+	if !create {
+		original = expected[p.ID]
+		if len(original) == 0 {
+			return catalog.ProductDetails{}, account.ErrUnavailable
+		}
+	}
+	return s.repo.SaveProduct(ctx, actor.ID, p, create, original)
 }
 func (s *Service) Delete(ctx context.Context, actor account.Identity, id string) error {
 	if err := admin(actor); err != nil {

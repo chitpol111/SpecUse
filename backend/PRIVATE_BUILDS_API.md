@@ -17,7 +17,7 @@ Render ใช้ `feat/backend-render-ready` ที่เปิด Auto-Deploy �
 
 ## Endpoints
 
-Base local `http://127.0.0.1:8080/api/v1`; ต้องใช้ code ใน branch ใหม่และ test Supabase ที่มี migration 007
+Base local `http://127.0.0.1:8080/api/v1`; ต้องใช้ code ใน branch ใหม่และ test Supabase ที่มี migrations 001–008
 ทุก endpoint ส่ง `Authorization: Bearer <access_token>` และ responses ใช้ `Cache-Control: no-store`
 ใช้ session/refresh ผ่าน `protectedRequest` ภายใน `createAuthClient` เดิมของ FE ไม่สร้าง Auth flow อีกชุด
 
@@ -160,7 +160,7 @@ SQL integration ต้องมี Docker ใช้ PostgreSQL ชั่วค�
 ตรวจ migrations 001–007 ในฐานว่างชั่วคราว ไม่ใช่คำสั่งสำหรับรันซ้ำบน project จริง
 ไม่ใช้ synthetic examples เป็นข้อมูล specuse-dev
 
-Manual API test: ใช้ **test Supabase ที่ตั้งค่าและมี 007 แล้ว** ตาม SUPABASE_SETUP.md
+Manual API test: ใช้ **test Supabase ที่ตั้งค่าและมี 001–008 แล้ว** ตาม SUPABASE_SETUP.md
 export URL/keys ผ่าน secret manager, ไม่ตั้ง LOCAL_CATALOG_FILE, ไม่ส่ง keys ในแชต/Git
 
 ```bash

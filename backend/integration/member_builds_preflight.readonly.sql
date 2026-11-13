@@ -36,7 +36,8 @@ WITH expected(signature, phase) AS (VALUES
  ('public.backend_member_build_list(uuid,bigint,bigint)','007'),
  ('public.backend_member_build_create(uuid,jsonb)','007'),
  ('public.backend_member_build_patch(uuid,uuid,jsonb)','007'),
- ('public.backend_member_build_delete(uuid,uuid)','007')
+ ('public.backend_member_build_delete(uuid,uuid)','007'),
+ ('public.backend_product_save_checked(uuid,jsonb,boolean,jsonb)','008')
 )
 SELECT e.signature, e.phase, p.oid IS NOT NULL AS present,
        p.prosecdef AS security_definer, p.proconfig AS function_settings
@@ -89,7 +90,7 @@ LEFT JOIN pg_class c ON c.oid=to_regclass('public.' || t.name)
 LEFT JOIN pg_roles pr ON pr.rolname=r.name
 ORDER BY t.name,r.name;
 
--- After 007: CRUD RPC EXECUTE is service_role only; helpers are not exposed.
+-- After 007/008: CRUD and checked-save RPC EXECUTE is service_role only; helpers are not exposed.
 WITH expected(signature, kind) AS (VALUES
  ('public.backend_member_build_private()','helper'),
  ('public.backend_member_actor(uuid)','helper'),
@@ -100,7 +101,8 @@ WITH expected(signature, kind) AS (VALUES
  ('public.backend_member_build_list(uuid,bigint,bigint)','rpc'),
  ('public.backend_member_build_create(uuid,jsonb)','rpc'),
  ('public.backend_member_build_patch(uuid,uuid,jsonb)','rpc'),
- ('public.backend_member_build_delete(uuid,uuid)','rpc')
+ ('public.backend_member_build_delete(uuid,uuid)','rpc'),
+ ('public.backend_product_save_checked(uuid,jsonb,boolean,jsonb)','rpc')
 ), roles(name) AS (VALUES ('anon'),('authenticated'),('service_role'))
 SELECT e.signature,e.kind,r.name AS role_name,p.oid IS NOT NULL AS present,
        CASE WHEN p.oid IS NOT NULL AND pr.oid IS NOT NULL THEN
