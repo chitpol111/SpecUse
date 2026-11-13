@@ -18,6 +18,52 @@ const CATEGORIES = [
 
 const ITEM_CATEGORIES = CATEGORIES.filter((category) => category.id !== "ram");
 
+const DRAFT_KEY = "specuse.build.draft";
+const EMPTY_SELECTION = Object.fromEntries(CATEGORIES.map(({ id }) => [id, ""]));
+const EMPTY_OWNED = Object.fromEntries(CATEGORIES.map(({ id }) => [id, 0]));
+const EMPTY_DRAFT = {
+  selectedComponents: EMPTY_SELECTION,
+  ownedQuantities: EMPTY_OWNED,
+  requiredModules: 2,
+  budget: "",
+};
+
+function readDraft() {
+  let stored;
+  try {
+    stored = window.sessionStorage.getItem(DRAFT_KEY);
+  } catch {
+    return { draft: EMPTY_DRAFT, warning: "เบราว์เซอร์ไม่อนุญาตให้เก็บสเปกชั่วคราว การรีเฟรชอาจทำให้รายการหาย" };
+  }
+  if (!stored) return { draft: EMPTY_DRAFT, warning: "" };
+
+  try {
+    const draft = JSON.parse(stored);
+    if (!draft || typeof draft !== "object" ||
+        !draft.selectedComponents || !draft.ownedQuantities ||
+        !CATEGORIES.every(({ id }) =>
+          typeof draft.selectedComponents[id] === "string" &&
+          typeof draft.ownedQuantities[id] === "number" &&
+          Number.isFinite(draft.ownedQuantities[id]) && draft.ownedQuantities[id] >= 0
+        ) ||
+        typeof draft.requiredModules !== "number" || !Number.isFinite(draft.requiredModules) ||
+        draft.requiredModules < 1 || typeof draft.budget !== "string") {
+      throw new Error("Invalid build draft");
+    }
+    return {
+      draft: {
+        selectedComponents: Object.fromEntries(CATEGORIES.map(({ id }) => [id, draft.selectedComponents[id]])),
+        ownedQuantities: Object.fromEntries(CATEGORIES.map(({ id }) => [id, draft.ownedQuantities[id]])),
+        requiredModules: draft.requiredModules,
+        budget: draft.budget,
+      },
+      warning: "",
+    };
+  } catch {
+    return { draft: EMPTY_DRAFT, warning: "ข้อมูลสเปกชั่วคราวไม่ถูกต้อง กรุณาเลือกอุปกรณ์ใหม่" };
+  }
+}
+
 const CHECK_LABELS = {
   CPU_SOCKET: "CPU กับเมนบอร์ด",
   RAM_TYPE: "RAM กับเมนบอร์ด",
@@ -484,32 +530,18 @@ function BuildList({ rows }) {
 
 export default function BuildPage() {
   const { authenticated, client } = useAuth();
+  const [initialDraft] = useState(readDraft);
+  const [draftWarning, setDraftWarning] = useState(initialDraft.warning);
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [productsError, setProductsError] = useState("");
   const [activeCategory, setActiveCategory] = useState("cpu");
-  const [selectedComponents, setSelectedComponents] = useState({
-    cpu: "",
-    motherboard: "",
-    gpu: "",
-    ram: "",
-    storage: "",
-    psu: "",
-    case: "",
-  });
-  const [ownedQuantities, setOwnedQuantities] = useState({
-    cpu: 0,
-    motherboard: 0,
-    ram: 0,
-    gpu: 0,
-    storage: 0,
-    psu: 0,
-    case: 0,
-  });
-  const [requiredModules, setRequiredModules] = useState(2);
+  const [selectedComponents, setSelectedComponents] = useState(initialDraft.draft.selectedComponents);
+  const [ownedQuantities, setOwnedQuantities] = useState(initialDraft.draft.ownedQuantities);
+  const [requiredModules, setRequiredModules] = useState(initialDraft.draft.requiredModules);
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState("price-asc");
-  const [budget, setBudget] = useState("");
+  const [budget, setBudget] = useState(initialDraft.draft.budget);
   const [toast, setToast] = useState(null);
   const [showSummary, setShowSummary] = useState(false);
   const [validation, setValidation] = useState(null);
@@ -520,6 +552,16 @@ export default function BuildPage() {
   const [savePending, setSavePending] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
+
+  useEffect(() => {
+    try {
+      window.sessionStorage.setItem(DRAFT_KEY, JSON.stringify({
+        selectedComponents, ownedQuantities, requiredModules, budget,
+      }));
+    } catch {
+      setDraftWarning("เบราว์เซอร์ไม่อนุญาตให้เก็บสเปกชั่วคราว การรีเฟรชอาจทำให้รายการหาย");
+    }
+  }, [selectedComponents, ownedQuantities, requiredModules, budget]);
 
   const loadProducts = useCallback(async (signal) => {
     setLoadingProducts(true);
@@ -584,9 +626,12 @@ export default function BuildPage() {
               category: "ram",
               kind: "ram",
             }
-          : null;
+          : { name: "สินค้าไม่พร้อมใช้งาน กรุณาเลือกใหม่", category: "ram", kind: "ram" };
       } else {
-        selected[category.id] = productsByID.get(id) || null;
+        const product = productsByID.get(id);
+        selected[category.id] = product?.category === category.id
+          ? product
+          : { name: "สินค้าไม่พร้อมใช้งาน กรุณาเลือกใหม่", category: category.id, specs: {} };
       }
     }
     return selected;
@@ -903,6 +948,12 @@ export default function BuildPage() {
           <div className="mt-6">
             <BuildNotice />
           </div>
+
+          {draftWarning && (
+            <div className="mt-4">
+              <ErrorNotice>{draftWarning}</ErrorNotice>
+            </div>
+          )}
 
           {toast && !showSummary && (
             <div
