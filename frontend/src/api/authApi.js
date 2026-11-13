@@ -184,13 +184,11 @@ export function createAuthClient(onChange) {
     });
     const data = await protectedRequest(`/admin/products?${query}`);
     if (!data || !Array.isArray(data.items) ||
+        data.revision_format !== "sha256" ||
         !Number.isInteger(data.page) || data.page < 1 ||
         !Number.isInteger(data.page_size) || data.page_size < 1 ||
         !Number.isInteger(data.total) || data.total < 0 ||
-        !data.items.every((item) => item && typeof item.id === "string" &&
-          typeof item.name === "string" && typeof item.category === "string" &&
-          typeof item.brand === "string" && Number.isInteger(item.price_thb) &&
-          typeof item.is_active === "boolean")) {
+        !data.items.every(isAdminProduct)) {
       throw new AuthError("รายการสินค้าจาก Backend มีรูปแบบไม่ถูกต้อง");
     }
     return data;
@@ -200,7 +198,8 @@ export function createAuthClient(onChange) {
     return product && typeof product.id === "string" &&
       typeof product.name === "string" && typeof product.category === "string" &&
       typeof product.brand === "string" && Number.isInteger(product.price_thb) &&
-      typeof product.is_active === "boolean";
+      typeof product.is_active === "boolean" &&
+      typeof product.revision === "string" && /^[0-9a-f]{64}$/.test(product.revision);
   }
 
   async function saveAdminProduct(path, method, body, expectedStatus) {

@@ -205,11 +205,12 @@ describe("auth API client", () => {
       brand: "Example",
       price_thb: 5000,
       is_active: true,
+      revision: "a".repeat(64),
     };
     global.fetch
       .mockResolvedValueOnce(response(200, { data: { session } }))
       .mockResolvedValueOnce(response(200, {
-        data: { items: [product], page: 2, page_size: 10, total: 11 },
+        data: { items: [product], page: 2, page_size: 10, total: 11, revision_format: "sha256" },
       }))
       .mockResolvedValueOnce(response(201, { data: { product } }));
 
@@ -219,7 +220,7 @@ describe("auth API client", () => {
       search: "Example CPU",
       page: 2,
       pageSize: 10,
-    })).resolves.toEqual({ items: [product], page: 2, page_size: 10, total: 11 });
+    })).resolves.toEqual({ items: [product], page: 2, page_size: 10, total: 11, revision_format: "sha256" });
     await expect(client.createAdminProduct({
       name: product.name,
       category: product.category,
@@ -247,5 +248,27 @@ describe("auth API client", () => {
     await expect(client.updateAdminProduct("cpu-1", { category: "gpu" }))
       .rejects.toThrow("ไม่สามารถเปลี่ยนหมวดหมู่สินค้าได้");
     expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects an admin catalog response without a revision", async () => {
+    const client = createAuthClient(jest.fn());
+    global.fetch
+      .mockResolvedValueOnce(response(200, { data: { session } }))
+      .mockResolvedValueOnce(response(200, { data: {
+        items: [{ id: "cpu-1", name: "CPU", category: "cpu", brand: "Example",
+          price_thb: 1000, is_active: true }],
+        page: 1, page_size: 20, total: 1, revision_format: "sha256",
+      } }));
+    await client.login({ email: user.email, password: "password" });
+    await expect(client.fetchAdminProducts()).rejects.toThrow("รูปแบบไม่ถูกต้อง");
+  });
+
+  it("rejects an empty admin catalog from an older backend", async () => {
+    const client = createAuthClient(jest.fn());
+    global.fetch
+      .mockResolvedValueOnce(response(200, { data: { session } }))
+      .mockResolvedValueOnce(response(200, { data: { items: [], page: 1, page_size: 20, total: 0 } }));
+    await client.login({ email: user.email, password: "password" });
+    await expect(client.fetchAdminProducts()).rejects.toThrow("รูปแบบไม่ถูกต้อง");
   });
 });

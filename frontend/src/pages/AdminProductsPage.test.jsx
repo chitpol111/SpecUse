@@ -6,6 +6,7 @@ import App from "../App";
 const user = { email: "admin@example.test" };
 const profile = { display_name: "Admin", role: "admin" };
 const session = { access_token: "access", refresh_token: "refresh" };
+const revision = "a".repeat(64);
 const response = (status, data) => ({
   ok: status >= 200 && status < 300,
   status,
@@ -51,18 +52,21 @@ describe("admin products page", () => {
     });
   }
 
-  async function signInAsAdminAndOpenProducts() {
+  async function signInAsAdminAndOpenProducts(backendSupportsRevision = true) {
     global.fetch.mockImplementation(async (url, options = {}) => {
       if (url.endsWith("/auth/login")) return response(200, { data: { session } });
       if (url.endsWith("/me")) return response(200, { data: { user, profile } });
       if (url.includes("/admin/products") && options.method === "POST") {
-        const product = { id: "cpu-1", ...JSON.parse(options.body) };
+        const product = { id: "cpu-1", ...JSON.parse(options.body), revision };
         products = [product];
         return response(201, { data: { product } });
       }
       if (url.endsWith("/admin/products/cpu-1") && options.method === "PATCH") {
-        const changes = JSON.parse(options.body);
-        products = products.map((product) => ({ ...product, ...changes }));
+        const { expected_revision, ...changes } = JSON.parse(options.body);
+        if (expected_revision !== products[0].revision) {
+          return response(409, { error: { code: "CONFLICT", message: "Conflict" } });
+        }
+        products = products.map((product) => ({ ...product, ...changes, revision: "b".repeat(64) }));
         return response(200, { data: { product: products[0] } });
       }
       if (url.endsWith("/admin/products/cpu-1") && options.method === "DELETE") {
@@ -71,7 +75,8 @@ describe("admin products page", () => {
       }
       if (url.includes("/admin/products")) {
         return response(200, {
-          data: { items: products, page: 1, page_size: 20, total: products.length },
+          data: { items: products, page: 1, page_size: 20, total: products.length,
+            ...(backendSupportsRevision ? { revision_format: "sha256" } : {}) },
         });
       }
       throw new Error(`Unexpected API request: ${url}`);
@@ -91,6 +96,15 @@ describe("admin products page", () => {
     expect(container.querySelector("main").textContent).toContain("เข้าสู่ระบบด้วยบัญชีผู้ดูแล");
     expect(container.querySelector('main a[href="/login"]')).not.toBeNull();
     expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it("blocks product creation when the backend cannot protect edits", async () => {
+    await signInAsAdminAndOpenProducts(false);
+    expect(container.querySelector('[role="alert"]').textContent).toContain("รูปแบบไม่ถูกต้อง");
+    const form = container.querySelector("#product-name").form;
+    expect(form.querySelector('button[type="submit"]').disabled).toBe(true);
+    await act(async () => form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })));
+    expect(global.fetch.mock.calls.some(([, options]) => options?.method === "POST" && options.body?.includes('"category"'))).toBe(false);
   });
 
   it("creates and soft-deactivates a product without allowing category changes", async () => {
@@ -128,7 +142,13 @@ describe("admin products page", () => {
     ));
     expect(container.querySelector('[role="status"]').textContent).toContain("บันทึกการแก้ไข Test CPU แล้ว");
     const updateCall = global.fetch.mock.calls.find(([, options]) => options?.method === "PATCH");
-    expect(JSON.parse(updateCall[1].body)).toEqual({ price_thb: 1200, is_active: true, name: "Test CPU", brand: "Example", specs: { cpu_socket: "AM5" } });
+    expect(JSON.parse(updateCall[1].body)).toEqual({ price_thb: 1200, is_active: true, name: "Test CPU", brand: "Example", specs: { cpu_socket: "AM5" }, expected_revision: revision });
+    setValue("#product-price", "1300");
+    await act(async () => container.querySelector("#product-name").form.dispatchEvent(
+      new Event("submit", { bubbles: true, cancelable: true }),
+    ));
+    const updateCalls = global.fetch.mock.calls.filter(([, options]) => options?.method === "PATCH");
+    expect(JSON.parse(updateCalls[1][1].body).expected_revision).toBe("b".repeat(64));
 
     window.confirm = jest.fn(() => true);
     const deactivateButton = Array.from(container.querySelectorAll("button"))
@@ -137,6 +157,26 @@ describe("admin products page", () => {
     expect(window.confirm).toHaveBeenCalledTimes(1);
     expect(container.querySelector("main").textContent).toContain("ปิดใช้งาน Test CPU แล้ว");
     expect(container.querySelector("main").textContent).toContain("ปิดใช้งาน");
+  });
+
+  it("preserves the form and explains a stale edit conflict", async () => {
+    await signInAsAdminAndOpenProducts();
+    products = [{ id: "cpu-1", name: "Original", category: "cpu", brand: "Example",
+      price_thb: 1000, is_active: true, specs: { cpu_socket: "AM5" }, revision }];
+    setValue("#product-search", "Original");
+    await act(async () => container.querySelector("#product-search").form.dispatchEvent(
+      new Event("submit", { bubbles: true, cancelable: true }),
+    ));
+    await act(async () => Array.from(container.querySelectorAll("button"))
+      .find((button) => button.textContent === "แก้ไข").click());
+    setValue("#product-name", "My unsaved edit");
+    products = [{ ...products[0], name: "Another admin", revision: "b".repeat(64) }];
+    await act(async () => container.querySelector("#product-name").form.dispatchEvent(
+      new Event("submit", { bubbles: true, cancelable: true }),
+    ));
+    expect(container.querySelector('[role="alert"]').textContent).toContain("ข้อมูลสินค้าขัดแย้ง");
+    expect(container.querySelector("#product-name").value).toBe("My unsaved edit");
+    expect(products[0].name).toBe("Another admin");
   });
 
   it("uses category-specific fields and keeps motherboard advanced metadata when editing", async () => {

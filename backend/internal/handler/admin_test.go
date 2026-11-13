@@ -93,13 +93,33 @@ func TestAdminHTTPAuthorizationAndCRUD(t *testing.T) {
 		t.Fatal("member mutation reached DB")
 	}
 	repo.role = "admin" // authoritative DB change takes effect without a new JWT
+	list := request("GET", "/api/v1/admin/products", "", token)
+	var page struct {
+		Data struct {
+			Items []struct {
+				Revision string `json:"revision"`
+			} `json:"items"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(list.Body.Bytes(), &page); err != nil || len(page.Data.Items) != 1 || len(page.Data.Items[0].Revision) != 64 {
+		t.Fatalf("missing admin revision: %s (%v)", list.Body.String(), err)
+	}
+	if w := request("PATCH", "/api/v1/admin/products/"+product, `{"price_thb":300}`, token); w.Code != 400 {
+		t.Fatalf("missing revision accepted: %d %s", w.Code, w.Body.String())
+	}
+	if w := request("PATCH", "/api/v1/admin/products/"+product, `{"price_thb":300,"expected_revision":null}`, token); w.Code != 400 {
+		t.Fatalf("null revision accepted: %d %s", w.Code, w.Body.String())
+	}
+	if w := request("PATCH", "/api/v1/admin/products/"+product, `{"price_thb":300,"expected_revision":"`+strings.Repeat("0", 64)+`"}`, token); w.Code != 409 {
+		t.Fatalf("stale revision did not conflict: %d %s", w.Code, w.Body.String())
+	}
 	for _, tt := range []struct {
 		method, path, body string
 		want               int
 	}{
 		{"GET", "/api/v1/admin/products", "", 200},
 		{"POST", "/api/v1/admin/products", `{"name":"Case","category":"case","brand":"Demo","price_thb":200,"is_active":true}`, 201},
-		{"PATCH", "/api/v1/admin/products/" + product, `{"price_thb":300}`, 200},
+		{"PATCH", "/api/v1/admin/products/" + product, `{"price_thb":300,"expected_revision":"` + page.Data.Items[0].Revision + `"}`, 200},
 		{"DELETE", "/api/v1/admin/products/" + product, "", 204},
 		{"POST", "/api/v1/admin/products", `{"id":"22222222-2222-4222-8222-222222222222","name":"X"}`, 400},
 	} {
