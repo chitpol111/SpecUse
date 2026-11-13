@@ -1,4 +1,6 @@
-const OWNED_QUANTITY_CATEGORIES = new Set(["cpu", "motherboard", "ram"]);
+const OWNED_QUANTITY_CATEGORIES = new Set([
+  "cpu", "motherboard", "ram", "gpu", "storage", "psu", "case",
+]);
 
 export function getOwnedQuantitiesAfterSelection(
   quantities,

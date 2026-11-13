@@ -1,4 +1,4 @@
-const API_BASE_URL = (
+export const API_BASE_URL = (
   process.env.REACT_APP_API_BASE_URL || "http://127.0.0.1:8080/api/v1"
 ).replace(/\/+$/, "");
 
@@ -110,5 +110,9 @@ export async function fetchProducts({ signal } = {}) {
 }
 
 export function validateBuild(build, { signal } = {}) {
-  return request("/builds/validate", { method: "POST", body: build, signal });
+  return request("/builds/validate?validation_mode=gpu_storage_v1", {
+    method: "POST",
+    body: build,
+    signal,
+  });
 }

@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { fetchProducts, validateBuild } from "../api/specUseApi";
 import { getOwnedQuantitiesAfterSelection } from "./buildSelection";
+import { useAuth } from "../auth/AuthContext";
 
 const CATEGORIES = [
   { id: "cpu", label: "ซีพียู", shortLabel: "CPU", mark: "CPU" },
@@ -15,7 +16,38 @@ const CATEGORIES = [
   { id: "case", label: "เคส", shortLabel: "Case", mark: "CASE" },
 ];
 
-const VALIDATED_CATEGORIES = new Set(["cpu", "motherboard", "ram"]);
+const ITEM_CATEGORIES = CATEGORIES.filter((category) => category.id !== "ram");
+
+const CHECK_LABELS = {
+  CPU_SOCKET: "CPU กับเมนบอร์ด",
+  RAM_TYPE: "RAM กับเมนบอร์ด",
+  GPU_MOTHERBOARD: "การ์ดจอกับเมนบอร์ด",
+  STORAGE_MOTHERBOARD: "พื้นที่จัดเก็บกับเมนบอร์ด",
+  MOTHERBOARD_RESOURCES: "ช่องเชื่อมต่อบนเมนบอร์ด",
+  GPU_PSU: "การ์ดจอกับ PSU",
+  GPU_CASE: "การ์ดจอกับเคส",
+  STORAGE_PSU: "พื้นที่จัดเก็บกับ PSU",
+  STORAGE_CASE: "พื้นที่จัดเก็บกับเคส",
+  SYSTEM_PSU: "กำลังไฟของระบบ",
+  SYSTEM_CASE: "พื้นที่ภายในเคส",
+};
+
+function getCompatibilitySummary(validation, hasRam) {
+  const checks = validation.compatibility.checks;
+  const relevantChecks = checks.filter(
+    (check) => check.code === "CPU_SOCKET" || check.code === "RAM_TYPE" || check.status === "failed",
+  );
+  const requiredCodes = hasRam ? ["CPU_SOCKET", "RAM_TYPE"] : ["CPU_SOCKET"];
+  const failed = validation.compatibility.status === "failed" ||
+    validation.issues.length > 0 || checks.some((check) => check.status === "failed");
+  const basicPassed = requiredCodes.every((code) =>
+    checks.some((check) => check.code === code && check.status === "passed"),
+  );
+  return {
+    checks: relevantChecks,
+    status: failed ? "failed" : basicPassed ? "passed" : "unknown",
+  };
+}
 
 const formatTHB = (amount) =>
   `${new Intl.NumberFormat("th-TH").format(amount)} ฿`;
@@ -99,7 +131,7 @@ function CategoryIcon({ category, className = "h-5 w-5" }) {
   );
 }
 
-function FixtureNotice() {
+function BuildNotice() {
   return (
     <div className="flex items-start gap-3 rounded-xl border border-ruby-400/20 bg-ruby-950/40 px-4 py-3 text-sm leading-6 text-ruby-100">
       <svg
@@ -116,8 +148,7 @@ function FixtureNotice() {
         <path d="M12 11v5m0-8h.01" />
       </svg>
       <p>
-        ตอนนี้กำลังใช้สินค้า <strong>[LOCAL TEST]</strong> จาก Backend ในเครื่อง
-        ราคานี้เป็นข้อมูลทดลอง ยังไม่ใช่ catalog จริง และระบบบันทึกสเปกยังไม่พร้อมใช้งาน
+        ราคาเป็นข้อมูลอ้างอิงจาก Backend และการตรวจยังไม่ครอบคลุมอุปกรณ์ทุกส่วน
       </p>
     </div>
   );
@@ -212,6 +243,7 @@ function BuilderSummary({
   selectedItems,
   selectedCount,
   validation,
+  compatibilitySummary,
   validationError,
   validating,
   budget,
@@ -320,7 +352,7 @@ function BuilderSummary({
           : validationError
             ? "ตรวจราคาไม่สำเร็จ"
             : validation
-              ? "ราคาจากข้อมูลทดลองของ Backend"
+              ? "ราคาอ้างอิงจาก Backend"
               : "เลือก CPU และเมนบอร์ดเพื่อคำนวณราคา"}
       </p>
       {validationError && (
@@ -331,13 +363,19 @@ function BuilderSummary({
       {validation && (
         <p
           className={`mt-3 text-sm font-bold ${
-            validation.compatible ? "text-emerald-300" : "text-ruby-300"
+            compatibilitySummary.status === "passed"
+              ? "text-emerald-300"
+              : compatibilitySummary.status === "failed"
+                ? "text-ruby-300"
+                : "text-amber-200"
           }`}
           role="status"
         >
-          {validation.compatible
-            ? "อุปกรณ์ที่ตรวจเข้ากันได้"
-            : "พบรายการที่ไม่เข้ากัน"}
+          {compatibilitySummary.status === "passed"
+            ? "การตรวจพื้นฐานผ่าน"
+            : compatibilitySummary.status === "failed"
+              ? "พบรายการที่ไม่เข้ากัน"
+              : "ยังตรวจพื้นฐานไม่ได้"}
         </p>
       )}
 
@@ -350,7 +388,7 @@ function BuilderSummary({
         สร้างชุดสเปก · ดูรายการที่เลือก
       </button>
       <p className="mt-2 text-center text-xs leading-5 text-slate-400">
-        ยังไม่สามารถบันทึกสเปกได้ในต้นแบบนี้
+        บันทึกสเปกส่วนตัวได้ในหน้าสรุปรายการ
       </p>
     </aside>
   );
@@ -445,6 +483,7 @@ function BuildList({ rows }) {
 }
 
 export default function BuildPage() {
+  const { authenticated, client } = useAuth();
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [productsError, setProductsError] = useState("");
@@ -462,6 +501,10 @@ export default function BuildPage() {
     cpu: 0,
     motherboard: 0,
     ram: 0,
+    gpu: 0,
+    storage: 0,
+    psu: 0,
+    case: 0,
   });
   const [requiredModules, setRequiredModules] = useState(2);
   const [search, setSearch] = useState("");
@@ -472,6 +515,11 @@ export default function BuildPage() {
   const [validation, setValidation] = useState(null);
   const [validationError, setValidationError] = useState("");
   const [validating, setValidating] = useState(false);
+  const [saveName, setSaveName] = useState("");
+  const [saveDescription, setSaveDescription] = useState("");
+  const [savePending, setSavePending] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [saveMessage, setSaveMessage] = useState("");
 
   const loadProducts = useCallback(async (signal) => {
     setLoadingProducts(true);
@@ -545,24 +593,16 @@ export default function BuildPage() {
   }, [productsByID, ramModels, selectedComponents]);
 
   const selectionCount = Object.values(selectedComponents).filter(Boolean).length;
+  const compatibilitySummary = validation
+    ? getCompatibilitySummary(validation, Boolean(selectedComponents.ram))
+    : null;
   const requestPayload = useMemo(
     () => ({
-      items: [
-        ...(selectedComponents.cpu
-          ? [{
-              product_id: selectedComponents.cpu,
-              quantity: 1,
-              owned_quantity: ownedQuantities.cpu,
-            }]
-          : []),
-        ...(selectedComponents.motherboard
-          ? [{
-              product_id: selectedComponents.motherboard,
-              quantity: 1,
-              owned_quantity: ownedQuantities.motherboard,
-            }]
-          : []),
-      ],
+      items: ITEM_CATEGORIES.flatMap(({ id }) =>
+        selectedComponents[id]
+          ? [{ product_id: selectedComponents[id], quantity: 1, owned_quantity: ownedQuantities[id] }]
+          : [],
+      ),
       ram_items: selectedComponents.ram
         ? [{
             ram_model_id: selectedComponents.ram,
@@ -574,16 +614,29 @@ export default function BuildPage() {
     [
       ownedQuantities,
       requiredModules,
-      selectedComponents.cpu,
-      selectedComponents.motherboard,
-      selectedComponents.ram,
+      selectedComponents,
     ],
   );
+  const saveSnapshot = useRef(null);
+  saveSnapshot.current = { authenticated, requestPayload, saveName, saveDescription };
+
+  useEffect(() => {
+    setSaveMessage("");
+    setSaveError("");
+  }, [authenticated, requestPayload, saveName, saveDescription]);
 
   useEffect(() => {
     if (!selectedComponents.cpu || !selectedComponents.motherboard) {
       setValidation(null);
       setValidationError("");
+      setValidating(false);
+      return undefined;
+    }
+    if (selectedComponents.ram && (!Number.isSafeInteger(requiredModules) ||
+        !Number.isSafeInteger(ownedQuantities.ram) || requiredModules < 1 ||
+        ownedQuantities.ram < 0 || ownedQuantities.ram > requiredModules)) {
+      setValidation(null);
+      setValidationError("จำนวน RAM ต้องเป็นจำนวนเต็มในช่วงที่รองรับ");
       setValidating(false);
       return undefined;
     }
@@ -600,7 +653,14 @@ export default function BuildPage() {
           !Array.isArray(result.issues) ||
           !Array.isArray(result.items) ||
           !Array.isArray(result.ram_selections) ||
-          !Number.isInteger(result.total_price_thb)
+          !Number.isInteger(result.total_price_thb) ||
+          result.compatibility?.mode !== "gpu_storage_v1" ||
+          !["passed", "failed", "unknown"].includes(result.compatibility.status) ||
+          !Array.isArray(result.compatibility.checks) ||
+          !result.compatibility.checks.every((check) =>
+            check && ["passed", "failed", "unknown"].includes(check.status) &&
+            typeof check.code === "string" && typeof check.message === "string"
+          )
         ) {
           throw new Error("ผลตรวจจาก Backend ไม่ตรงกับ API contract");
         }
@@ -614,7 +674,7 @@ export default function BuildPage() {
       });
 
     return () => controller.abort();
-  }, [requestPayload, selectedComponents.cpu, selectedComponents.motherboard]);
+  }, [requestPayload, selectedComponents.cpu, selectedComponents.motherboard, selectedComponents.ram, requiredModules, ownedQuantities.ram]);
 
   const categoryProducts = useMemo(() => {
     const category = CATEGORIES.find((item) => item.id === activeCategory);
@@ -718,8 +778,7 @@ export default function BuildPage() {
             : productDetails(item).join(" · ") || item.brand,
         quantity: category.id === "ram" ? `${requiredModules} โมดูล` : "1 ชิ้น",
         status:
-          (category.id === "cpu" && ownedQuantities.cpu > 0) ||
-          (category.id === "motherboard" && ownedQuantities.motherboard > 0) ||
+          (category.id !== "ram" && ownedQuantities[category.id] > 0) ||
           (category.id === "ram" && ownedQuantities.ram >= requiredModules)
             ? "มีแล้ว"
             : "ยังไม่มี",
@@ -736,7 +795,6 @@ export default function BuildPage() {
 
   const selectedCategory = CATEGORIES.find((item) => item.id === activeCategory);
   const hasCategoryProducts = categoryProducts.length > 0;
-  const categorySupported = VALIDATED_CATEGORIES.has(activeCategory);
 
   function chooseCategory(categoryID) {
     setActiveCategory(categoryID);
@@ -744,7 +802,6 @@ export default function BuildPage() {
   }
 
   function addToBuild(item) {
-    if (!categorySupported) return;
     setOwnedQuantities((current) =>
       getOwnedQuantitiesAfterSelection(
         current,
@@ -763,6 +820,39 @@ export default function BuildPage() {
       category: selectedCategory?.label || "อุปกรณ์",
       name: itemName,
     });
+  }
+
+  async function saveBuild(event) {
+    event.preventDefault();
+    if (savePending) return;
+    const name = saveName.trim();
+    if (!name || [...name].length > 100 || [...saveDescription].length > 2000 ||
+        name.includes("\0") || saveDescription.includes("\0")) {
+      setSaveError("ชื่อสเปกต้องมี 1–100 ตัวอักษร และคำอธิบายไม่เกิน 2,000 ตัวอักษร");
+      return;
+    }
+    if (selectedComponents.ram && (!Number.isSafeInteger(requiredModules) ||
+        !Number.isSafeInteger(ownedQuantities.ram) || requiredModules < 1 ||
+        ownedQuantities.ram < 0 || ownedQuantities.ram > requiredModules)) {
+      setSaveError("จำนวน RAM ต้องเป็นจำนวนเต็มในช่วงที่รองรับ");
+      return;
+    }
+    setSavePending(true);
+    setSaveError("");
+    setSaveMessage("");
+    const snapshot = saveSnapshot.current;
+    try {
+      await client.createBuild({ name, description: saveDescription, visibility: "private", ...requestPayload });
+      const current = saveSnapshot.current;
+      if (current.authenticated && current.requestPayload === snapshot.requestPayload &&
+          current.saveName === snapshot.saveName && current.saveDescription === snapshot.saveDescription) {
+        setSaveMessage("บันทึกสเปกส่วนตัวแล้ว");
+      }
+    } catch (error) {
+      if (saveSnapshot.current.authenticated) setSaveError(error.message);
+    } finally {
+      setSavePending(false);
+    }
   }
 
   const openSummary = () => {
@@ -811,7 +901,7 @@ export default function BuildPage() {
           </div>
 
           <div className="mt-6">
-            <FixtureNotice />
+            <BuildNotice />
           </div>
 
           {toast && !showSummary && (
@@ -884,7 +974,7 @@ export default function BuildPage() {
 
           {!loadingProducts && !productsError && products.length === 0 && (
             <div className="mt-7 max-w-2xl">
-              <ErrorNotice>Backend ยังไม่มีสินค้า active ให้ทดลอง เลือกตรวจสอบข้อมูล fixture แล้วลองใหม่</ErrorNotice>
+              <ErrorNotice>Backend ยังไม่มีสินค้าเปิดใช้งาน ตรวจสอบรายการสินค้าแล้วลองใหม่</ErrorNotice>
               <button
                 type="button"
                 onClick={() => loadProducts()}
@@ -915,22 +1005,28 @@ export default function BuildPage() {
                     {validation && (
                       <div
                         className={`mt-5 rounded-xl border p-4 ${
-                          validation.compatible
+                          compatibilitySummary.status === "passed"
                             ? "border-emerald-400/25 bg-emerald-950/25"
-                            : "border-ruby-400/30 bg-ruby-950/30"
+                            : compatibilitySummary.status === "failed"
+                              ? "border-ruby-400/30 bg-ruby-950/30"
+                              : "border-amber-300/20 bg-amber-950/20"
                         }`}
                         role="status"
                       >
                         <p
                           className={`font-bold ${
-                            validation.compatible
+                            compatibilitySummary.status === "passed"
                               ? "text-emerald-200"
-                              : "text-ruby-200"
+                              : compatibilitySummary.status === "failed"
+                                ? "text-ruby-200"
+                                : "text-amber-100"
                           }`}
                         >
-                          {validation.compatible
-                            ? "เข้ากันได้ทั้งหมด"
-                            : "พบอุปกรณ์ที่อาจไม่เข้ากัน"}
+                          {compatibilitySummary.status === "passed"
+                            ? "การตรวจพื้นฐานผ่าน"
+                            : compatibilitySummary.status === "failed"
+                              ? "พบอุปกรณ์ที่ไม่เข้ากัน"
+                              : "ยังตรวจพื้นฐานไม่ได้"}
                         </p>
                         {validation.issues.length > 0 && (
                           <ul className="mt-2 list-inside list-disc space-y-1 text-sm leading-6 text-ruby-100">
@@ -939,6 +1035,16 @@ export default function BuildPage() {
                             ))}
                           </ul>
                         )}
+                        <ul className="mt-2 space-y-1 text-sm leading-6 text-slate-200">
+                          {compatibilitySummary.checks.map((check) => (
+                            <li key={check.code}>
+                              {CHECK_LABELS[check.code] || check.code} — {check.status === "passed" ? "ผ่าน" : check.status === "failed" ? "ไม่ผ่าน" : "ยังตรวจไม่ได้"}: {check.message}
+                            </li>
+                          ))}
+                        </ul>
+                        <p className="mt-2 text-xs leading-5 text-slate-300">
+                          ตรวจพื้นฐานเฉพาะ CPU socket และชนิด RAM ที่เลือก ไม่รับรอง BIOS หรือความเข้ากันของอุปกรณ์อื่น
+                        </p>
                       </div>
                     )}
                     {validating && (
@@ -961,7 +1067,7 @@ export default function BuildPage() {
                       <BuildList rows={summaryRows} />
                     </div>
                     <p className="mt-3 text-xs leading-5 text-slate-400">
-                      ราคาเป็นข้อมูลตัวอย่างจาก Backend ใช้เพื่อวางแผนเท่านั้น และคำนวณเฉพาะอุปกรณ์ที่ยังไม่มีในชุด
+                      ราคาอ้างอิงจาก Backend ใช้เพื่อวางแผนเท่านั้น และคำนวณเฉพาะอุปกรณ์ที่ยังไม่มีในชุด
                     </p>
                   </div>
 
@@ -986,40 +1092,25 @@ export default function BuildPage() {
                         อุปกรณ์ที่มีอยู่แล้ว
                       </legend>
                       <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                        <label className="text-xs text-slate-300">
-                          CPU
-                          <select
-                            value={ownedQuantities.cpu}
-                            onChange={(event) =>
-                              setOwnedQuantities((current) => ({
-                                ...current,
-                                cpu: Number(event.target.value),
-                              }))
-                            }
-                            disabled={!selectedComponents.cpu || validating}
-                            className="mt-1 min-h-10 w-full rounded-lg border border-white/10 bg-obsidian-900 px-3 text-sm text-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            <option value={0}>ยังไม่มี</option>
-                            <option value={1}>มีอยู่แล้ว</option>
-                          </select>
-                        </label>
-                        <label className="text-xs text-slate-300">
-                          เมนบอร์ด
-                          <select
-                            value={ownedQuantities.motherboard}
-                            onChange={(event) =>
-                              setOwnedQuantities((current) => ({
-                                ...current,
-                                motherboard: Number(event.target.value),
-                              }))
-                            }
-                            disabled={!selectedComponents.motherboard || validating}
-                            className="mt-1 min-h-10 w-full rounded-lg border border-white/10 bg-obsidian-900 px-3 text-sm text-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            <option value={0}>ยังไม่มี</option>
-                            <option value={1}>มีอยู่แล้ว</option>
-                          </select>
-                        </label>
+                        {ITEM_CATEGORIES.map((category) => (
+                          <label key={category.id} className="text-xs text-slate-300">
+                            {category.shortLabel}
+                            <select
+                              value={ownedQuantities[category.id]}
+                              onChange={(event) =>
+                                setOwnedQuantities((current) => ({
+                                  ...current,
+                                  [category.id]: Number(event.target.value),
+                                }))
+                              }
+                              disabled={!selectedComponents[category.id] || validating}
+                              className="mt-1 min-h-10 w-full rounded-lg border border-white/10 bg-obsidian-900 px-3 text-sm text-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              <option value={0}>ยังไม่มี</option>
+                              <option value={1}>มีอยู่แล้ว</option>
+                            </select>
+                          </label>
+                        ))}
                       </div>
                       {selectedComponents.ram && (
                         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
@@ -1090,14 +1181,25 @@ export default function BuildPage() {
                       </p>
                     )}
                     <div className="mt-5 grid gap-2">
-                      <button
-                        type="button"
-                        disabled
-                        aria-describedby="build-actions-note"
-                        className="min-h-11 cursor-not-allowed rounded-lg bg-ruby-700/50 px-4 py-2 text-sm font-bold text-white/60"
-                      >
-                        บันทึกชุดสเปก
-                      </button>
+                      {authenticated ? (
+                        <form onSubmit={saveBuild} className="grid gap-3">
+                          <label className="text-sm font-semibold text-slate-200">
+                            ชื่อสเปก
+                            <input value={saveName} onChange={(event) => setSaveName(event.target.value)} required className="mt-2 min-h-11 w-full rounded-lg border border-white/15 bg-obsidian-900 px-3 py-2 text-slate-100 focus:border-ruby-300 focus:outline-none focus:ring-2 focus:ring-ruby-300/20" />
+                          </label>
+                          <label className="text-sm font-semibold text-slate-200">
+                            คำอธิบาย (ไม่บังคับ)
+                            <textarea value={saveDescription} onChange={(event) => setSaveDescription(event.target.value)} rows={2} className="mt-2 w-full rounded-lg border border-white/15 bg-obsidian-900 px-3 py-2 text-slate-100 focus:border-ruby-300 focus:outline-none focus:ring-2 focus:ring-ruby-300/20" />
+                          </label>
+                          {saveError && <p role="alert" className="text-sm text-ruby-200">{saveError}</p>}
+                          {saveMessage && <p role="status" className="text-sm text-emerald-200">{saveMessage} · <Link to="/me/builds" className="underline">ดูสเปกของฉัน</Link></p>}
+                          <button type="submit" disabled={savePending} className="min-h-11 rounded-lg bg-ruby-600 px-4 py-2 text-sm font-bold text-white hover:bg-ruby-500 disabled:opacity-50">
+                            {savePending ? "กำลังบันทึก..." : "บันทึกสเปกส่วนตัว"}
+                          </button>
+                        </form>
+                      ) : (
+                        <p className="text-sm text-slate-300"><Link to="/login" className="text-ruby-200 underline">เข้าสู่ระบบ</Link> เพื่อบันทึกสเปกส่วนตัว</p>
+                      )}
                       <button
                         type="button"
                         disabled
@@ -1108,7 +1210,7 @@ export default function BuildPage() {
                       </button>
                     </div>
                     <p id="build-actions-note" className="mt-3 text-xs leading-5 text-slate-400">
-                      บันทึกและแชร์ยังไม่เปิดใช้ในต้นแบบนี้
+                      การแชร์ยังไม่เปิดใช้ สเปกที่บันทึกเป็นส่วนตัว
                     </p>
                   </div>
                 </section>
@@ -1178,7 +1280,7 @@ export default function BuildPage() {
                             {selectedCategory?.label}
                           </h2>
                           <p className="mt-1 text-xs text-slate-400">
-                            {categoryProducts.length} รายการในข้อมูลตัวอย่าง
+                            {categoryProducts.length} รายการ
                           </p>
                         </div>
                         <label className="min-w-[145px] text-xs text-slate-400">
@@ -1217,26 +1319,13 @@ export default function BuildPage() {
                       </label>
                     </div>
 
-                    {!categorySupported ? (
+                    {!hasCategoryProducts ? (
                       <div className="mt-4 rounded-xl border border-dashed border-white/15 bg-white/[0.02] px-5 py-9 text-center">
                         <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-white/5 text-slate-400">
                           <CategoryIcon category={activeCategory} className="h-6 w-6" />
                         </span>
                         <h3 className="mt-4 font-bold text-slate-200">
-                          หมวดนี้ยังไม่มีข้อมูลสำหรับเลือก
-                        </h3>
-                        <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-400">
-                          Backend รุ่นปัจจุบันรองรับการตรวจ CPU, เมนบอร์ด และ RAM
-                          หมวดอื่นจะแสดงเมื่อมี catalog และ API รองรับ
-                        </p>
-                      </div>
-                    ) : !hasCategoryProducts ? (
-                      <div className="mt-4 rounded-xl border border-dashed border-white/15 bg-white/[0.02] px-5 py-9 text-center">
-                        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-white/5 text-slate-400">
-                          <CategoryIcon category={activeCategory} className="h-6 w-6" />
-                        </span>
-                        <h3 className="mt-4 font-bold text-slate-200">
-                          ยังไม่มี{selectedCategory?.label}ใน catalog ตัวอย่าง
+                          ยังไม่มี{selectedCategory?.label}ใน catalog
                         </h3>
                         <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-400">
                           รายการสินค้าจะปรากฏที่นี่เมื่อ Backend มีข้อมูลในหมวดนี้
@@ -1248,13 +1337,6 @@ export default function BuildPage() {
                       </p>
                     ) : (
                       <>
-                        {!categorySupported && (
-                          <div className="mt-4">
-                            <ErrorNotice>
-                              หมวดนี้ยังไม่รองรับการตรวจและคำนวณราคาจาก Backend
-                            </ErrorNotice>
-                          </div>
-                        )}
                         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                           {visibleProducts.map((item) => (
                             <ProductCard
@@ -1275,6 +1357,7 @@ export default function BuildPage() {
                     selectedItems={selectedItems}
                     selectedCount={selectionCount}
                     validation={validation}
+                    compatibilitySummary={compatibilitySummary}
                     validationError={validationError}
                     validating={validating}
                     budget={budget}

@@ -65,7 +65,7 @@ describe("SpecUse API client", () => {
       total_price_thb: 0,
     });
     expect(global.fetch).toHaveBeenCalledWith(
-      "http://127.0.0.1:8080/api/v1/builds/validate",
+      "http://127.0.0.1:8080/api/v1/builds/validate?validation_mode=gpu_storage_v1",
       expect.objectContaining({
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -84,7 +84,7 @@ describe("SpecUse API client", () => {
     await validateBuild({ items: [], ram_items: [] }, { signal: controller.signal });
 
     expect(global.fetch).toHaveBeenCalledWith(
-      "http://127.0.0.1:8080/api/v1/builds/validate",
+      "http://127.0.0.1:8080/api/v1/builds/validate?validation_mode=gpu_storage_v1",
       expect.objectContaining({ signal: controller.signal }),
     );
   });
