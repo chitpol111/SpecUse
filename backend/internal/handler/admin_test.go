@@ -46,7 +46,15 @@ func (r *adminRepo) UpdateProfile(context.Context, string, string) (account.Prof
 func (r *adminRepo) LoadSnapshot(context.Context) (build.Snapshot, error) {
 	return build.Snapshot{Products: []build.Component{{Product: catalog.Product{ID: "22222222-2222-4222-8222-222222222222", Name: "Demo", Category: "case", Brand: "Demo", PriceTHB: 100, IsActive: true}}}}, nil
 }
-func (r *adminRepo) SaveProduct(_ context.Context, actor string, p catalog.ProductDetails, create bool) (catalog.ProductDetails, error) {
+func (r *adminRepo) LoadSnapshotForWrite(ctx context.Context) (build.Snapshot, map[string]json.RawMessage, error) {
+	snapshot, err := r.LoadSnapshot(ctx)
+	expected := make(map[string]json.RawMessage)
+	for _, c := range snapshot.Products {
+		expected[c.Product.ID], _ = json.Marshal(c.Product)
+	}
+	return snapshot, expected, err
+}
+func (r *adminRepo) SaveProduct(_ context.Context, actor string, p catalog.ProductDetails, create bool, expected json.RawMessage) (catalog.ProductDetails, error) {
 	r.writes++
 	return p, nil
 }

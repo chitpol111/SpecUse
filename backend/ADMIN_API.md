@@ -52,6 +52,13 @@ public Register สร้าง member เสมอ; SQL owner promotion เป�
 - nullable GPU/Storage metadata ตาม contract เดิม; synthetic evidence ถูกปฏิเสธก่อนเขียนผ่าน DB adapter
 - Guest เห็นเฉพาะ active; Validate ใช้ราคาปัจจุบันจาก snapshot ที่อ่านจาก DB หลัง mutation
 - Postgres transaction เขียน products และ typed rows พร้อมกัน; FK/constraint error rollback ทั้ง mutation
+- PATCH ใช้ snapshot ตรวจพร้อม lock ในฐานข้อมูล; หากสินค้าเปลี่ยนระหว่างคำขอ ตอบ 409
+  ให้โหลดข้อมูลล่าสุดก่อนลองใหม่ ไม่เขียนทับการแก้ของคนอื่น
+
+Backend รุ่นนี้ต้องติดตั้ง migration 008 หลัง migrations 001–005 ก่อน deploy; migration 005 เดิมไม่ถูกแก้
+ฐานที่ติดตั้ง 005 แล้วต้องลง 008 แยก ไม่รัน 005 ซ้ำ และตรวจ release plan ก่อนเปลี่ยนฐานจริง
+RPC เดิมยังคงอยู่เพื่อให้ Backend รุ่นเดิมและ rollback ใช้ได้ แต่รุ่นเดิมไม่มีการตรวจ concurrency นี้
+ต้องหลีกเลี่ยงการแก้สินค้าระหว่าง deploy/rollback ที่มี Backend รุ่นเก่าใช้งาน
 
 ## วิธีทดสอบหลังตั้ง Supabase แล้ว
 

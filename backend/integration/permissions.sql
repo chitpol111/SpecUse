@@ -40,4 +40,31 @@ DO $$ BEGIN
  END;
  IF EXISTS(SELECT 1 FROM public.products WHERE id='55555555-5555-4555-8555-555555555555') THEN RAISE EXCEPTION 'Mutation not atomic';END IF;
 END $$;
+DO $$
+DECLARE original jsonb; current_product jsonb;
+BEGIN
+ IF has_function_privilege('anon','public.backend_product_save_checked(uuid,jsonb,boolean,jsonb)','EXECUTE')
+    OR has_function_privilege('authenticated','public.backend_product_save_checked(uuid,jsonb,boolean,jsonb)','EXECUTE')
+    OR NOT has_function_privilege('service_role','public.backend_product_save_checked(uuid,jsonb,boolean,jsonb)','EXECUTE') THEN
+  RAISE EXCEPTION 'Checked product save privileges incorrect';
+ END IF;
+ original := public.backend_product_json('44444444-4444-4444-8444-444444444444');
+ PERFORM public.backend_product_save_checked('22222222-2222-4222-8222-222222222222',
+  jsonb_set(original,'{name}','"Updated board"'),false,original);
+ BEGIN
+  PERFORM public.backend_product_save_checked('22222222-2222-4222-8222-222222222222',
+   jsonb_set(original,'{price_thb}','7000'),false,original);
+  RAISE EXCEPTION 'Stale product update accepted';
+ EXCEPTION WHEN SQLSTATE 'PT409' THEN NULL;
+ END;
+ current_product := public.backend_product_json('44444444-4444-4444-8444-444444444444');
+ IF current_product->>'name' <> 'Updated board' OR (current_product->>'price_thb')::bigint <> 6000 THEN
+  RAISE EXCEPTION 'Stale update changed product';
+ END IF;
+ PERFORM public.backend_product_save_checked('22222222-2222-4222-8222-222222222222',
+  jsonb_set(current_product,'{price_thb}','7000'),false,current_product);
+ IF (public.backend_product_json('44444444-4444-4444-8444-444444444444')->>'price_thb')::bigint <> 7000 THEN
+  RAISE EXCEPTION 'Reloaded product update failed';
+ END IF;
+END $$;
 SELECT 'PASS: trigger/role escalation, grants, CRUD, typed snapshot and atomic rollback' AS integration_result;
