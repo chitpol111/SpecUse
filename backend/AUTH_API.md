@@ -16,7 +16,7 @@ Go เรียก Supabase Auth / Data API ฝั่ง server; Supabase เป
   FE อ่าน app role จาก GET /me → data.profile.role เท่านั้น ไม่อ่าน user_metadata เป็นสิทธิ์
 - /auth/confirm เดิมเลิกใช้: POST ตอบ 410 ENDPOINT_RETIRED เสมอ ไม่เรียก provider และไม่รับ/แลก OTP
   FE ไม่ต้องสร้างหน้า/ขั้นตอนรอ OTP; method อื่นตอบ 405 Allow: POST
-- FE เก็บ token pair ใน memory; หากต้องการคงผ่าน reload ให้ใช้ sessionStorage และล้างเมื่อ logout/refresh ใช้ไม่ได้
+- FE เก็บ token pair ใน sessionStorage เพื่อคงผ่าน reload และล้างเมื่อ logout/refresh ใช้ไม่ได้
   ไม่บันทึก token/password ลง console, URL, analytics หรือ Git; ไม่มี privileged key ใน FE
 - ทุก endpoint ที่ต้องล็อกอินใช้ Authorization: Bearer <access_token>
 - 401 จาก protected API: refresh แบบ single flight หนึ่งครั้งแล้ว retry เดิมหนึ่งครั้ง; ไม่วน refresh บน 403/503

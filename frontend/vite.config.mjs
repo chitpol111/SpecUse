@@ -11,6 +11,6 @@ export default defineConfig(({ mode }) => {
     },
     server: { port: 3000, strictPort: true },
     build: { outDir: "build" },
-    test: { globals: true, environment: "jsdom" },
+    test: { globals: true, environment: "jsdom", setupFiles: "./src/setupTests.js" },
   };
 });

@@ -1,4 +1,4 @@
-import { createAuthClient } from "./authApi";
+import { createAuthClient, readStoredSession } from "./authApi";
 
 const session = { access_token: "first", refresh_token: "old-refresh" };
 const nextSession = { access_token: "second", refresh_token: "new-refresh" };
@@ -16,6 +16,88 @@ describe("auth API client", () => {
   });
   afterEach(() => {
     delete global.fetch;
+  });
+
+  it("restores a stored session, saves refreshed tokens, and removes them on logout", async () => {
+    const first = createAuthClient(vi.fn());
+    global.fetch.mockResolvedValueOnce(response(200, { data: { session } }));
+    await first.login({});
+    expect(readStoredSession()).toEqual({ session, warning: "" });
+
+    const onChange = vi.fn();
+    const restored = createAuthClient(onChange, { initialSession: readStoredSession().session });
+    global.fetch
+      .mockResolvedValueOnce(response(401, { error: { code: "UNAUTHORIZED", message: "expired" } }))
+      .mockResolvedValueOnce(response(200, { data: { session: nextSession } }))
+      .mockResolvedValueOnce(response(200, { data: { user, profile } }))
+      .mockResolvedValueOnce(response(204));
+    await restored.restoreProfile();
+    expect(readStoredSession()).toEqual({ session: nextSession, warning: "" });
+    expect(onChange).toHaveBeenLastCalledWith({ authenticated: true, user, profile });
+    await restored.logout();
+    expect(readStoredSession()).toEqual({ session: null, warning: "" });
+  });
+
+  it("clears the stored session when its refresh token is rejected", async () => {
+    const first = createAuthClient(vi.fn());
+    global.fetch.mockResolvedValueOnce(response(200, { data: { session } }));
+    await first.login({});
+    const restored = createAuthClient(vi.fn(), { initialSession: readStoredSession().session });
+    global.fetch
+      .mockResolvedValueOnce(response(401, { error: { code: "UNAUTHORIZED", message: "expired" } }))
+      .mockResolvedValueOnce(response(401, { error: { code: "INVALID_REFRESH_TOKEN", message: "expired" } }));
+    await expect(restored.restoreProfile()).rejects.toThrow("expired");
+    expect(readStoredSession().session).toBeNull();
+  });
+
+  it("keeps the stored session when restoring the profile fails due to a network error", async () => {
+    const first = createAuthClient(vi.fn());
+    global.fetch.mockResolvedValueOnce(response(200, { data: { session } }));
+    await first.login({});
+    const restored = createAuthClient(vi.fn(), { initialSession: readStoredSession().session });
+    global.fetch.mockRejectedValueOnce(new Error("offline"));
+    await expect(restored.restoreProfile()).rejects.toThrow("เชื่อมต่อ Backend ไม่ได้");
+    expect(readStoredSession().session).toEqual(session);
+  });
+
+  it("warns when browser storage is unavailable without losing the active session", async () => {
+    const warning = vi.fn();
+    const onChange = vi.fn();
+    const setItem = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new Error("blocked"); });
+    try {
+      const client = createAuthClient(onChange, { onStorageStatus: warning });
+      global.fetch.mockResolvedValueOnce(response(200, { data: { session } }));
+      await client.login({});
+      expect(warning).toHaveBeenCalledWith(expect.stringContaining("เก็บสถานะเข้าสู่ระบบไม่ได้"));
+      expect(onChange).toHaveBeenLastCalledWith({ authenticated: true, user: null, profile: null });
+      expect(readStoredSession().session).toBeNull();
+    } finally {
+      setItem.mockRestore();
+    }
+  });
+
+  it("reports when logout cannot remove stored credentials", async () => {
+    const warning = vi.fn();
+    const onChange = vi.fn();
+    const client = createAuthClient(onChange, { onStorageStatus: warning });
+    global.fetch.mockResolvedValueOnce(response(200, { data: { session } })).mockResolvedValueOnce(response(204));
+    await client.login({});
+    const removeItem = vi.spyOn(Storage.prototype, "removeItem").mockImplementation(() => { throw new Error("blocked"); });
+    try {
+      await expect(client.logout()).rejects.toMatchObject({ code: "SESSION_STORAGE_CLEAR_FAILED" });
+      expect(warning).toHaveBeenLastCalledWith(expect.stringContaining("ล้างข้อมูลเข้าสู่ระบบที่เก็บไว้ไม่ได้"));
+      expect(onChange).toHaveBeenLastCalledWith({ authenticated: false, user: null, profile: null });
+    } finally {
+      removeItem.mockRestore();
+    }
+  });
+
+  it("reports malformed stored sessions without using them", () => {
+    window.sessionStorage.setItem("specuse.auth.session", "{invalid");
+    expect(readStoredSession()).toEqual({
+      session: null,
+      warning: expect.stringContaining("ข้อมูลเข้าสู่ระบบที่เก็บไว้ไม่ถูกต้อง"),
+    });
   });
 
   it("uses protected private-draft endpoints and patches only metadata", async () => {
