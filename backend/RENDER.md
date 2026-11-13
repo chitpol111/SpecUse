@@ -33,7 +33,9 @@ memory mode ไม่จำลอง login และไม่เชื่อม 
 
 ## Local: ทดสอบ Supabase ที่เจ้าของตั้งค่าแล้ว
 
-รัน migrations 001–006 ตาม [SUPABASE_SETUP.md](SUPABASE_SETUP.md) ไม่รันซ้ำโดยไม่ตรวจประวัติ
+ติดตั้ง migrations 001–006 และ 008 ตาม [SUPABASE_SETUP.md](SUPABASE_SETUP.md)
+สำหรับฐานที่มีข้อมูล ตรวจ schema/history/backup ก่อน และไม่รัน migration ที่ติดตั้งแล้วซ้ำ
+007 เป็น private-build migration แยก ให้ใช้เฉพาะเมื่อมีใน release ที่ตรวจแล้ว
 เปิด Email provider และ Allow new users to sign up, **ปิด Confirm email** แล้ว Save ใน Auth → Sign In / Providers → Email
 ไม่ต้องรอ OTP หรือตั้ง signup SMTP สำหรับ flow หลักนี้; ดูแหล่งอ้างอิงและ local config ใน SUPABASE_SETUP.md
 ตั้ง `CATALOG_BACKEND=supabase`, URL/keys/issuer/audience ใน backend environment
@@ -102,7 +104,9 @@ Access JWT เดิมอาจใช้ได้จนหมดอายุ �
    APP_ENV=production bind `0.0.0.0:$PORT`; local mode bind 127.0.0.1 จึงห้ามใช้ APP_ENV=local บน Render
 6. ตั้ง environment ด้านล่างผ่าน Render Environment โดยไม่ใส่ secrets ใน Git/Frontend
    ไม่แชร์ screenshot ที่เห็น values และไม่ใส่ credentials ลง build/start command
-7. Manual deploy แล้วตรวจ health/logs/flow ตาม checklist ก่อนส่ง URL ให้ Fluke
+7. ก่อน Manual deploy ตรวจว่าติดตั้ง 008, reload PostgREST schema cache และตรวจสิทธิ์ RPC แล้ว
+   หากยังไม่มี 008 การสร้าง/แก้สินค้า Admin จะใช้ไม่ได้; ห้ามแก้สินค้าในช่วงที่ Backend รุ่นเก่าและใหม่ทำงานปะปนกัน
+   จากนั้น Manual deploy แล้วตรวจ health/logs/flow ตาม checklist ก่อนส่ง URL ให้ Fluke
    ไม่เปิด auto-deploy จนเจ้าของตัดสินใจ; ไม่ผูก deployment กับ main ที่ยังไม่มีโค้ดชุดนี้
 
 | Variable | ค่าที่ต้องตั้ง |

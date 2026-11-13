@@ -31,7 +31,7 @@ backend/
   internal/account/               Auth/profile service และ ownership checks
   internal/supabase/              Auth HTTP client และ database RPC repository
   internal/management/            Admin product service
-  migrations/001–006*.sql         catalog, profiles, restricted RPC และ health
+  migrations/001–006,008*.sql     catalog, profiles, restricted RPC, health และ admin concurrency
   integration/                    disposable PostgreSQL permissions/CRUD tests
   render.yaml                     Render Blueprint (ยังไม่ได้สร้างบริการ)
   testdata/catalog.local.json     ข้อมูลสมมติสำหรับ local แบบ opt-in
@@ -250,7 +250,7 @@ routes ที่ไม่ได้ระบุ เช่น trailing slash ไ�
 policies ให้ anon/authenticated ในระยะนี้ การเปิด RLS ไม่มีผลแทนการกรอง active ใน Go
 โดยเฉพาะเมื่อ backend ใช้ database role ที่ bypass RLS
 
-migrations 001–006 ทดสอบด้วย disposable PostgreSQL และ auth schema/roles จำลอง
+migrations 001–006 และ 008 ทดสอบด้วย disposable PostgreSQL และ auth schema/roles จำลอง
 ยังไม่ทดสอบ hosted Supabase; ไม่มี migration อัตโนมัติตอนเปิด server
 ตั้ง schema ตาม [SUPABASE_SETUP.md](SUPABASE_SETUP.md); ตัวอย่างคำสั่งรัน migration แรกกับฐานทดสอบ:
 ตั้ง `DATABASE_URL` เป็น connection string ของฐานทดสอบผ่าน environment แล้วใช้:

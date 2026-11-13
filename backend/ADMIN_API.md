@@ -1,7 +1,7 @@
 # Guest / Member / Admin และ CRUD สินค้า
 
 ดู request/response contract ใน [AUTH_API.md](AUTH_API.md); ต่อจาก [Supabase setup](SUPABASE_SETUP.md)
-รัน migration 005 หลัง 001–004 ด้วย owner SQL connection บน local/test project ก่อน
+รัน migration 005 หลัง 001–004 และ 008 หลัง 005 ด้วย owner SQL connection บน local/test project ก่อน
 
 Guest ใช้ GET Catalog และ POST Validate แบบเดิมได้; Member ใช้ profile/password ของตนเอง
 Admin endpoints ตรวจ Bearer token กับ Supabase แล้วอ่าน profiles.role จากฐานข้อมูลทุกครั้ง

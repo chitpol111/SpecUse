@@ -18,6 +18,7 @@
 | Diff/secrets | git diff --check ผ่าน; ไม่พบ tracked .env จริงหรือ credential patterns; .env.example เป็น placeholders |
 
 SQL integration ใช้ disposable postgres:17-alpine และ auth.users/roles จำลอง ไม่ใช่ hosted Supabase
+ผลในตารางเป็นผลวันที่ 2026-11-11 ก่อนเพิ่ม migration 008; ตรวจผล CI ของ commit ปัจจุบันสำหรับ 008 แยก
 Auth tests ใช้ stubs/httptest ไม่ใช่หลักฐานว่า Supabase ออก/ตรวจ JWT หรือส่งอีเมลจริงสำเร็จ
 Binary smoke ใช้ local fixture ไม่ใช่ live database; DB demo seed ไม่มี hardware evidence จำลอง
 Secret scan เป็นการตรวจ patterns และ review diff ไม่ใช่การรับประกันจากบริการสแกนภายนอก
