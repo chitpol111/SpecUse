@@ -55,3 +55,5 @@ END $$;
 SQL
 wait "$task_writer"
 echo 'PASS: concurrent product update rejected without overwriting'
+
+docker exec -i "$task_container" psql -h 127.0.0.1 -q -U postgres -v ON_ERROR_STOP=1 < "$task_root/integration/member_builds.sql"

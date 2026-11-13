@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "PUBLIC_BUILD_NOT_ENABLED",
+    "message": "ยังไม่เปิดเผยแพร่ Build สาธารณะ"
+  }
+}

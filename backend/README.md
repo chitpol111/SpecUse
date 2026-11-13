@@ -5,6 +5,10 @@ Go REST API ด้วย `net/http` และ JSON แยก handler, service �
 รวมถึง `POST /api/v1/builds/validate` จากข้อมูล repository ชุดเดียวกัน
 ไม่มี third-party Go dependencies; เพิ่ม Supabase Auth/Data API adapter แล้ว แต่ยังไม่ได้ทดสอบ hosted project หรือ deploy จริง
 
+เพิ่ม private draft ใน branch แยก ดู [PRIVATE_BUILDS_API.md](PRIVATE_BUILDS_API.md)
+ยังไม่ apply migration 007 กับ specuse-dev และยังไม่ deploy งานนี้
+ทดสอบร่วม FE บนฐานแยกตาม [PRIVATE_BUILDS_E2E.md](PRIVATE_BUILDS_E2E.md)
+
 เริ่มงานสมาชิกด้วย [AUTH_API.md](AUTH_API.md), ตั้งค่า DB ด้วย [SUPABASE_SETUP.md](SUPABASE_SETUP.md),
 สิทธิ์สินค้าใน [ADMIN_API.md](ADMIN_API.md) และเตรียม deploy ด้วย [RENDER.md](RENDER.md)
 Register ได้ member/session พร้อมใช้ทันที ไม่ต้อง OTP; /auth/confirm เดิมตอบ 410
@@ -31,7 +35,7 @@ backend/
   internal/account/               Auth/profile service และ ownership checks
   internal/supabase/              Auth HTTP client และ database RPC repository
   internal/management/            Admin product service
-  migrations/001–006,008*.sql     catalog, profiles, restricted RPC, health และ admin concurrency
+  migrations/001–008*.sql         catalog, profiles, private drafts, health และ admin concurrency
   integration/                    disposable PostgreSQL permissions/CRUD tests
   render.yaml                     Render Blueprint (ยังไม่ได้สร้างบริการ)
   testdata/catalog.local.json     ข้อมูลสมมติสำหรับ local แบบ opt-in
@@ -250,7 +254,7 @@ routes ที่ไม่ได้ระบุ เช่น trailing slash ไ�
 policies ให้ anon/authenticated ในระยะนี้ การเปิด RLS ไม่มีผลแทนการกรอง active ใน Go
 โดยเฉพาะเมื่อ backend ใช้ database role ที่ bypass RLS
 
-migrations 001–006 และ 008 ทดสอบด้วย disposable PostgreSQL และ auth schema/roles จำลอง
+migrations 001–008 ทดสอบด้วย disposable PostgreSQL และ auth schema/roles จำลอง
 ยังไม่ทดสอบ hosted Supabase; ไม่มี migration อัตโนมัติตอนเปิด server
 ตั้ง schema ตาม [SUPABASE_SETUP.md](SUPABASE_SETUP.md); ตัวอย่างคำสั่งรัน migration แรกกับฐานทดสอบ:
 ตั้ง `DATABASE_URL` เป็น connection string ของฐานทดสอบผ่าน environment แล้วใช้:
@@ -307,5 +311,5 @@ PostgreSQL integration แยกจาก unit tests; ทดสอบ trigger/gr
   เพิ่ม direct SATA allocation ตาม [B1](STORAGE_B1.md) แล้ว; ยังไม่มี filters ใหม่,
   GPU/M.2/PSU/Case checks หรือ typed PSU/Case/cooler
 - ใช้ server-only Data API RPC, default-deny direct table access และ RLS ตาม [SUPABASE_SETUP.md](SUPABASE_SETUP.md)
-- เพิ่ม Auth/Profile/Admin และ tests แล้ว; ยังไม่มี saved-build persistence/publication, recovery/OAuth/MFA UI
+- เพิ่ม Auth/Profile/Admin และ private draft persistence/tests ใน branch นี้แล้ว; ยังไม่มี public publication, recovery/OAuth/MFA UI
 - ยังต้องตั้ง project/keys/CORS และปิด Confirm email และทดสอบบริการจริงก่อน deploy; ไม่มี privileged key ใน Frontend

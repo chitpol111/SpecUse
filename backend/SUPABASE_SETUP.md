@@ -20,11 +20,12 @@ SQL function อ่านทุกตารางใน SQL statement เดี�
 4. Settings → API Keys: project URL, publishable key และ secret key สำหรับ server
    legacy anon/service_role JWT keys ใช้ได้เช่นกัน แต่ไม่ใส่ server key ใน Frontend
 5. เปิด Data API สำหรับ public schema เพื่อให้ Go เรียก RPC; anonymous/member ไม่มีสิทธิ์ table/RPC ที่สร้างในงานนี้
-6. ฐานทดสอบใหม่: ติดตั้ง migrations 001–006 ตามลำดับ แล้วติดตั้ง 008 ด้วย project-owner SQL connection/SQL Editor
-   008 เพิ่ม RPC สำหรับป้องกัน Admin แก้สินค้าทับกัน และต้องมี 005 ก่อน; 007 เป็น private-build migration แยก
+6. ฐานทดสอบใหม่: ติดตั้ง migrations 001–008 ตามลำดับด้วย project-owner SQL connection/SQL Editor
+   007 เพิ่ม private builds; 008 เพิ่ม RPC สำหรับป้องกัน Admin แก้สินค้าทับกัน และต้องมี 005 ก่อน
    สำหรับฐานที่มีข้อมูล ให้ตรวจ project, schema, ประวัติการติดตั้ง และ backup ก่อน ห้ามรัน migrations ที่ติดตั้งแล้วซ้ำ
-   หากยืนยันว่า 001–006 มีครบและ 008 ยังไม่มี ให้เจ้าของติดตั้งเฉพาะ 008 ตาม release plan ที่อนุมัติแล้ว
-   หาก 008 มีอยู่แล้วหรือสถานะไม่แน่ใจ ให้หยุดตรวจนิยามและประวัติก่อน ไม่รันซ้ำ
+   หากยืนยันว่า 001–006 มีครบ ให้ตรวจสถานะ 007 และ 008 แยกกันและใช้
+   [release plan](PRIVATE_BUILDS_RELEASE_PLAN.md) ที่เจ้าของอนุมัติแล้วก่อนติดตั้งเฉพาะส่วนที่ยังไม่มี
+   หาก migration มีอยู่แล้วหรือสถานะไม่แน่ใจ ให้หยุดตรวจนิยามและประวัติก่อน ไม่รันซ้ำ
    หลังติดตั้งให้ reload PostgREST schema cache และตรวจสิทธิ์ RPC ก่อน deploy; startup ไม่รัน migrations หรือ seed อัตโนมัติ
 
 Environment ของ Go:
@@ -61,7 +62,7 @@ memory mode สำหรับ tests/local เดิมยังมี; ถ้�
 - ไม่มีการ backfill metadata หรือ synthetic hardware evidence ให้สินค้าใน DB
 - เปิด RLS และ revoke table privileges จาก anon/authenticated/service_role; ไม่มี client policies
 - 005 เพิ่ม Admin mutation RPC ตรวจ actor role ซ้ำ, 006 เพิ่ม backend_health RPC สำหรับ readiness,
-  008 เพิ่ม backend_product_save_checked สำหรับปฏิเสธการแก้สินค้าที่ใช้ข้อมูลเก่า
+  007 เพิ่ม private build RPC และ 008 เพิ่ม backend_product_save_checked สำหรับปฏิเสธการแก้สินค้าที่ใช้ข้อมูลเก่า
 - เฉพาะ service_role เรียก backend_catalog_snapshot/backend_profile_get/backend_profile_update และ Admin/health RPC ได้
   ฟังก์ชัน SECURITY DEFINER มี search_path='' และใช้ชื่อ schema ชัดเจน
 - Go ตรวจ token ทุกครั้งผ่าน Auth GET /user แล้วตรวจ iss/aud/exp/nbf/sub และเทียบ user UUID
