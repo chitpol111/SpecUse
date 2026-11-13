@@ -2,7 +2,6 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
   push:
     branches: [main]
 
@@ -49,3 +48,11 @@ jobs:
           cache-dependency-path: backend/go.mod
       - name: Run tests
         run: go test ./...
+      - name: Vet backend
+        run: go vet ./...
+      - name: Race checks
+        run: go test -race ./internal/...
+      - name: PostgreSQL migrations and permissions
+        run: bash integration/postgres.sh
+      - name: Private draft E2E fixture checks
+        run: bash integration/private_draft_e2e_seed.sh

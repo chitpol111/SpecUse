@@ -1,7 +1,9 @@
 # SpecUse: Build Validation API สำหรับ Frontend
 
 ใช้สัญญา response ที่ยืนยันกับ Fluke แล้ว Backend เป็นผู้คำนวณราคาและ compatibility
-จาก catalog repository เดียวกับ GET products ทั้งหมดเป็น local fixture ยังไม่ใช้ Supabase
+จาก catalog repository เดียวกับ GET products; ตัวอย่างในหน้านี้ใช้ local fixture โดยไม่ต้องมี Supabase
+โหมดฐานข้อมูลจริงและสมาชิกดู [SUPABASE_SETUP.md](SUPABASE_SETUP.md) และ [AUTH_API.md](AUTH_API.md)
+โหมด Supabase ใช้ snapshot จาก DB ร่วมกัน ไม่มีการ fallback เป็น fixture
 
 ล่าสุด [B1 SATA-first](STORAGE_B1.md) ตรวจ direct SATA allocation ใน opt-in เดิมได้เมื่อข้อมูล/หลักฐานครบ
 ใช้ fixture และ runnable examples แยก ส่วน legacy response ในเอกสารนี้ยังคงเดิม

@@ -1,0 +1,46 @@
+-- SYNTHETIC FIXTURES ONLY: run once in a fresh, isolated local Supabase stack.
+-- No real SKU/manufacturer specs/evidence. Never run in specuse-dev.
+-- No Auth users, passwords, roles or builds are created here.
+BEGIN;
+DO $$ BEGIN
+ IF current_setting('app.allow_private_draft_e2e_seed',true) IS DISTINCT FROM 'on' THEN
+  RAISE EXCEPTION 'Private draft E2E seed requires explicit local-test opt-in';
+ END IF;
+ IF to_regprocedure('public.backend_member_build_create(uuid,jsonb)') IS NULL THEN
+  RAISE EXCEPTION 'Apply migration 007 to the isolated test database first';
+ END IF;
+ IF EXISTS(SELECT 1 FROM public.products) OR EXISTS(SELECT 1 FROM public.ram_models) THEN
+  RAISE EXCEPTION 'E2E seed requires an empty catalog; existing data will not be overwritten';
+ END IF;
+END $$;
+
+INSERT INTO public.products(id,name,category,brand,price_thb,is_active) VALUES
+ ('10101010-0000-4000-8000-000000000001','[SYNTHETIC E2E ONLY] CPU A','cpu','TEST ONLY',1000,true),
+ ('10101010-0000-4000-8000-000000000002','[SYNTHETIC E2E ONLY] CPU B conflict','cpu','TEST ONLY',1200,true),
+ ('10101010-0000-4000-8000-000000000003','[SYNTHETIC E2E ONLY] Motherboard','motherboard','TEST ONLY',1500,true),
+ ('10101010-0000-4000-8000-000000000004','[SYNTHETIC E2E ONLY] RAM A single','ram','TEST ONLY',400,true),
+ ('10101010-0000-4000-8000-000000000005','[SYNTHETIC E2E ONLY] RAM A pair','ram','TEST ONLY',700,true),
+ ('10101010-0000-4000-8000-000000000006','[SYNTHETIC E2E ONLY] Storage A','storage','TEST ONLY',200,true),
+ ('10101010-0000-4000-8000-000000000007','[SYNTHETIC E2E ONLY] Storage B','storage','TEST ONLY',300,true),
+ ('10101010-0000-4000-8000-000000000008','[SYNTHETIC E2E ONLY] PSU','psu','TEST ONLY',400,true),
+ ('10101010-0000-4000-8000-000000000009','[SYNTHETIC E2E ONLY] Case','case','TEST ONLY',500,true),
+ ('10101010-0000-4000-8000-000000000010','[SYNTHETIC E2E ONLY] GPU','gpu','TEST ONLY',600,true),
+ ('10101010-0000-4000-8000-000000000011','[SYNTHETIC E2E ONLY] Storage inactive','storage','TEST ONLY',350,false),
+ ('10101010-0000-4000-8000-000000000012','[SYNTHETIC E2E ONLY] RAM B inactive pair','ram','TEST ONLY',600,false),
+ ('10101010-0000-4000-8000-000000000013','[SYNTHETIC E2E ONLY] RAM D DDR5','ram','TEST ONLY',450,true);
+INSERT INTO public.product_cpus(product_id,cpu_socket) VALUES
+ ('10101010-0000-4000-8000-000000000001','TEST_SOCKET_A'),
+ ('10101010-0000-4000-8000-000000000002','TEST_SOCKET_B');
+INSERT INTO public.product_motherboards(product_id,cpu_socket,ram_type) VALUES
+ ('10101010-0000-4000-8000-000000000003','TEST_SOCKET_A','DDR4');
+INSERT INTO public.ram_models(id,ram_type) VALUES
+ ('20202020-0000-4000-8000-000000000001','DDR4'),
+ ('20202020-0000-4000-8000-000000000002','DDR4'),
+ ('20202020-0000-4000-8000-000000000003','DDR4'),
+ ('20202020-0000-4000-8000-000000000004','DDR5');
+INSERT INTO public.product_rams(product_id,ram_model_id,ram_type,modules_per_package) VALUES
+ ('10101010-0000-4000-8000-000000000004','20202020-0000-4000-8000-000000000001','DDR4',1),
+ ('10101010-0000-4000-8000-000000000005','20202020-0000-4000-8000-000000000001','DDR4',2),
+ ('10101010-0000-4000-8000-000000000012','20202020-0000-4000-8000-000000000002','DDR4',2),
+ ('10101010-0000-4000-8000-000000000013','20202020-0000-4000-8000-000000000004','DDR5',1);
+COMMIT;

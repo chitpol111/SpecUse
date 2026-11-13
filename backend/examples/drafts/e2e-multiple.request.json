@@ -1,0 +1,54 @@
+{
+  "name": "[LOCAL E2E ONLY] multiple selections 5600",
+  "description": "ข้อมูลสังเคราะห์ในฐานทดสอบ local เท่านั้น",
+  "visibility": "private",
+  "items": [
+    {
+      "product_id": "10101010-0000-4000-8000-000000000001",
+      "quantity": 1,
+      "owned_quantity": 0
+    },
+    {
+      "product_id": "10101010-0000-4000-8000-000000000003",
+      "quantity": 1,
+      "owned_quantity": 0
+    },
+    {
+      "product_id": "10101010-0000-4000-8000-000000000006",
+      "quantity": 3,
+      "owned_quantity": 2
+    },
+    {
+      "product_id": "10101010-0000-4000-8000-000000000007",
+      "quantity": 2,
+      "owned_quantity": 1
+    },
+    {
+      "product_id": "10101010-0000-4000-8000-000000000008",
+      "quantity": 1,
+      "owned_quantity": 0
+    },
+    {
+      "product_id": "10101010-0000-4000-8000-000000000009",
+      "quantity": 1,
+      "owned_quantity": 0
+    },
+    {
+      "product_id": "10101010-0000-4000-8000-000000000010",
+      "quantity": 1,
+      "owned_quantity": 0
+    }
+  ],
+  "ram_items": [
+    {
+      "ram_model_id": "20202020-0000-4000-8000-000000000001",
+      "required_modules": 4,
+      "owned_modules": 1
+    },
+    {
+      "ram_model_id": "20202020-0000-4000-8000-000000000002",
+      "required_modules": 6,
+      "owned_modules": 6
+    }
+  ]
+}
