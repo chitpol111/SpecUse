@@ -4,9 +4,9 @@
 ## ทดลองหน้าเช็กสเปกกับ Backend
 
 หน้า `/build` โหลดสินค้าและส่งรายการให้ Backend ตรวจความเข้ากันได้และยอดซื้อเพิ่ม
-Backend local fixture ตามคำสั่งด้านล่างใช้สำหรับพัฒนา catalog/validation เท่านั้น
-ไม่บันทึก Build หรือเชื่อม Supabase; ข้อจำกัดนี้เป็นเฉพาะโหมด local fixture
-เว็บ production ใช้ Backend บน Render เชื่อม Supabase
+**Local:** คำสั่งด้านล่างใช้ข้อมูลตัวอย่างสำหรับทดลองโหลด catalog และตรวจความเข้ากันได้เท่านั้น
+โหมดนี้ไม่มี Auth หรือการบันทึกสเปกส่วนตัว
+**Production:** เว็บใช้ Backend บน Render เชื่อม Supabase และสมาชิกบันทึกสเปกส่วนตัวได้
 หน้า Build เลือก CPU, เมนบอร์ด, RAM, GPU, Storage, PSU และ Case ได้อย่างละหนึ่งรุ่น
 โดย Backend คำนวณยอดจาก catalog และตรวจด้วยโหมด `gpu_storage_v1` ซึ่งแสดง
 ผลพื้นฐานของ CPU socket และชนิด RAM ที่เลือก พร้อมแสดงข้อขัดแย้งอื่นที่ตรวจพบจริง
