@@ -5,7 +5,8 @@
 
 หน้า `/build` โหลดสินค้าและส่งรายการให้ Backend ตรวจความเข้ากันได้และยอดซื้อเพิ่ม
 Backend local fixture ตามคำสั่งด้านล่างใช้สำหรับพัฒนา catalog/validation เท่านั้น
-ไม่บันทึก Build หรือเชื่อม Supabase
+ไม่บันทึก Build หรือเชื่อม Supabase; ข้อจำกัดนี้เป็นเฉพาะโหมด local fixture
+เว็บ production ใช้ Backend บน Render เชื่อม Supabase
 หน้า Build เลือก CPU, เมนบอร์ด, RAM, GPU, Storage, PSU และ Case ได้อย่างละหนึ่งรุ่น
 โดย Backend คำนวณยอดจาก catalog และตรวจด้วยโหมด `gpu_storage_v1` ซึ่งแสดง
 ผลพื้นฐานของ CPU socket และชนิด RAM ที่เลือก พร้อมแสดงข้อขัดแย้งอื่นที่ตรวจพบจริง
@@ -13,7 +14,7 @@ Backend local fixture ตามคำสั่งด้านล่างใช�
 RAM เลือกเป็นรุ่นและระบุจำนวนโมดูล ส่วนอุปกรณ์หมวดอื่นเลือกได้หนึ่งชิ้นต่อหมวด
 
 หน้า `/login` และ `/register` เชื่อม Auth API ของ Go ตาม [Auth contract](backend/AUTH_API.md)
-Backend fixture ตามคำสั่งด้านล่างยังไม่รองรับ Auth; ต้องตั้งค่าและทดสอบ hosted services จริง
+Backend fixture ตามคำสั่งด้านล่างยังไม่รองรับ Auth; production เชื่อม Supabase Auth
 หน้า `/profile` ใช้ข้อมูลจาก `/me` และรองรับแก้ชื่อที่แสดงกับเปลี่ยนรหัสผ่าน
 Session เก็บใน sessionStorage ของแท็บเพื่อให้คงอยู่เมื่อรีเฟรช โดยล้างเมื่อออกจากระบบ
 เบราว์เซอร์อาจกู้แท็บที่ปิดไปพร้อม sessionStorage ได้; JavaScript ในเว็บเข้าถึง token ได้
@@ -24,7 +25,7 @@ SKU และ RAM models รวมถึงสินค้าที่ปิด�
 ยังไม่มีการแชร์สาธารณะ
 ฟีเจอร์นี้ต้องใช้ Backend private draft และฐานที่ติดตั้ง migrations ตาม
 [แผน release](backend/PRIVATE_BUILDS_RELEASE_PLAN.md);
-Backend ที่ deploy อยู่ยังไม่รองรับ และยังไม่ได้ทดสอบร่วมกับ hosted Supabase
+ทดสอบบน production แล้วว่าสมาชิกบันทึกสเปก รีเฟรชแล้วยังอยู่ แก้ไข และลบได้
 หน้า `/admin/products` สำหรับบัญชี Admin รองรับค้นหา กรอง เพิ่ม แก้ไข และปิดใช้งานสินค้า
 โดย Backend เป็นผู้ตรวจสิทธิ์และข้อมูลจริง; หมวดหมู่เปลี่ยนไม่ได้ และการปิดใช้งานไม่ลบข้อมูล
 ฟอร์มมีช่องสเปกตามหมวดสินค้า ส่วนข้อมูลขั้นสูงยังแก้ได้ด้วย JSON; RAM ต้องใช้รหัสรุ่น
